@@ -20,13 +20,17 @@ import json
 gc = pygsheets.authorize(service_file='connectsheets-341012-fddaa9df86d9.json')
 
 
-##################### CUSTOM ERRORS ##########################
+##################### CUSTOM ERRORS & STACK ##########################
 
 class OBS_Shutdown(Exception):
     """Custom error for OBS not working"""
     def __init__(self, msg:str) -> None:
         self.__message = msg
         super().__init__(self.__message)
+
+def output_msg(string:str) -> None:
+    """Prints the date and time of action + info specified in str"""
+    print(f"[{str(datetime.datetime.now())}] {string}")
 
 
 ##################### GSHEETS ##########################
@@ -113,7 +117,7 @@ def get_stats(name):
 
 ####################################################################
 
-def obs_invoke(f,*args):
+async def obs_invoke(f,*args):
     logging.basicConfig(level=logging.INFO)
 
     sys.path.append('../')
@@ -125,16 +129,16 @@ def obs_invoke(f,*args):
     ws = obsws(host, port, password)
     try:
         ws.connect()
-        f(ws,args) # exécution de la fonction
+        await f(ws,args) # exécution de la fonction
         ws.disconnect()
     except Exception:
         raise OBS_Shutdown("Impossible de se connecter à OBS Studio.")
 
-def toggle_anim(ws,name):
+async def toggle_anim(ws,name):
     try:
         ws.call(requests.SetSceneItemProperties(scene_name = "Animations", item = name[0], visible = True))
-        print(f"L'animation {name} est lancée !")
-        time.sleep(5)
+        output_msg(f"L'animation {name} est lancée !")
+        await asyncio.sleep(5)
         ws.call(requests.SetSceneItemProperties(scene_name = "Animations", item = name[0], visible = False))
 
     except KeyboardInterrupt:
@@ -165,7 +169,8 @@ def roll_the_dice(de_a_lancer,bonus,message,valeur_difficulte=0,statistique=""):
             else:
                 quote = random.choice(["Une progression n'est pas toujours linéaire...","Le pire reste de ne pas savoir que l'on ne sait pas.","L'inconnu, fantasme des savants, plaie des vivants !"])
                 state,anim = "INCONNU",""
-            return (f"{message.author.mention} > **{state}** {statistique}\n> {dice}/{de_a_lancer} (dé) + {bonus} (bonus) = {resultat}\n> *{quote}*",anim)
+            string = f"{message.author.mention} > **{state}** {statistique}\n> {dice}/{de_a_lancer} (dé) + {bonus} (bonus) = {resultat}\n> *{quote}*"
+
         case _:
             # valeur de difficulté existante
             if dice == 1:
@@ -182,7 +187,10 @@ def roll_the_dice(de_a_lancer,bonus,message,valeur_difficulte=0,statistique=""):
                 else:
                     quote = random.choice(["Qui n'avait point prévu ces remuantes choses dans l'ombre ?","La vérité n'éclot jamais du mensonge.","A espoirs illusoires, rêves déchus !"])
                     state,anim = "ECHEC","E_STD.avi"
-            return (f"{message.author.mention} > **{state}** {statistique}\n> {dice}/{de_a_lancer} (dé) + {bonus} (bonus) = {resultat} pour une difficulté de {valeur_difficulte}\n> *{quote}*",anim)
+            string = f"{message.author.mention} > **{state}** {statistique}\n> {dice}/{de_a_lancer} (dé) + {bonus} (bonus) = {resultat} pour une difficulté de {valeur_difficulte}\n> *{quote}*"
+    # outputs
+    output_msg(string)
+    return (string,anim)
 
 def bot(ld):
     client = discord.Client()
@@ -218,7 +226,7 @@ def bot(ld):
     @client.event
     async def on_ready():
         await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="les gens écrire !sup"))
-        print(f"[{str(datetime.datetime.now())}] PNJMaker est prêt !")
+        output_msg(f"PNJMaker est prêt !")
         
 
     @client.event
@@ -227,7 +235,7 @@ def bot(ld):
 
         # nettoyage
         if(contents in ["!disconnect","!support","!gennom","!genpnj","!meow","!linkjdr","!linkprojet","!ad"] or contents[:2] in ["!d","!s","!r"] or contents[:4] in dict_stats.keys()):
-            print(f"[{str(datetime.datetime.now())}] Réception d'une commande de {str(message.author)} > {contents}")
+            output_msg(f"Réception d'une commande de {str(message.author)} > {contents}")
             messages = await message.channel.history(limit=1).flatten()
             for each_message in messages:
                 await each_message.delete()
@@ -291,9 +299,13 @@ def bot(ld):
 
                 if(str(message.author.id) == str(admin)):
                     await message.channel.send("Déconnexion du serveur. A bientôt !")
+
                     client.close()
-                    print("PNJMaker est maintenant déconnecté !")
+
+                    output_msg("PNJMaker est maintenant déconnecté !")
+
                     exit()
+
                 else:
                     await message.channel.send("Vous n'avez pas les droits pour déconnecter le bot.")
 
@@ -307,9 +319,10 @@ def bot(ld):
 
                     output = roll_the_dice(int(de_a_lancer),int(bonus),message,int(valeur_difficulte),f"({dict_stats[contents[:4]]})")
 
-                    print(output[0])
-                    await message.channel.send(output[0])
-                    obs_invoke(toggle_anim,output[1])
+                    asyncio.gather(
+                        message.channel.send(output[0]),
+                        obs_invoke(toggle_anim,output[1])
+                    )
 
                 elif(contents[:2]=='!d'): # dé simple avec ou sans valeur de difficulté
 
@@ -321,12 +334,12 @@ def bot(ld):
 
                     output = roll_the_dice(int(de_a_lancer),int(bonus),message,int(diff))
 
-                    print(output[0])
-                    await message.channel.send(output[0])
-                    obs_invoke(toggle_anim,output[1])
+                    asyncio.gather(
+                        message.channel.send(output[0]),
+                        obs_invoke(toggle_anim,output[1])
+                    )
 
                 elif(contents[:2]=='!s'): # lancer de dé de stress
-                    print(contents[2:])
                     if (contents[2:]!=''):
                         val_stress:int = int(contents[2:])
                     else:
@@ -348,9 +361,13 @@ def bot(ld):
                         quote = random.choice(["Maladies de l'esprit sont peste pour la chair !","Pouce par pouce, une seule vérité s'impose à vous : celle du tombeau.","A quoi bon frapper un mal que l'on ne saurait voir ?"])
 
                     string = f"{message.author.mention} > **{state}**\n> {dice} (dé) : {effect}\n> *{quote}*"
-                    print(string)
-                    await message.channel.send(string)
-                    obs_invoke(toggle_anim,anim)
+
+                    output_msg(string)
+
+                    asyncio.gather(
+                        message.channel.send(string),
+                        obs_invoke(toggle_anim,anim)
+                    )
 
 
 
