@@ -16,9 +16,15 @@ import logging
 import asyncio
 import json
 
-# creditentials json
+##################### TOKENS DE CONNEXION ##########################
+
 gc = pygsheets.authorize(service_file='connectsheets-341012-fddaa9df86d9.json')
 
+with open("connectdiscord.json", "r") as read_file:
+    tokens_connexion = json.load(read_file)
+
+token:str = tokens_connexion['cle_de_connexion']
+admin:str = tokens_connexion['administrator']
 
 ##################### CUSTOM ERRORS & STACK ##########################
 
@@ -35,11 +41,7 @@ def output_msg(string:str) -> None:
 
 ##################### GSHEETS ##########################
 
-with open("connectdiscord.json", "r") as read_file:
-    tokens_connexion = json.load(read_file)
 
-token:str = tokens_connexion['cle_de_connexion']
-admin:str = tokens_connexion['administrator']
 
 dict_stats = {
                 '!par':'Parade',
