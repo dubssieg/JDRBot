@@ -1,4 +1,3 @@
-from ast import Str
 from asyncio.windows_events import NULL
 from multiprocessing.sharedctypes import Value
 from obswebsocket import obsws, requests
@@ -11,7 +10,6 @@ import random
 import csv
 import datetime
 import sys
-import time
 import logging
 import asyncio
 import json
@@ -371,9 +369,9 @@ def bot(ld):
                         obs_invoke(toggle_anim,anim)
                     )
 
-
-
     client.run(token)
+
+    
 
 def main():
     liste_dicos = dict()
