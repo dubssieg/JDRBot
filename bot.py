@@ -1,4 +1,4 @@
-from asyncio.windows_events import NULL
+# from asyncio.windows_events import NULL
 from multiprocessing.sharedctypes import Value
 from obswebsocket import obsws, requests
 import discord
@@ -41,7 +41,7 @@ def output_msg(string:str) -> None:
 
 
 
-dict_stats = {
+dict_stats:dict = {
                 '!par':'Parade',
                 '!res':'Résistance',
                 '!cou':'Course',
@@ -62,7 +62,7 @@ dict_stats = {
                 '!cha':'Charme et influence'
             }
 
-dict_pos = {
+dict_pos:dict = {
                 'Parade':'E12',
                 'Résistance':'E13',
                 'Course':'E14',
@@ -117,7 +117,8 @@ def get_stats(name):
 
 ####################################################################
 
-async def obs_invoke(f,*args):
+async def obs_invoke(f,*args) -> None:
+    "appel avec unpacking via l'étoile"
     logging.basicConfig(level=logging.INFO)
 
     sys.path.append('../')
@@ -134,7 +135,7 @@ async def obs_invoke(f,*args):
     except Exception:
         raise OBS_Shutdown("Impossible de se connecter à OBS Studio.")
 
-async def toggle_anim(ws,name):
+async def toggle_anim(ws,name) -> None:
     try:
         ws.call(requests.SetSceneItemProperties(scene_name = "Animations", item = name[0], visible = True))
         output_msg(f"L'animation {name} est lancée !")
@@ -207,7 +208,7 @@ def bot(ld):
 
     # mise en place de l'aide
 
-    helps = {
+    helps:dict = {
                     "!support":"pour obtenir de l'aide",
                     "!gennom":"pour générer un nom aléatoire",
                     "!genpnj":"pour générer un PnJ aléatoire",
@@ -226,12 +227,12 @@ def bot(ld):
     @client.event
     async def on_ready():
         await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="les gens écrire !sup"))
-        output_msg(f"PNJMaker est prêt !")
+        output_msg(f"JDRBot est prêt !")
         
 
     @client.event
     async def on_message(message):
-        contents = message.content
+        contents:str = message.content
 
         # nettoyage
         if(contents in ["!disconnect","!support","!gennom","!genpnj","!meow","!linkjdr","!linkprojet","!ad"] or contents[:2] in ["!d","!s","!r"] or contents[:4] in dict_stats.keys()):
@@ -364,10 +365,13 @@ def bot(ld):
 
                     output_msg(string)
 
-                    asyncio.gather(
-                        message.channel.send(string),
-                        obs_invoke(toggle_anim,anim)
-                    )
+                    # à tester
+                    
+                    #coroutine:None = asyncio.ensure_future(obs_invoke,[toggle_anim,anim]) # boucle infinie
+                    asyncio.to_thread(obs_invoke,[toggle_anim,anim])
+                    await message.channel.send(string)
+                    output_msg("Stack vide. Prêt !")
+
 
     client.run(token)
 
