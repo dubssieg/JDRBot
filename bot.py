@@ -178,7 +178,7 @@ def meow(message) -> dict:
     return {'info':'Meow','chaine':random.choice(list_meows)}
 
 @commande
-def disconnect(message) -> dict:
+def disconnect(message,client) -> dict:
     if(str(message.author.id) == str(admin)):
         client.close()
         return {'info':'Tentative de déconnexion...','chaine':"Déconnexion du serveur. A bientôt !"}
@@ -197,8 +197,7 @@ def weekpoll(message,client,nb_jours:int=9,incr:int=0) -> dict:
     """
     if nb_jours > 19: nb_jours = 19
     list_days:list = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"]
-    increment:int = incr # pour pouvoir générer un futur plus ou moins lointain, s'exprime en nombre de jours
-    today:int = datetime.datetime.today().weekday()
+    increment:int = incr if incr>0 else 0 # pour pouvoir générer un futur plus ou moins lointain, s'exprime en nombre de jours
     liste_lettres = list(string.ascii_uppercase)
     liste_jours:dict = dict()
     for day in range(1,nb_jours+1,1):
@@ -208,7 +207,7 @@ def weekpoll(message,client,nb_jours:int=9,incr:int=0) -> dict:
 
     embed=discord.Embed(title="Date pour la prochaine séance !", description="Votez pour les dates qui vous conviennent :)", color=0xF9BEE4)
     auteur:str = ((str(message.author)).split("#"))[0]
-    embed.set_author(name=f"{auteur}", url="https://twitter.com/Tharos_le_Vif", icon_url="https://media.discordapp.net/attachments/313977728242155520/874435067710177300/unknown.png")
+    embed.set_author(name=f"{auteur}", url="https://twitter.com/Tharos_le_Vif", icon_url="https://media.discordapp.net/attachments/555328372213809153/946500250422632479/logo_discord.png")
 
     for key,value in liste_jours.items():
         embed.add_field(name=f"{key}",value=f"{value}", inline=False)
@@ -217,6 +216,17 @@ def weekpoll(message,client,nb_jours:int=9,incr:int=0) -> dict:
     meow_emoji = client.get_emoji(906137086262923275)
 
     return {'info':f"Merci de répondre au plus vite {meow_emoji}",'chaine':embed}
+
+@commande
+def embedlink(message,dico:dict,descs:str):
+    embed=discord.Embed(title=descs[0], description=descs[1], color=0xF9BEE4)
+    embed.set_author(name="Tharos", url="https://twitter.com/Tharos_le_Vif", icon_url="https://media.discordapp.net/attachments/555328372213809153/946500250422632479/logo_discord.png")
+    for key,value in dico.items():
+        embed.add_field(name=key, value=f"[{value[0]}]({value[1]})", inline=False) 
+
+    embed.set_footer(text=descs[2])
+
+    return {'info':"Voici les liens demandés",'chaine':embed}
 
 ####################################################################
 
@@ -320,6 +330,7 @@ def bot(ld):
                     "!dX+Y/Z":"pour lancer un dé à X faces avec un bonus de Y sur une difficulté de Z",
                     "!dX+Y":"pour lancer un dé à X faces avec un bonus de Y sans valeur de difficulté",
                     "!sX":"pour lancer un dé de stress avec un stress de X",
+                    "!wpX+Y":"pour lancer un sondage sur X jours décalé de Y jours",
                     "!meow":"Parce qu'il faut forcément un chat !"
                 }
         
@@ -332,32 +343,24 @@ def bot(ld):
 
     @client.event
     async def on_ready():
-        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="les gens écrire !sup"))
-        output_msg(f"JDRBot est prêt !")
+        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="les gens écrire !support"))
+        output_msg(f"PATOUNES EST PRET !")
         
     @client.event
     async def on_message(message):
         contents:str = message.content
 
-       
-
-        ######################## END WRAP ########################""
-
         # nettoyage
-        if(contents in ["!disconnect","!support","!gennom","!genpnj","!meow","!linkjdr","!linkprojet","!ad"] or contents[:2] in ["!d","!s","!r"] or contents[:3] in ["!wp"] or contents[:4] in dict_stats.keys()):
+        if(contents in ["!disconnect","!support","!gennom","!genpnj","!meow","!linkjdr","!linkprojet"] or contents[:2] in ["!d","!s","!r"] or contents[:3] in ["!wp"] or contents[:4] in dict_stats.keys()):
             output_msg(f"Réception d'une commande de {str(message.author)} > {contents}")
             messages = await message.channel.history(limit=1).flatten()
             for each_message in messages:
                 await each_message.delete()
 
         match contents:
-            case "!ad":
-                await message.channel.send("Hey ! C'est partiiiii !")
-                e = discord.Embed(title="On est en live maintenant", url="https://www.twitch.tv/tharostv", description="Venez voir tout ce qu'on a pour vous !", color=0xF9BEE4)
-                # e.set_thumbnail(url="https://media.discordapp.net/attachments/909452391244525598/939881649066369085/New_Logo_Color4.png")
-                await message.channel.send(embed=e)
 
             case "!linkprojet":
+                "Donne les liens vers les différents projets sous forme d'un embed"
 
                 lembed:dict =   {
                                 
@@ -369,18 +372,30 @@ def bot(ld):
                                 
                                 }
 
-                embed=discord.Embed(title="Liens vers mes projets", description="Retrouvez tous les liens vers les projets ici ; tout n'est pas directement en lien avec le JdR mais parfois plus largement avec mes projets !", color=0xF9BEE4)
-                embed.set_author(name="Tharos", url="https://twitter.com/Tharos_le_Vif", icon_url="https://media.discordapp.net/attachments/313977728242155520/874435067710177300/unknown.png")
-                for key,value in lembed.items():
-                    embed.add_field(name=key, value=f"[{value[0]}]({value[1]})", inline=False) 
-                embed.set_footer(text="Merci pour tous vos partages et vos retours, c'est adorable !")
+                descs:list = ["Liens vers mes projets","Retrouvez tous les liens vers les projets ici ; tout n'est pas directement en lien avec le JdR mais parfois plus largement avec mes projets !","Merci pour tous vos partages et vos retours, c'est adorable !"]
 
-                await message.channel.send(embed=embed)
+                eb = embedlink(message,lembed,descs)
+                await message.channel.send(eb[1],embed=eb[0])
 
             case "!linkjdr":
-                print("tamer")
+                "Donne les liens vers les différents outils pour les JdR sous forme d'un embed"
 
-            case '!support': 
+                lembed:dict =   {
+                                
+                                "Watch2Gether":["Sert pour la musique pendant les séances","https://w2g.tv/rooms/i0bpwst6mzv3t9qh9c7?access_key=vivvyyity2uburxwxo4wjm"],
+                                "Manuel des règles":["Pour se mettre à jour sur le système","https://decorous-ptarmigan-9bf.notion.site/R-gles-JdR-ddd3ac0d4d0c4f98a9b2bcdd0d5cda79"],
+                                "GDoc du lore":["Pour se rafraîchir la mémoire sur le lore","https://docs.google.com/document/d/1Ytnvfar50VX2DmUkk1DoovrHz-nE_BAlFBGAkjkNX3Y/edit?usp=sharing"],
+                                "Retours de séances":["Faites vos retours ici après la fin d'une série de JdR !","https://forms.gle/9nSjZwnFQChf9j546"]
+                                
+                                }
+
+                descs:list = ["Liens utiles aux JdR","Retrouvez ici tous les liens pouvant vous servir durant les séances, n'oubliez pas non plus d'ouvrir votre petite fiche de personnage !","En espérant que cela vous ait été utile !"]
+
+                eb = embedlink(message,lembed,descs)
+                await message.channel.send(eb[1],embed=eb[0])
+
+            case '!support':
+                "Renvoie l'aide du bot"
                 await message.channel.send(help_string)
 
             case "!gennom":
@@ -456,11 +471,12 @@ def bot(ld):
                     string = f"{message.author.mention} > **{state}**\n> {dice} (dé) : {effect}\n> *{quote}*"
 
                     output_msg(string)
-
                     
-                    asyncio.to_thread(obs_invoke,[toggle_anim,anim])
-                    await message.channel.send(string)
-                    output_msg("Stack vide. Prêt !")
+                    asyncio.gather(
+                        message.channel.send(string),
+                        obs_invoke(toggle_anim,anim)
+                    )
+
                 
                 elif(contents[:3]=='!wp'):
                     "Renvoie un sondage paramétré"
@@ -471,12 +487,8 @@ def bot(ld):
                     sondage = weekpoll(message,client,nb_jours,decalage)
                     msg = await message.channel.send(sondage[1],embed=sondage[0])
 
-
-                    start_letter = int("0001F1E6",16)
-                    end_letter = int("0001F1FF",16)
+                    # affiche les réactions pour le sondage
                     list_letters = ["\U0001F1E6","\U0001F1E7","\U0001F1E8","\U0001F1E9","\U0001F1EA","\U0001F1EB","\U0001F1EC","\U0001F1ED","\U0001F1EE","\U0001F1EF","\U0001F1F0","\U0001F1F1","\U0001F1F2","\U0001F1F3","\U0001F1F4","\U0001F1F5","\U0001F1F6","\U0001F1F7"]
-
-                    #list_emoji = [rf"\U000{format(i, 'X')}" for i in range(start_letter,start_letter+nb_jours+1,1)] + ["\U00002705"]
 
                     list_emoji = [list_letters[i] for i in range(0,nb_jours,1)] + ["\U00002705"]
                     for emoji in list_emoji:
