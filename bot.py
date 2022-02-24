@@ -15,6 +15,7 @@ import asyncio
 import json
 import functools
 import datetime
+import string
 
 ##################### TOKENS DE CONNEXION ##########################
 
@@ -29,6 +30,18 @@ admin:str = tokens_connexion['administrator']
 ##################### CUSTOM ERRORS & STACK ##########################
 
 class OBS_Shutdown(Exception):
+    """Custom error for OBS not working"""
+    def __init__(self, msg:str) -> None:
+        self.__message = msg
+        super().__init__(self.__message)
+
+class Max_Poll_Size(Exception):
+    """Custom error for OBS not working"""
+    def __init__(self, msg:str) -> None:
+        self.__message = msg
+        super().__init__(self.__message)
+
+class Wrapped_Exception(Exception):
     """Custom error for OBS not working"""
     def __init__(self, msg:str) -> None:
         self.__message = msg
@@ -131,10 +144,12 @@ def commande(func):
         
         """
         dict_retour = func(*args,**kwargs)
+        if dict_retour == None:
+            raise Wrapped_Exception("Aucun retour par la fonction.")
         message = args[0]
 
         # préparation des retours
-        infos_retour = f"{message.author.mention} > {dict_retour['info']}\n" if 'info' in dict_retour else ""
+        infos_retour = f"Commande par {message.author.mention} > {dict_retour['info']}\n" if 'info' in dict_retour else ""
         chaine_retour = dict_retour['chaine']
 
         if(isinstance(dict_retour['chaine'],str)):
@@ -172,15 +187,24 @@ def disconnect(message) -> dict:
 
 @commande
 def weekpoll(message,client,nb_jours:int=9,incr:int=0) -> dict:
+    """
+    Renvoie un embed discord de sondage
+
+    message:discord.message = le message envoyé par l'utilisateur
+    client:discord.client = le client responsable de l'IO du bot
+    nb_jours:int (9) = le nombre de jours sur lequel le sondage s'exécute, max. 19
+    incr:int (0) = le nombre de jours dans lequel la première date du sondage est posée
+    """
+    if nb_jours > 19: nb_jours = 19
     list_days:list = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"]
     increment:int = incr # pour pouvoir générer un futur plus ou moins lointain, s'exprime en nombre de jours
     today:int = datetime.datetime.today().weekday()
-
+    liste_lettres = list(string.ascii_uppercase)
     liste_jours:dict = dict()
     for day in range(1,nb_jours+1,1):
         future = datetime.datetime.today() + datetime.timedelta(days=day+increment)
         horaire = f"21h, ou peut être placé en journée si préférable." if future.weekday() >= 5 else "21h tapantes, essayez d'être à l'heure !"
-        liste_jours[f"{day} - {list_days[future.weekday()]} {future.day}.{future.month}"] = horaire
+        liste_jours[f"{liste_lettres[day-1]} - {list_days[future.weekday()]} {future.day}.{future.month}"] = horaire
 
     embed=discord.Embed(title="Date pour la prochaine séance !", description="Votez pour les dates qui vous conviennent :)", color=0xF9BEE4)
     auteur:str = ((str(message.author)).split("#"))[0]
@@ -450,9 +474,11 @@ def bot(ld):
 
                     start_letter = int("0001F1E6",16)
                     end_letter = int("0001F1FF",16)
-                    list_emoji = [f"\U{format(i, 'X')}" for i in range(start_letter,start_letter+nb_jours+1,1)] + ["\U00002705"]
+                    list_letters = ["\U0001F1E6","\U0001F1E7","\U0001F1E8","\U0001F1E9","\U0001F1EA","\U0001F1EB","\U0001F1EC","\U0001F1ED","\U0001F1EE","\U0001F1EF","\U0001F1F0","\U0001F1F1","\U0001F1F2","\U0001F1F3","\U0001F1F4","\U0001F1F5","\U0001F1F6","\U0001F1F7"]
 
-                    #list_emoji = [f"{i}\u20e3" for i in range(1,nb_jours+1,1)] + ["\U00002705"]
+                    #list_emoji = [rf"\U000{format(i, 'X')}" for i in range(start_letter,start_letter+nb_jours+1,1)] + ["\U00002705"]
+
+                    list_emoji = [list_letters[i] for i in range(0,nb_jours,1)] + ["\U00002705"]
                     for emoji in list_emoji:
                         await msg.add_reaction(emoji)
 
