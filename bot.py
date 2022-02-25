@@ -1,6 +1,7 @@
 # from asyncio.windows_events import NULL
 from multiprocessing.sharedctypes import Value
 from obswebsocket import obsws, requests
+from enum import Enum,auto
 import discord
 import pygsheets
 import resx.pnj as p
@@ -29,32 +30,35 @@ admin:str = tokens_connexion['administrator']
 
 ##################### CUSTOM ERRORS & STACK ##########################
 
-class OBS_Shutdown(Exception):
-    """Custom error for OBS not working"""
-    def __init__(self, msg:str) -> None:
-        self.__message = msg
-        super().__init__(self.__message)
-
-class Max_Poll_Size(Exception):
-    """Custom error for OBS not working"""
-    def __init__(self, msg:str) -> None:
-        self.__message = msg
-        super().__init__(self.__message)
-
-class Wrapped_Exception(Exception):
-    """Custom error for OBS not working"""
-    def __init__(self, msg:str) -> None:
-        self.__message = msg
-        super().__init__(self.__message)
-
 def output_msg(string:str) -> None:
     """Prints the date and time of action + info specified in str"""
     print(f"[{str(datetime.datetime.now())}] {string}")
 
+class OBS_Shutdown(BaseException):
+    """Custom error for OBS not working"""
+    def __init__(self, msg:str) -> None:
+        self.__message = msg
+        super().__init__(self.__message)
+
+class Max_Poll_Size(BaseException):
+    """Custom error for OBS not working"""
+    def __init__(self, msg:str) -> None:
+        self.__message = msg
+        super().__init__(self.__message)
+
+class Wrapped_Exception(BaseException):
+    """Custom error for OBS not working"""
+    def __init__(self, msg:str) -> None:
+        self.__message = msg
+        super().__init__(self.__message)
+
+class Sheets_Exception(BaseException):
+    """Custom error for OBS not working"""
+    def __init__(self, msg:str, context) -> None:
+        self.__message = msg
+        super().__init__(self.__message)
 
 ##################### GSHEETS ##########################
-
-
 
 dict_stats:dict = {
                 '!par':'Parade',
@@ -99,9 +103,27 @@ dict_pos:dict = {
                 'Stress':'G31'
             }
 
-def stat_from_player(stat,joueur):
-    return get_stats(joueur)[stat]
 
+def stat_from_player(stat,joueur):
+    stats = get_stats(joueur)
+    if stats != None:
+        return get_stats(joueur)[stat]
+    return None
+
+
+def googleask(func):
+    def wrapper(*args,**kwargs):
+        "Gère si l'utilisateur a bien une fiche à son nom"
+        try:
+            retour = func(*args,**kwargs)
+        except:
+            return None
+        return retour
+    return wrapper
+
+
+
+@googleask
 def increase_on_crit(stat,name,valeur=1):
     # connexion
     cellule = dict_pos[stat]
@@ -110,12 +132,14 @@ def increase_on_crit(stat,name,valeur=1):
     value = int(wks.cell(cellule).value)
     wks.update_value(cellule, value+valeur)
 
-def get_stress(name):
+@googleask
+def get_stress(name:str):
     """Renvoie la valeur de stress pour le jet de dés
     *name* <str> : nom du joueur
     """
     return gc.open(f"OmbreMeteore_{name}")[0].cell('G31').value
 
+@googleask
 def get_stats(name:str) -> dict:
     """Renvoie un dictionnaire de stats
     *name* <str> : nom du joueur
@@ -169,6 +193,11 @@ def genpnj(message,ld) -> dict:
     for key in monPnj.carac:
         string = string + f"**{key.replace('_',' ')}** = {monPnj.carac[key]}\n"
     return {'info':'Voici le PnJ demandé !','chaine':string}
+
+@commande
+def toss(message) -> dict:
+    string = "**PILE**" if(random.random() > 0.5) else "**FACE**"
+    return {'info':string,'chaine':'> *Un lancer de pièce, pour remettre son sort au destin...*'}
 
 @commande
 def meow(message) -> dict:
@@ -258,7 +287,7 @@ async def toggle_anim(ws,name) -> None:
     except KeyboardInterrupt:
         pass
 
-def roll_the_dice(de_a_lancer,bonus,message,valeur_difficulte=0,statistique=""):
+def roll_the_dice(de_a_lancer:int,bonus:int,message,valeur_difficulte:int=0,statistique:str=""):
     """Permet de lancer un dé, et retourne une chaine formatée indiquant le résultat du jet.
     Effet de bord : envoie une animation sur OBS Studio
 
@@ -268,8 +297,8 @@ def roll_the_dice(de_a_lancer,bonus,message,valeur_difficulte=0,statistique=""):
     *valeur_difficulte* (int) > valeur à laquelle comparer, si elle existe (par def : 0)
     *message* (discord.message) > objet message discord
     """
-    dice = random.randrange(1,(de_a_lancer+1))
-    resultat = dice + bonus
+    dice:int = random.randrange(0,(de_a_lancer))+1
+    resultat:int = dice + bonus
     match valeur_difficulte:
         case 0:
             # pas de valeur de difficulté, jet dont on ne connait pas les possibilités de victoire
@@ -281,7 +310,11 @@ def roll_the_dice(de_a_lancer,bonus,message,valeur_difficulte=0,statistique=""):
                 state,anim = "REUSSITE CRITIQUE","R_CRIT.avi"
                 if(statistique != ""): increase_on_crit(statistique[1:-1],(str(message.author)).split("#")[0])
             else:
-                quote = random.choice(["Une progression n'est pas toujours linéaire...","Le pire reste de ne pas savoir que l'on ne sait pas.","L'inconnu, fantasme des savants, plaie des vivants !"])
+                quote = random.choice(
+                    ["Une progression n'est pas toujours linéaire...",
+                    "Le pire reste de ne pas savoir que l'on ne sait pas.",
+                    "L'inconnu, fantasme des savants, plaie des vivants !"]
+                    )
                 state,anim = "INCONNU",""
             string = f"{message.author.mention} > **{state}** {statistique}\n> {dice}/{de_a_lancer} (dé) + {bonus} (bonus) = {resultat}\n> *{quote}*"
 
@@ -305,6 +338,11 @@ def roll_the_dice(de_a_lancer,bonus,message,valeur_difficulte=0,statistique=""):
     # outputs
     output_msg(string)
     return (string,anim)
+
+async def error_nofile(client,message) -> None:
+    meow_emoji = client.get_emoji(906136078472331284)
+    await message.channel.send(f"Désolé {message.author.mention} > tu n'as pas de fiche nommée sur GoogleSheets {meow_emoji}")
+    raise Sheets_Exception("Pas de feuille valide")
 
 def bot(ld):
     client = discord.Client()
@@ -331,6 +369,7 @@ def bot(ld):
                     "!dX+Y":"pour lancer un dé à X faces avec un bonus de Y sans valeur de difficulté",
                     "!sX":"pour lancer un dé de stress avec un stress de X",
                     "!wpX+Y":"pour lancer un sondage sur X jours décalé de Y jours",
+                    "!toss":"pour lancer une pièce et obtenir pile ou face",
                     "!meow":"Parce qu'il faut forcément un chat !"
                 }
         
@@ -351,7 +390,7 @@ def bot(ld):
         contents:str = message.content
 
         # nettoyage
-        if(contents in ["!disconnect","!support","!gennom","!genpnj","!meow","!linkjdr","!linkprojet"] or contents[:2] in ["!d","!s","!r"] or contents[:3] in ["!wp"] or contents[:4] in dict_stats.keys()):
+        if(contents in ["!toss","!disconnect","!support","!gennom","!genpnj","!meow","!linkjdr","!linkprojet"] or contents[:2] in ["!d","!s","!r"] or contents[:3] in ["!wp"] or contents[:4] in dict_stats.keys()):
             output_msg(f"Réception d'une commande de {str(message.author)} > {contents}")
             messages = await message.channel.history(limit=1).flatten()
             for each_message in messages:
@@ -417,20 +456,29 @@ def bot(ld):
                 "Tentative de déconnexion, utilisable seulement par un admin"
                 await message.channel.send(disconnect(message))
 
+            case "!toss":
+                "Lance une pièce et donne un résultat pile/face"
+                tmp = toss(message)
+                await message.channel.send(f"{tmp[1]}{tmp[0]}")
+
+
             case _:
 
                 if(contents[:4] in dict_stats.keys()): # dé fonctionnant avec le nom du joueur
 
                     stat = stat_from_player(dict_stats[contents[:4]],(str(message.author)).split("#")[0])[2:]
-                    valeur_difficulte = contents.split("/")[1] if "/" in contents else 0
-                    de_a_lancer,bonus = stat.split("+")[0],stat.split("+")[1]
+                    if stat != None:
+                        valeur_difficulte = contents.split("/")[1] if "/" in contents else 0
+                        de_a_lancer,bonus = stat.split("+")[0],stat.split("+")[1]
 
-                    output = roll_the_dice(int(de_a_lancer),int(bonus),message,int(valeur_difficulte),f"({dict_stats[contents[:4]]})")
+                        output = roll_the_dice(int(de_a_lancer),int(bonus),message,int(valeur_difficulte),f"({dict_stats[contents[:4]]})")
 
-                    asyncio.gather(
-                        message.channel.send(output[0]),
-                        obs_invoke(toggle_anim,output[1])
-                    )
+                        asyncio.gather(
+                            message.channel.send(output[0]),
+                            obs_invoke(toggle_anim,output[1])
+                        )
+                    else:
+                        await error_nofile(client,message)
 
                 elif(contents[:2]=='!d'): # dé simple avec ou sans valeur de difficulté
 
@@ -452,30 +500,40 @@ def bot(ld):
                         val_stress:int = int(contents[2:])
                     else:
                         val_stress:int = get_stress((str(message.author)).split("#")[0])
+                        if(val_stress != None):
 
-                    dice:int = random.randrange(1,11)
-                    index:int = dice + int(val_stress)
+                            dice:int = random.randrange(0,10) + 1
+                            index:int = dice + int(val_stress)
 
-                    state,anim = listStates[index],str(listStates[index])[:-2]+".avi"
-                    effect = listEffects[index]
+                            state,anim = listStates[index],str(listStates[index])[:-2]+".avi"
+                            effect = listEffects[index]
 
-                    if(dice >= 8):
-                        quote = "La vie n'est que coups au coeur et à l'esprit."
-                        increase_on_crit('Stress',(str(message.author)).split("#")[0],1)
-                    elif(dice <= 2):
-                        quote = "De l'espoir, là même où les plus fous n'auraient su en trouver."
-                        increase_on_crit('Stress',(str(message.author)).split("#")[0],-1)
-                    else:
-                        quote = random.choice(["Maladies de l'esprit sont peste pour la chair !","Pouce par pouce, une seule vérité s'impose à vous : celle du tombeau.","A quoi bon frapper un mal que l'on ne saurait voir ?"])
+                            if(dice >= 8):
+                                quote = "La vie n'est que coups au coeur et à l'esprit."
+                                increase_on_crit('Stress',(str(message.author)).split("#")[0],1)
+                            elif(dice <= 2):
+                                quote = "De l'espoir, là même où les plus fous n'auraient su en trouver."
+                                increase_on_crit('Stress',(str(message.author)).split("#")[0],-1)
+                            else:
+                                quote = random.choice(
+                                    ["Maladies de l'esprit sont peste pour la chair !",
+                                    "Pouce par pouce, une seule vérité s'impose à vous : celle du tombeau.",
+                                    "A quoi bon frapper un mal que l'on ne saurait voir ?"]
+                                    )
 
-                    string = f"{message.author.mention} > **{state}**\n> {dice} (dé) : {effect}\n> *{quote}*"
+                            # idée : le faire dans des embeds avec des petites miniatures
 
-                    output_msg(string)
-                    
-                    asyncio.gather(
-                        message.channel.send(string),
-                        obs_invoke(toggle_anim,anim)
-                    )
+                            string = f"{message.author.mention} > **{state}**\n> {dice+1} (dé) : {effect}\n> *{quote}*"
+
+                            output_msg(string)
+                            
+                            asyncio.gather(
+                                message.channel.send(string),
+                                obs_invoke(toggle_anim,anim)
+                            )
+
+                        else:
+                            await error_nofile(client,message)
 
                 
                 elif(contents[:3]=='!wp'):
