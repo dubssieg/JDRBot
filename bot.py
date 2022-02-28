@@ -527,10 +527,14 @@ def bot(ld):
 
                             output_msg(string)
                             
+                            
+
+                            
                             asyncio.gather(
                                 message.channel.send(string),
                                 obs_invoke(toggle_anim,anim)
                             )
+                            
 
                         else:
                             await error_nofile(client,message)
