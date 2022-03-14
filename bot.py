@@ -1,4 +1,5 @@
-# from asyncio.windows_events import NULL
+from my_checker import my_types_checker
+from asyncio.windows_events import NULL
 from multiprocessing.sharedctypes import Value
 from obswebsocket import obsws, requests
 from enum import Enum,auto
@@ -30,6 +31,7 @@ admin:str = tokens_connexion['administrator']
 
 ##################### CUSTOM ERRORS & STACK ##########################
 
+@my_types_checker
 def output_msg(string:str) -> None:
     """Prints the date and time of action + info specified in str"""
     print(f"[{str(datetime.datetime.now())}] {string}")
@@ -382,7 +384,7 @@ def bot(ld):
 
     @client.event
     async def on_ready():
-        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="les gens écrire !support"))
+        await client.change_presence(activity=discord.Streaming(name="!support", url="https://www.twitch.tv/TharosTV"))
         output_msg(f"PATOUNES EST PRET !")
         
     @client.event
