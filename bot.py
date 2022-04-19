@@ -13,7 +13,7 @@ import logging
 import asyncio
 import datetime
 from string import ascii_uppercase
-from json_methods import load_json
+from json_methods import load_json, save_json
 
 ##################### TOKENS DE CONNEXION ##########################
 
@@ -29,6 +29,7 @@ admin: str = tokens_connexion['administrator']
 dict_stats: dict = load_json("stats")
 dict_pos: dict = load_json("pos")
 dict_links: dict = load_json("links")
+dict_stress: dict = load_json("stress")
 
 ##################### CUSTOM ERRORS & STACK ##########################
 
@@ -100,7 +101,7 @@ def increase_on_crit(stat: str, name: str, valeur=1):
     * valeur (int - def. 1) : l'incrément à apposer à la stat
     """
     cellule = dict_pos[stat]
-    sh = gc.open(f"OmbreMeteore_{name}")
+    sh = gc.open(dict_links[f"{name}"])
     wks = sh[0]
     value = int(wks.cell(cellule).value)
     wks.update_value(cellule, value+valeur)
@@ -112,7 +113,7 @@ def get_stress(name: str):
     Renvoie la valeur de stress pour le jet de dés
     * name (str) : nom du joueur
     """
-    return gc.open(f"OmbreMeteore_{name}")[0].cell('G31').value
+    return gc.open(dict_links[f"{name}"])[0].cell('G31').value
 
 
 @googleask
@@ -167,6 +168,7 @@ def savefile(message) -> dict:
     "Associe une fiche de stats à un ID discord"
     file_name = (message.content).split(' ')[1]
     dict_links[f"{message.author.mention}"] = f"{file_name}"
+    save_json("links", dict_links)
     return {'info': 'La fiche a bien été associée !', 'chaine': f"Le nom de la fiche est {file_name}"}
 
 
@@ -316,7 +318,7 @@ def roll_the_dice(de_a_lancer: int, bonus: int, message, valeur_difficulte: int 
                 state, anim = "REUSSITE CRITIQUE", "R_CRIT.avi"
                 if(statistique != ""):
                     increase_on_crit(
-                        statistique[1:-1], (str(message.author)).split("#")[0])
+                        statistique[1:-1], str(message.author.mention))
             else:
                 quote = random.choice(
                     ["Une progression n'est pas toujours linéaire...",
@@ -335,7 +337,7 @@ def roll_the_dice(de_a_lancer: int, bonus: int, message, valeur_difficulte: int 
                 quote = "Brillant ! Que brûle la flamme, brasier de peur en vos ennemis !"
                 if(statistique != ""):
                     increase_on_crit(
-                        statistique, (str(message.author)).split("#")[0])
+                        statistique, str(message.author))
                 state, anim = "REUSSITE CRITIQUE", "R_CRIT.avi"
             else:
                 if resultat >= valeur_difficulte:
@@ -479,6 +481,11 @@ def bot(ld):
                 tmp = toss(message)
                 await message.channel.send(f"{tmp[1]}{tmp[0]}")
 
+            case "!savefile":
+                "Crée un lien symbolique entre un ID discord et une fiche"
+                tmp = savefile(message)
+                await message.channel.send(f"{tmp[1]}{tmp[0]}")
+
             case _:
 
                 # dé fonctionnant avec le nom du joueur
@@ -525,7 +532,7 @@ def bot(ld):
                         val_stress: int = int(contents[2:])
                     else:
                         val_stress: int = get_stress(
-                            (str(message.author)).split("#")[0])
+                            str(message.author.mention))
                         if(val_stress != None):
 
                             dice: int = random.randrange(0, 10) + 1
@@ -538,11 +545,11 @@ def bot(ld):
                             if(dice >= 8):
                                 quote = "La vie n'est que coups au coeur et à l'esprit."
                                 increase_on_crit(
-                                    'Stress', (str(message.author)).split("#")[0], 1)
+                                    'Stress', str(message.author.mention), 1)
                             elif(dice <= 2):
                                 quote = "De l'espoir, là même où les plus fous n'auraient su en trouver."
                                 increase_on_crit(
-                                    'Stress', (str(message.author)).split("#")[0], -1)
+                                    'Stress', str(message.author.mention), -1)
                             else:
                                 quote = random.choice(
                                     ["Maladies de l'esprit sont peste pour la chair !",
