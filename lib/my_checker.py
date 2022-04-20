@@ -1,12 +1,15 @@
 import inspect
 
+
 class TCError(BaseException):
     """
     Erreur custom permettant d'afficher un message d'erreur.
     """
-    def __init__(self, msg:str) -> None:
+
+    def __init__(self, msg: str) -> None:
         self.__message = msg
         super().__init__(self.__message)
+
 
 def my_types_checker(func):
     """
@@ -18,7 +21,7 @@ def my_types_checker(func):
     Fonctionne à la fois avec les args et les kwargs.
     Permet également de vérifier le type de retour, ignoré également si il n'est pas indiqué.
     """
-    def wrapper(*args,**kwargs):
+    def wrapper(*args, **kwargs):
         """
         Corps de test
         """
@@ -28,20 +31,23 @@ def my_types_checker(func):
         args_types = [type(arg) for arg in arguments]
         signature_func = inspect.signature(func).parameters
         ret_annotation = inspect.signature(func).return_annotation
-        annotations = [signature_func[elt].annotation for elt in signature_func]
+        annotations = [
+            signature_func[elt].annotation for elt in signature_func]
 
         # comparaison des annotations de signature et des types des arguments
         comp = zip(args_types, annotations)
         for input_type, annotation in comp:
             if annotation is not inspect._empty and input_type != annotation:
-                raise TCError(f"Erreur de la fonction {func.__name__} : le type entré {input_type} ne correspond pas au type attendu {annotation}")
+                raise TCError(
+                    f"Erreur de la fonction {func.__name__} : le type entré {input_type} ne correspond pas au type attendu {annotation}")
 
         # execution de la fonction décorée
-        retour = func(*args,**kwargs)
+        retour = func(*args, **kwargs)
 
         # comparaison du type de retour
         if ret_annotation is not inspect._empty and ret_annotation != None and type(retour) != ret_annotation:
-            raise TCError(f"Erreur de la fonction {func.__name__} : le type de retour {type(retour)} ne correspond pas au type attendu {ret_annotation}")
+            raise TCError(
+                f"Erreur de la fonction {func.__name__} : le type de retour {type(retour)} ne correspond pas au type attendu {ret_annotation}")
 
         return retour
     return wrapper
@@ -57,11 +63,3 @@ def my_class_checker(cls):
         if callable(getattr(cls, attr)):
             setattr(cls, attr, my_types_checker(getattr(cls, attr)))
     return cls
-
-def my_ignore_check(func):
-    """
-    Tentative de bypass de décorateur
-    """
-    def wrapper(*args,**kwargs):
-        return func(*args,**kwargs)
-    return wrapper

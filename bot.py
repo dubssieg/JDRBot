@@ -1,4 +1,4 @@
-from my_checker import my_types_checker
+
 from obswebsocket import obsws, requests
 import discord
 import pygsheets
@@ -12,8 +12,10 @@ import sys
 import logging
 import asyncio
 import datetime
+
+###
 from string import ascii_uppercase
-from json_methods import load_json, save_json
+from lib import output_msg, load_json, save_json, OBS_Shutdown, Max_Poll_Size, Wrapped_Exception, Sheets_Exception
 
 ##################### TOKENS DE CONNEXION ##########################
 
@@ -25,51 +27,35 @@ tokens_connexion: dict = load_json("connect_discord")
 token: str = tokens_connexion['cle_de_connexion']
 admin: str = tokens_connexion['administrator']
 
-# Data GSheets
+# datas d'environnement
 dict_stats: dict = load_json("stats")
 dict_pos: dict = load_json("pos")
 dict_links: dict = load_json("links")
 dict_stress: dict = load_json("stress")
 
-##################### CUSTOM ERRORS & STACK ##########################
+embed_projets: dict = load_json("embed_projets")
+embed_jdr: dict = load_json("embed_jdr")
+quotes: dict = load_json("quotes")
 
+# préparation du dico de stress
 
-@my_types_checker
-def output_msg(string: str) -> None:
-    """Prints the date and time of action + info specified in str"""
-    print(f"[{str(datetime.datetime.now())}] {string}")
+listStates = [key for key in dict_stress.keys()],
+listEffects = [value for value in dict_stress.values()]
 
+# listes utiles à déclarer en amont
+list_letters: list = ["\U0001F1E6", "\U0001F1E7", "\U0001F1E8", "\U0001F1E9", "\U0001F1EA", "\U0001F1EB", "\U0001F1EC", "\U0001F1ED",
+                      "\U0001F1EE", "\U0001F1EF", "\U0001F1F0", "\U0001F1F1", "\U0001F1F2", "\U0001F1F3", "\U0001F1F4", "\U0001F1F5", "\U0001F1F6", "\U0001F1F7"]
+descs_jdr: list = ["Liens utiles aux JdR", "Retrouvez ici tous les liens pouvant vous servir durant les séances, n'oubliez pas non plus d'ouvrir votre petite fiche de personnage !",
+                   "En espérant que cela vous ait été utile !"]
+descs_projets: list = ["Liens vers mes projets", "Retrouvez tous les liens vers les projets ici ; tout n'est pas directement en lien avec le JdR mais parfois plus largement avec mes projets !",
+                       "Merci pour tous vos partages et vos retours, c'est adorable !"]
+list_days: list = ["Lundi", "Mardi", "Mercredi",
+                   "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 
-class OBS_Shutdown(BaseException):
-    """Custom error for OBS not working"""
-
-    def __init__(self, msg: str) -> None:
-        self.__message = msg
-        super().__init__(self.__message)
-
-
-class Max_Poll_Size(BaseException):
-    """Custom error for OBS not working"""
-
-    def __init__(self, msg: str) -> None:
-        self.__message = msg
-        super().__init__(self.__message)
-
-
-class Wrapped_Exception(BaseException):
-    """Custom error for OBS not working"""
-
-    def __init__(self, msg: str) -> None:
-        self.__message = msg
-        super().__init__(self.__message)
-
-
-class Sheets_Exception(BaseException):
-    """Custom error for OBS not working"""
-
-    def __init__(self, msg: str, context) -> None:
-        self.__message = msg
-        super().__init__(self.__message)
+# chaines utiles
+help_string: str = "Vous pouvez utiliser les commandes :\n" + \
+    "\n".join([f"**{key}** - *{val}*" for key,
+              val in load_json("helps").items()])
 
 ##################### GSHEETS ##########################
 
@@ -219,8 +205,6 @@ def weekpoll(message, client, nb_jours: int = 9, incr: int = 0) -> dict:
     """
     if nb_jours > 19:
         nb_jours = 19
-    list_days: list = ["Lundi", "Mardi", "Mercredi",
-                       "Jeudi", "Vendredi", "Samedi", "Dimanche"]
     # pour pouvoir générer un futur plus ou moins lointain, s'exprime en nombre de jours
     increment: int = incr if incr > 0 else 0
     liste_lettres = list(ascii_uppercase)
@@ -307,49 +291,22 @@ def roll_the_dice(de_a_lancer: int, bonus: int, message, valeur_difficulte: int 
     """
     dice: int = random.randrange(0, (de_a_lancer))+1
     resultat: int = dice + bonus
-    match valeur_difficulte:
-        case 0:
-            # pas de valeur de difficulté, jet dont on ne connait pas les possibilités de victoire
-            if dice == 1:
-                quote = "La chance ne vous sourit pas toujours... et ce revers de fortune est cruel !"
-                state, anim = "ECHEC CRITIQUE", "E_CRIT.avi"
-            elif dice == de_a_lancer:
-                quote = "Brillant ! Que brûle la flamme, brasier de peur en vos ennemis !"
-                state, anim = "REUSSITE CRITIQUE", "R_CRIT.avi"
-                if(statistique != ""):
-                    increase_on_crit(
-                        statistique[1:-1], str(message.author.mention))
+    if dice == 1:
+        state, anim = "ECHEC CRITIQUE", "E_CRIT.avi"
+    elif dice == de_a_lancer:
+        state, anim = "REUSSITE CRITIQUE", "R_CRIT.avi"
+        if(statistique != ""):
+            increase_on_crit(statistique[1:-1], str(message.author.mention))
+            # increase_on_crit(statistique, str(message.author)) <--- ????
+    else:
+        if valeur_difficulte == 0:
+            state, anim = "INCONNU", ""
+        else:
+            if resultat >= valeur_difficulte:
+                state, anim = "REUSSITE", "R_STD.avi"
             else:
-                quote = random.choice(
-                    ["Une progression n'est pas toujours linéaire...",
-                     "Le pire reste de ne pas savoir que l'on ne sait pas.",
-                     "L'inconnu, fantasme des savants, plaie des vivants !"]
-                )
-                state, anim = "INCONNU", ""
-            string = f"{message.author.mention} > **{state}** {statistique}\n> {dice}/{de_a_lancer} (dé) + {bonus} (bonus) = {resultat}\n> *{quote}*"
-
-        case _:
-            # valeur de difficulté existante
-            if dice == 1:
-                quote = "La chance ne vous sourit pas toujours... et ce revers de fortune est cruel !"
-                state, anim = "ECHEC CRITIQUE", "E_CRIT.avi"
-            elif dice == de_a_lancer:
-                quote = "Brillant ! Que brûle la flamme, brasier de peur en vos ennemis !"
-                if(statistique != ""):
-                    increase_on_crit(
-                        statistique, str(message.author))
-                state, anim = "REUSSITE CRITIQUE", "R_CRIT.avi"
-            else:
-                if resultat >= valeur_difficulte:
-                    quote = random.choice(["Un coup décisif pour la chair comme pour l'esprit !",
-                                          "La voie est claire, le chemin dégagé : ne nous manque plus que la force pour l'emprunter."])
-                    state, anim = "REUSSITE", "R_STD.avi"
-                else:
-                    quote = random.choice(["Qui n'avait point prévu ces remuantes choses dans l'ombre ?",
-                                          "La vérité n'éclot jamais du mensonge.", "A espoirs illusoires, rêves déchus !"])
-                    state, anim = "ECHEC", "E_STD.avi"
-            string = f"{message.author.mention} > **{state}** {statistique}\n> {dice}/{de_a_lancer} (dé) + {bonus} (bonus) = {resultat} pour une difficulté de {valeur_difficulte}\n> *{quote}*"
-    # outputs
+                state, anim = "ECHEC", "E_STD.avi"
+    string = f"{message.author.mention} > **{state}** {statistique}\n> {dice}/{de_a_lancer} (dé) + {bonus} (bonus) = {resultat} pour une difficulté de {valeur_difficulte}\n> *{quote_selection(state)}*" if valeur_difficulte != 0 else f"{message.author.mention} > **{state}** {statistique}\n> {dice}/{de_a_lancer} (dé) + {bonus} (bonus) = {resultat}\n> *{quote_selection(state)}*"
     output_msg(string)
     return (string, anim)
 
@@ -360,42 +317,40 @@ async def error_nofile(client, message) -> None:
     raise Sheets_Exception("Pas de feuille valide")
 
 
+async def delete_command(message) -> None:
+    "Supprime le message à l'origine de la commande"
+    messages = await message.channel.history(limit=1).flatten()
+    for each_message in messages:
+        await each_message.delete()
+
+
+def quote_selection(categorie: str) -> str:
+    "Renvoie une quote issue du dico de quotes qui match la catégorie"
+    return random.choice(quotes[categorie])
+
+
+def sender(chaine, message):
+    "Envoie le message {chaine} dans le chan de la commande"
+    message.channel.send(chaine)
+
+
+async def send_texte(chaine, message):
+    "Envoie le message {chaine} dans le chan de la commande"
+    await message.channel.send(chaine)
+
+
+async def send_embed(txt, emb, message):
+    "Envoie le message d'embed"
+    await message.channel.send(txt, embed=emb)
+
+
+async def send_image(txt, img, message):
+    "Envoie une potite image"
+    await message.channel.send(txt, file=discord.File(img))
+
+
 def bot(ld):
     client = discord.Client()
-
-    # préparation du dico de stress
-
-    listStates, listEffects = [], []
-    with open("resx/stress.csv", newline='') as reader:
-        spamreader = csv.reader(reader, delimiter=',', quotechar='"')
-        for l in spamreader:
-            listStates.append(l[0])
-            temp = l[1]
-            listEffects.append(temp.replace('"', ''))
-
-    # mise en place de l'aide
-
-    helps: dict = {
-        "!support": "pour obtenir de l'aide",
-                    "!gennom": "pour générer un nom aléatoire",
-                    "!genpnj": "pour générer un PnJ aléatoire",
-                    "!linkjdr": "pour récupérer les liens utiles pour les séances",
-                    "!linkprojet": "pour obtenir les liens vers les projets",
-                    "!dX+Y/Z": "pour lancer un dé à X faces avec un bonus de Y sur une difficulté de Z",
-                    "!dX+Y": "pour lancer un dé à X faces avec un bonus de Y sans valeur de difficulté",
-                    "!sX": "pour lancer un dé de stress avec un stress de X",
-                    "!wpX+Y": "pour lancer un sondage sur X jours décalé de Y jours",
-                    "!toss": "pour lancer une pièce et obtenir pile ou face",
-                    "!meow": "Parce qu'il faut forcément un chat !"
-    }
-
-    help_string = "Vous pouvez utiliser les commandes :\n"
-    for key, val in helps.items():
-        help_string = help_string + f"\n**{key}** - *{val}*"
-
-
-##################################################################
-
 
     @client.event
     async def on_ready():
@@ -410,186 +365,151 @@ def bot(ld):
         if(contents in ["!toss", "!disconnect", "!support", "!gennom", "!genpnj", "!meow", "!linkjdr", "!linkprojet"] or contents[:2] in ["!d", "!s", "!r"] or contents[:3] in ["!wp"] or contents[:4] in dict_stats.keys()):
             output_msg(
                 f"Réception d'une commande de {str(message.author)} > {contents}")
-            messages = await message.channel.history(limit=1).flatten()
-            for each_message in messages:
-                await each_message.delete()
+            delete_command(message)
 
-        match contents:
+            match contents:
 
-            case "!linkprojet":
-                "Donne les liens vers les différents projets sous forme d'un embed"
+                case "!linkprojet":
+                    "Donne les liens vers les différents projets sous forme d'un embed"
+                    eb = embedlink(message, embed_projets, descs_projets)
+                    await send_embed(eb[1], eb[0], message)
 
-                lembed: dict = {
+                case "!linkjdr":
+                    "Donne les liens vers les différents outils pour les JdR sous forme d'un embed"
+                    eb = embedlink(message, embed_jdr, descs_jdr)
+                    await send_embed(eb[1], eb[0], message)
 
-                    "Youtube principal": ["Replays de JdR et chroniques rôlistes", "https://www.youtube.com/channel/UCCn873wDjYSl_YZpNNTbViA"],
-                    "Chaine de replays": ["Ce que vous n'avez pas vu en live", "https://www.youtube.com/channel/UCmmNBnYQmZlv6tPz6MO2TNA"],
-                    "Streams twitch": ["Où on a des concepts variés", "https://www.twitch.tv/tharostv"],
-                    "Github des projets": ["Nourri aux bons utilitaires pour du JdR", "https://github.com/Tharos-ux"],
-                    "Cycle de Niathshrubb": ["Pour découvrir ce que j'écris", "https://docs.google.com/document/d/1BC4PwwgtKJVfi3yFeJVzcIasZL3iVizx-WNH1jVvk9U/edit?usp=sharing"]
+                case '!support':
+                    "Renvoie l'aide du bot"
+                    await send_texte(help_string, message)
 
-                }
+                case "!gennom":
+                    "Renvoie une génération de nom à l'utilisateur"
+                    tmp = gennom(message, ld)
+                    await send_texte(f"{tmp[1]}{tmp[0]}", message)
 
-                descs: list = ["Liens vers mes projets", "Retrouvez tous les liens vers les projets ici ; tout n'est pas directement en lien avec le JdR mais parfois plus largement avec mes projets !",
-                               "Merci pour tous vos partages et vos retours, c'est adorable !"]
+                case "!genpnj":
+                    "Renvoie une génération de pnj à l'utilisateur"
+                    tmp = genpnj(message, ld)
+                    await send_texte(f"{tmp[1]}{tmp[0]}", message)
 
-                eb = embedlink(message, lembed, descs)
-                await message.channel.send(eb[1], embed=eb[0])
+                case "!meow":
+                    "Envoi d'un gif de chat"
+                    tmp = meow(message)
+                    await send_image(tmp[1], tmp[0], message)
 
-            case "!linkjdr":
-                "Donne les liens vers les différents outils pour les JdR sous forme d'un embed"
+                case "!disconnect":
+                    "Tentative de déconnexion, utilisable seulement par un admin"
+                    await send_texte(disconnect(message), message)
 
-                lembed: dict = {
+                case "!toss":
+                    "Lance une pièce et donne un résultat pile/face"
+                    tmp = toss(message)
+                    await send_texte(f"{tmp[1]}{tmp[0]}", message)
 
-                    "Watch2Gether": ["Sert pour la musique pendant les séances", "https://w2g.tv/rooms/i0bpwst6mzv3t9qh9c7?access_key=vivvyyity2uburxwxo4wjm"],
-                    "Manuel des règles": ["Pour se mettre à jour sur le système", "https://decorous-ptarmigan-9bf.notion.site/R-gles-JdR-ddd3ac0d4d0c4f98a9b2bcdd0d5cda79"],
-                    "GDoc du lore": ["Pour se rafraîchir la mémoire sur le lore", "https://docs.google.com/document/d/1Ytnvfar50VX2DmUkk1DoovrHz-nE_BAlFBGAkjkNX3Y/edit?usp=sharing"],
-                    "Retours de séances": ["Faites vos retours ici après la fin d'une série de JdR !", "https://forms.gle/9nSjZwnFQChf9j546"]
+                case "!savefile":
+                    "Crée un lien symbolique entre un ID discord et une fiche"
+                    tmp = savefile(message)
+                    await send_texte(f"{tmp[1]}{tmp[0]}", message)
 
-                }
+                case _:
 
-                descs: list = ["Liens utiles aux JdR", "Retrouvez ici tous les liens pouvant vous servir durant les séances, n'oubliez pas non plus d'ouvrir votre petite fiche de personnage !",
-                               "En espérant que cela vous ait été utile !"]
+                    # dé fonctionnant avec le nom du joueur
+                    if(contents[:4] in dict_stats.keys()):
 
-                eb = embedlink(message, lembed, descs)
-                await message.channel.send(eb[1], embed=eb[0])
+                        stat = stat_from_player(
+                            dict_stats[contents[:4]], (str(message.author)).split("#")[0])[2:]
+                        if stat != None:
+                            valeur_difficulte = contents.split(
+                                "/")[1] if "/" in contents else 0
+                            de_a_lancer, bonus = stat.split(
+                                "+")[0], stat.split("+")[1]
 
-            case '!support':
-                "Renvoie l'aide du bot"
-                await message.channel.send(help_string)
-
-            case "!gennom":
-                "Renvoie une génération de nom à l'utilisateur"
-                tmp = gennom(message, ld)
-                await message.channel.send(f"{tmp[1]}{tmp[0]}")
-
-            case "!genpnj":
-                "Renvoie une génération de pnj à l'utilisateur"
-                tmp = genpnj(message, ld)
-                await message.channel.send(f"{tmp[1]}{tmp[0]}")
-
-            case "!meow":
-                "Envoi d'un gif de chat"
-                tmp = meow(message)
-                await message.channel.send(tmp[1], file=discord.File(tmp[0]))
-
-            case "!disconnect":
-                "Tentative de déconnexion, utilisable seulement par un admin"
-                await message.channel.send(disconnect(message))
-
-            case "!toss":
-                "Lance une pièce et donne un résultat pile/face"
-                tmp = toss(message)
-                await message.channel.send(f"{tmp[1]}{tmp[0]}")
-
-            case "!savefile":
-                "Crée un lien symbolique entre un ID discord et une fiche"
-                tmp = savefile(message)
-                await message.channel.send(f"{tmp[1]}{tmp[0]}")
-
-            case _:
-
-                # dé fonctionnant avec le nom du joueur
-                if(contents[:4] in dict_stats.keys()):
-
-                    stat = stat_from_player(
-                        dict_stats[contents[:4]], (str(message.author)).split("#")[0])[2:]
-                    if stat != None:
-                        valeur_difficulte = contents.split(
-                            "/")[1] if "/" in contents else 0
-                        de_a_lancer, bonus = stat.split(
-                            "+")[0], stat.split("+")[1]
-
-                        output = roll_the_dice(int(de_a_lancer), int(bonus), message, int(
-                            valeur_difficulte), f"({dict_stats[contents[:4]]})")
-
-                        asyncio.gather(
-                            message.channel.send(output[0]),
-                            obs_invoke(toggle_anim, output[1])
-                        )
-                    else:
-                        await error_nofile(client, message)
-
-                elif(contents[:2] == '!d'):  # dé simple avec ou sans valeur de difficulté
-
-                    datas = contents[2:].replace(
-                        " ", "")  # on nettoie la chaine
-                    de_a_lancer, reste = datas.split(
-                        "+")[0], datas.split("+")[1]
-
-                    diff = reste.split('/')[1] if '/' in reste else 0
-                    bonus = reste.split('/')[0] if '/' in reste else reste
-
-                    output = roll_the_dice(
-                        int(de_a_lancer), int(bonus), message, int(diff))
-
-                    asyncio.gather(
-                        message.channel.send(output[0]),
-                        obs_invoke(toggle_anim, output[1])
-                    )
-
-                elif(contents[:2] == '!s'):  # lancer de dé de stress
-                    if (contents[2:] != ''):
-                        val_stress: int = int(contents[2:])
-                    else:
-                        val_stress: int = get_stress(
-                            str(message.author.mention))
-                        if(val_stress != None):
-
-                            dice: int = random.randrange(0, 10) + 1
-                            index: int = dice + int(val_stress)
-
-                            state, anim = listStates[index], str(
-                                listStates[index])[:-2]+".avi"
-                            effect = listEffects[index]
-
-                            if(dice >= 8):
-                                quote = "La vie n'est que coups au coeur et à l'esprit."
-                                increase_on_crit(
-                                    'Stress', str(message.author.mention), 1)
-                            elif(dice <= 2):
-                                quote = "De l'espoir, là même où les plus fous n'auraient su en trouver."
-                                increase_on_crit(
-                                    'Stress', str(message.author.mention), -1)
-                            else:
-                                quote = random.choice(
-                                    ["Maladies de l'esprit sont peste pour la chair !",
-                                     "Pouce par pouce, une seule vérité s'impose à vous : celle du tombeau.",
-                                     "A quoi bon frapper un mal que l'on ne saurait voir ?"]
-                                )
-
-                            # idée : le faire dans des embeds avec des petites miniatures
-
-                            string = f"{message.author.mention} > **{state}**\n> {dice+1} (dé) : {effect}\n> *{quote}*"
-
-                            output_msg(string)
+                            output = roll_the_dice(int(de_a_lancer), int(bonus), message, int(
+                                valeur_difficulte), f"({dict_stats[contents[:4]]})")
 
                             asyncio.gather(
-                                message.channel.send(string),
-                                obs_invoke(toggle_anim, anim)
+                                sender(output[0], message),
+                                obs_invoke(toggle_anim, output[1])
                             )
-
                         else:
                             await error_nofile(client, message)
 
-                elif(contents[:3] == '!wp'):
-                    "Renvoie un sondage paramétré"
-                    valeurs: str = contents[3:]
-                    nb_jours: int = int(valeurs.split(
-                        '+')[0]) if '+' in valeurs else 9
-                    decalage: int = int(valeurs.split(
-                        '+')[1]) if '+' in valeurs else 0
+                    elif(contents[:2] == '!d'):  # dé simple avec ou sans valeur de difficulté
 
-                    sondage = weekpoll(message, client, nb_jours, decalage)
-                    msg = await message.channel.send(sondage[1], embed=sondage[0])
+                        datas = contents[2:].replace(
+                            " ", "")  # on nettoie la chaine
+                        de_a_lancer, reste = datas.split(
+                            "+")[0], datas.split("+")[1]
 
-                    # affiche les réactions pour le sondage
-                    list_letters = ["\U0001F1E6", "\U0001F1E7", "\U0001F1E8", "\U0001F1E9", "\U0001F1EA", "\U0001F1EB", "\U0001F1EC", "\U0001F1ED",
-                                    "\U0001F1EE", "\U0001F1EF", "\U0001F1F0", "\U0001F1F1", "\U0001F1F2", "\U0001F1F3", "\U0001F1F4", "\U0001F1F5", "\U0001F1F6", "\U0001F1F7"]
+                        diff = reste.split('/')[1] if '/' in reste else 0
+                        bonus = reste.split('/')[0] if '/' in reste else reste
 
-                    list_emoji = [list_letters[i]
-                                  for i in range(0, nb_jours, 1)] + ["\U00002705"]
-                    for emoji in list_emoji:
-                        await msg.add_reaction(emoji)
+                        output = roll_the_dice(
+                            int(de_a_lancer), int(bonus), message, int(diff))
+
+                        asyncio.gather(
+                            sender(output[0], message),
+                            obs_invoke(toggle_anim, output[1])
+                        )
+
+                    elif(contents[:2] == '!s'):  # lancer de dé de stress
+                        if (contents[2:] != ''):
+                            val_stress: int = int(contents[2:])
+                        else:
+                            val_stress: int = get_stress(
+                                str(message.author.mention))
+                            if(val_stress != None):
+
+                                dice: int = random.randrange(0, 10) + 1
+                                index: int = dice + int(val_stress)
+
+                                state, anim = listStates[index], str(
+                                    listStates[index])[:-2]+".avi"
+                                effect = listEffects[index]
+
+                                if(dice >= 8):
+                                    "Effet de stress négatif"
+                                    quote = quote_selection("STRESS NEGATIF")
+                                    increase_on_crit(
+                                        'Stress', str(message.author.mention), 1)
+                                elif(dice <= 2):
+                                    "Effet de stress positif"
+                                    quote = quote_selection("STRESS POSITIF")
+                                    increase_on_crit(
+                                        'Stress', str(message.author.mention), -1)
+                                else:
+                                    "Effet de stress médian"
+                                    quote = quote_selection("STRESS NEUTRE")
+
+                                string = f"{message.author.mention} > **{state}**\n> {dice+1} (dé) : {effect}\n> *{quote}*"
+                                output_msg(string)
+
+                                asyncio.gather(
+                                    sender(string, message),
+                                    obs_invoke(toggle_anim, anim)
+                                )
+
+                            else:
+                                await error_nofile(client, message)
+
+                    elif(contents[:3] == '!wp'):
+                        "Renvoie un sondage paramétré"
+                        valeurs: str = contents[3:]
+                        nb_jours: int = int(valeurs.split(
+                            '+')[0]) if '+' in valeurs else 9
+                        decalage: int = int(valeurs.split(
+                            '+')[1]) if '+' in valeurs else 0
+
+                        sondage = weekpoll(message, client, nb_jours, decalage)
+                        msg = await message.channel.send(sondage[1], embed=sondage[0])
+
+                        # affiche les réactions pour le sondage
+
+                        list_emoji = [list_letters[i]
+                                      for i in range(0, nb_jours, 1)] + ["\U00002705"]
+                        for emoji in list_emoji:
+                            await msg.add_reaction(emoji)
 
     client.run(token)
 

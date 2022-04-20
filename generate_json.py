@@ -1,21 +1,4 @@
-from json import load, dump
-
-
-def load_json(json_file: str) -> dict:
-    """
-    Charge un fichier json en un dictionnaire
-    * json_file (str) : le chemin d'accès au fichier
-    """
-    return load(open(f"env/{json_file}.json", "r"))
-
-
-def save_json(json_file: str, dico_save: dict) -> None:
-    """
-    Sauve un dictionnaire en un fichier json
-    * json_file (str) : le chemin d'accès au fichier
-    * dico_save (dict) : le dictionnaire à sauvegarder
-    """
-    dump(dico_save, open(f"env/{json_file}.json", "w"))
+from lib import save_json
 
 
 def init():
@@ -101,10 +84,90 @@ def init():
         "Trahison 3": "Vous attaquez instantanément l’allié qu’il vous est le plus aisé de toucher, et il lance un jet de stress."
     }
 
+    dict_helps: dict = {
+        "!support": "pour obtenir de l'aide",
+        "!gennom": "pour générer un nom aléatoire",
+        "!genpnj": "pour générer un PnJ aléatoire",
+        "!linkjdr": "pour récupérer les liens utiles pour les séances",
+        "!linkprojet": "pour obtenir les liens vers les projets",
+        "!dX+Y/Z": "pour lancer un dé à X faces avec un bonus de Y sur une difficulté de Z",
+        "!dX+Y": "pour lancer un dé à X faces avec un bonus de Y sans valeur de difficulté",
+        "!sX": "pour lancer un dé de stress avec un stress de X",
+        "!wpX+Y": "pour lancer un sondage sur X jours décalé de Y jours",
+        "!toss": "pour lancer une pièce et obtenir pile ou face",
+        "!link": "pour créer un lien symbolique entre votre ID discord et un nom de fiche",
+        "!meow": "parce qu'il faut forcément un chat !"
+    }
+
+    embed_jdr: dict = {
+        "Watch2Gether": ["Sert pour la musique pendant les séances", "https://w2g.tv/rooms/i0bpwst6mzv3t9qh9c7?access_key=vivvyyity2uburxwxo4wjm"],
+        "Manuel des règles": ["Pour se mettre à jour sur le système", "https://decorous-ptarmigan-9bf.notion.site/R-gles-JdR-ddd3ac0d4d0c4f98a9b2bcdd0d5cda79"],
+        "GDoc du lore": ["Pour se rafraîchir la mémoire sur le lore", "https://docs.google.com/document/d/1Ytnvfar50VX2DmUkk1DoovrHz-nE_BAlFBGAkjkNX3Y/edit?usp=sharing"],
+        "Retours de séances": ["Faites vos retours ici après la fin d'une série de JdR !", "https://forms.gle/9nSjZwnFQChf9j546"]
+    }
+
+    embed_projets: dict = {
+        "Youtube principal": ["Replays de JdR et chroniques rôlistes", "https://www.youtube.com/channel/UCCn873wDjYSl_YZpNNTbViA"],
+        "Chaine de replays": ["Ce que vous n'avez pas vu en live", "https://www.youtube.com/channel/UCmmNBnYQmZlv6tPz6MO2TNA"],
+        "Streams twitch": ["Où on a des concepts variés", "https://www.twitch.tv/tharostv"],
+        "Github des projets": ["Nourri aux bons utilitaires pour du JdR", "https://github.com/Tharos-ux"],
+        "Cycle de Niathshrubb": ["Pour découvrir ce que j'écris", "https://docs.google.com/document/d/1BC4PwwgtKJVfi3yFeJVzcIasZL3iVizx-WNH1jVvk9U/edit?usp=sharing"]
+    }
+
+    quotes: dict = {
+        "ECHEC":
+            [
+                "Malheureuses circonstances ou compétences insuffisantes ? Seule la certitude de votre échec demeure.",
+                "Qui n'avait point prévu ces remuantes choses dans l'ombre ?",
+                "La vérité n'éclot jamais du mensonge.",
+                "A espoirs illusoires, rêves déchus !"
+            ],
+        "ECHEC CRITIQUE":
+            [
+                "La chance ne vous sourit pas toujours... et ce revers de fortune est cruel !"
+            ],
+        "REUSSITE":
+            [
+                "Un coup décisif pour la chair comme pour l'esprit !",
+                "La voie est claire, le chemin dégagé : ne nous manque plus que la force pour l'emprunter."
+            ],
+        "REUSSITE CRITIQUE":
+            [
+                "Brillant ! Que brûle la flamme, brasier de peur en vos ennemis !"
+            ],
+        "INCONNU":
+            [
+                "Une progression n'est pas toujours linéaire...",
+                "Le pire reste de ne pas savoir que l'on ne sait pas.",
+                "L'inconnu, fantasme des savants, plaie des vivants !"
+            ],
+        "STRESS POSITIF":
+            [
+                "C'est quand tout semble perdu que l'esprit est à son plus fort !",
+                "De l'espoir, là même où les plus fous n'auraient su en trouver."
+            ],
+        "STRESS NEGATIF":
+            [
+                "Les ténèbres les plus profondes sont bien souvent celles de notre esprit...",
+                "La vie n'est que coups au coeur et à l'esprit."
+            ],
+        "STRESS NEUTRE":
+            [
+                "Maladies de l'esprit sont peste pour la chair !",
+                "Pouce par pouce, une seule vérité s'impose à vous : celle du tombeau.",
+                "A quoi bon frapper un mal que l'on ne saurait voir ?"
+            ]
+    }
+
+    # saving all files
     save_json("stats", dict_stats)
     save_json("pos", dict_pos)
     save_json("links", dict_links)
     save_json("stress", dict_stress)
+    save_json("helps", dict_helps)
+    save_json("embed_jdr", embed_jdr)
+    save_json("embed_projets", embed_projets)
+    save_json("quotes", quotes)
 
 
 if __name__ == "__main__":
