@@ -1,11 +1,3 @@
-from datetime import datetime
-
-
-def output_msg(string: str) -> None:
-    """Prints the date and time of action + info specified in str"""
-    print(f"[{str(datetime.now())}] {string}")
-
-
 ##################### CUSTOM ERRORS & STACK ##########################
 
 

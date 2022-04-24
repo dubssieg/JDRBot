@@ -95,7 +95,7 @@ def init():
         "!sX": "pour lancer un dé de stress avec un stress de X",
         "!wpX+Y": "pour lancer un sondage sur X jours décalé de Y jours",
         "!toss": "pour lancer une pièce et obtenir pile ou face",
-        "!link": "pour créer un lien symbolique entre votre ID discord et un nom de fiche",
+        "!savefile filename": "pour créer un lien symbolique entre votre ID discord et un nom de fiche",
         "!meow": "parce qu'il faut forcément un chat !"
     }
 

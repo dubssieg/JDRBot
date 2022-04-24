@@ -1,26 +1,23 @@
-
-from obswebsocket import obsws, requests
-import discord
-import pygsheets
+# A REBUILD
 import resx.pnj as p
 import resx.loader as l
-import os
-import random
-import csv
-import datetime
-import sys
-import logging
-import asyncio
-import datetime
 
-###
+# OK
+from discord import Embed, Client, Streaming, File
+from os import fsencode, fsdecode, listdir
+from random import random, choice, randrange
+from sys import path
+from asyncio import sleep, gather
+from pygsheets import authorize
+from datetime import datetime, timedelta
+from obswebsocket import obsws, requests
 from string import ascii_uppercase
-from lib import output_msg, load_json, save_json, OBS_Shutdown, Max_Poll_Size, Wrapped_Exception, Sheets_Exception
+from lib import output_msg, load_json, save_json, OBS_Shutdown, Wrapped_Exception, Sheets_Exception, my_logs_global_config
 
 ##################### TOKENS DE CONNEXION ##########################
 
 # tokens GSheets
-gc = pygsheets.authorize(service_file='connectsheets-341012-fddaa9df86d9.json')
+gc = authorize(service_file='connectsheets-341012-fddaa9df86d9.json')
 
 # tokens discord
 tokens_connexion: dict = load_json("connect_discord")
@@ -109,7 +106,7 @@ def get_stats(name: str) -> dict:
     *name (str) : nom du joueur
     """
     # connexion
-    sh = gc.open(f"OmbreMeteore_{name}")
+    sh = gc.open(dict_links[f"{name}"])
     wks = sh[0]
     # récupération des cellules d'intérêt
     cell_list = wks.range('C12:E29')
@@ -151,7 +148,10 @@ def gennom(message, ld) -> dict:
 
 @commande
 def savefile(message) -> dict:
-    "Associe une fiche de stats à un ID discord"
+    """
+    Associe une fiche de stats à un ID discord
+    et enregistre la fiche de liens discord-gsheets
+    """
     file_name = (message.content).split(' ')[1]
     dict_links[f"{message.author.mention}"] = f"{file_name}"
     save_json("links", dict_links)
@@ -169,7 +169,7 @@ def genpnj(message, ld) -> dict:
 
 @commande
 def toss(message) -> dict:
-    string = "**PILE**" if(random.random() > 0.5) else "**FACE**"
+    string = "**PILE**" if(random() > 0.5) else "**FACE**"
     return {'info': string, 'chaine': '> *Un lancer de pièce, pour remettre son sort au destin...*'}
 
 
@@ -178,7 +178,7 @@ def meow(message) -> dict:
     list_meows = [
         "happy_cat.gif"
     ]
-    return {'info': 'Meow', 'chaine': random.choice(list_meows)}
+    return {'info': 'Meow', 'chaine': choice(list_meows)}
 
 
 @commande
@@ -195,7 +195,7 @@ def disconnect(message, client) -> dict:
 
 
 @commande
-def weekpoll(message, client, nb_jours: int = 9, incr: int = 0) -> dict:
+def weekpoll(message, client, chaine: str | None = None, nb_jours: int = 9, incr: int = 0) -> dict:
     """
     Renvoie un embed discord de sondage pour définir une date
     * message (discord.message) : le message envoyé par l'utilisateur
@@ -203,20 +203,20 @@ def weekpoll(message, client, nb_jours: int = 9, incr: int = 0) -> dict:
     * nb_jours (int, def 9) : le nombre de jours sur lequel le sondage s'exécute, max. 19
     * incr (int, def 0) : le nombre de jours dans lequel la première date du sondage est posée
     """
-    if nb_jours > 19:
-        nb_jours = 19
+    if nb_jours > 18:
+        nb_jours = 18
     # pour pouvoir générer un futur plus ou moins lointain, s'exprime en nombre de jours
     increment: int = incr if incr > 0 else 0
     liste_lettres = list(ascii_uppercase)
     liste_jours: dict = dict()
     for day in range(1, nb_jours+1, 1):
-        future = datetime.datetime.today() + datetime.timedelta(days=day+increment)
+        future = datetime.today() + timedelta(days=day+increment)
         horaire = f"21h, ou peut être placé en journée si préférable." if future.weekday(
-        ) >= 5 else "21h tapantes, essayez d'être à l'heure !"
+        ) >= 5 else "21h tapantes au maximum, essayez d'être à l'heure !"
         liste_jours[f"{liste_lettres[day-1]} - {list_days[future.weekday()]} {future.day}.{future.month}"] = horaire
-
-    embed = discord.Embed(title="Date pour la prochaine séance !",
-                          description="Votez pour les dates qui vous conviennent :)", color=0xF9BEE4)
+    titre = "Date pour l'event !" if chaine == None else chaine
+    embed = Embed(title=titre,
+                  description="Votez pour les dates qui vous conviennent :)", color=0xF9BEE4)
     auteur: str = ((str(message.author)).split("#"))[0]
     embed.set_author(name=f"{auteur}", url="https://twitter.com/Tharos_le_Vif",
                      icon_url="https://media.discordapp.net/attachments/555328372213809153/946500250422632479/logo_discord.png")
@@ -233,7 +233,7 @@ def weekpoll(message, client, nb_jours: int = 9, incr: int = 0) -> dict:
 
 @commande
 def embedlink(message, dico: dict, descs: str):
-    embed = discord.Embed(title=descs[0], description=descs[1], color=0xF9BEE4)
+    embed = Embed(title=descs[0], description=descs[1], color=0xF9BEE4)
     embed.set_author(name="Tharos", url="https://twitter.com/Tharos_le_Vif",
                      icon_url="https://media.discordapp.net/attachments/555328372213809153/946500250422632479/logo_discord.png")
     for key, value in dico.items():
@@ -249,9 +249,6 @@ def embedlink(message, dico: dict, descs: str):
 
 async def obs_invoke(f, *args) -> None:
     "appel avec unpacking via l'étoile"
-    logging.basicConfig(level=logging.INFO)
-
-    sys.path.append('../')
 
     host = "localhost"
     port = 4444
@@ -271,12 +268,46 @@ async def toggle_anim(ws, name) -> None:
         ws.call(requests.SetSceneItemProperties(
             scene_name="Animations", item=name[0], visible=True))
         output_msg(f"L'animation {name} est lancée !")
-        await asyncio.sleep(5)
+        await sleep(5)
         ws.call(requests.SetSceneItemProperties(
             scene_name="Animations", item=name[0], visible=False))
 
     except KeyboardInterrupt:
         pass
+
+
+def roll_the_stress(message, val_stress):
+    """
+    Lance un dé de stress et en traite les conséquences
+
+    Keywords arguments:
+    *message* (discord.message) > source de la commande
+    *val_stress* (str) > valeur du stress indiqué dans le message
+    """
+    dice: int = randrange(0, 10) + 1
+    index: int = dice + int(val_stress)
+
+    state, anim = listStates[index], str(
+        listStates[index])[:-2]+".avi"
+    effect = listEffects[index]
+
+    if(dice >= 8):
+        "Effet de stress négatif"
+        quote = quote_selection("STRESS NEGATIF")
+        increase_on_crit(
+            'Stress', str(message.author.mention), 1)
+    elif(dice <= 2):
+        "Effet de stress positif"
+        quote = quote_selection("STRESS POSITIF")
+        increase_on_crit(
+            'Stress', str(message.author.mention), -1)
+    else:
+        "Effet de stress médian"
+        quote = quote_selection("STRESS NEUTRE")
+
+    string = f"{message.author.mention} > **{state}**\n> {dice+1} (dé) : {effect}\n> *{quote}*"
+    output_msg(string)
+    return (string, anim)
 
 
 def roll_the_dice(de_a_lancer: int, bonus: int, message, valeur_difficulte: int = 0, statistique: str = ""):
@@ -289,7 +320,7 @@ def roll_the_dice(de_a_lancer: int, bonus: int, message, valeur_difficulte: int 
     *valeur_difficulte* (int) > valeur à laquelle comparer, si elle existe (par def : 0)
     *message* (discord.message) > objet message discord
     """
-    dice: int = random.randrange(0, (de_a_lancer))+1
+    dice: int = randrange(0, (de_a_lancer))+1
     resultat: int = dice + bonus
     if dice == 1:
         state, anim = "ECHEC CRITIQUE", "E_CRIT.avi"
@@ -324,9 +355,16 @@ async def delete_command(message) -> None:
         await each_message.delete()
 
 
+def string_cleaner(chaine: str) -> str:
+    """
+    Nettoie une chaine d'entrée
+    """
+    return chaine.replace(' ', '')
+
+
 def quote_selection(categorie: str) -> str:
     "Renvoie une quote issue du dico de quotes qui match la catégorie"
-    return random.choice(quotes[categorie])
+    return choice(quotes[categorie])
 
 
 def sender(chaine, message):
@@ -346,15 +384,15 @@ async def send_embed(txt, emb, message):
 
 async def send_image(txt, img, message):
     "Envoie une potite image"
-    await message.channel.send(txt, file=discord.File(img))
+    await message.channel.send(txt, file=File(img))
 
 
 def bot(ld):
-    client = discord.Client()
+    client = Client()
 
     @client.event
     async def on_ready():
-        await client.change_presence(activity=discord.Streaming(name="!support", url="https://www.twitch.tv/TharosTV"))
+        await client.change_presence(activity=Streaming(name="!support", url="https://www.twitch.tv/TharosTV"))
         output_msg(f"PATOUNES EST PRET !")
 
     @client.event
@@ -413,42 +451,52 @@ def bot(ld):
                     await send_texte(f"{tmp[1]}{tmp[0]}", message)
 
                 case _:
+                    # on retire les espaces
+                    contents = string_cleaner(contents)
 
-                    # dé fonctionnant avec le nom du joueur
+                    # dé fonctionnant avec le nom du joueur, va chercher la stat
                     if(contents[:4] in dict_stats.keys()):
 
                         stat = stat_from_player(
-                            dict_stats[contents[:4]], (str(message.author)).split("#")[0])[2:]
+                            dict_stats[contents[:4]], (str(message.author.mention)).split("#")[0])[2:]
                         if stat != None:
                             valeur_difficulte = contents.split(
                                 "/")[1] if "/" in contents else 0
-                            de_a_lancer, bonus = stat.split(
-                                "+")[0], stat.split("+")[1]
+                            de_a_lancer = stat.split(
+                                "+")[0] if '+' in contents else stat
+                            bonus = stat.split(
+                                "+")[1] if '+' in contents else 0
 
                             output = roll_the_dice(int(de_a_lancer), int(bonus), message, int(
                                 valeur_difficulte), f"({dict_stats[contents[:4]]})")
 
-                            asyncio.gather(
+                            gather(
                                 sender(output[0], message),
                                 obs_invoke(toggle_anim, output[1])
                             )
+                        # erreur si on la trouve pas
                         else:
                             await error_nofile(client, message)
 
-                    elif(contents[:2] == '!d'):  # dé simple avec ou sans valeur de difficulté
+                    # dé simple avec ou sans valeur de difficulté
+                    elif(contents[:2] == '!d'):
 
-                        datas = contents[2:].replace(
-                            " ", "")  # on nettoie la chaine
-                        de_a_lancer, reste = datas.split(
-                            "+")[0], datas.split("+")[1]
+                        datas = contents[2:]
 
-                        diff = reste.split('/')[1] if '/' in reste else 0
-                        bonus = reste.split('/')[0] if '/' in reste else reste
+                        de_a_lancer = datas.split("+")[0]
+                        reste = datas.split("+")[1] if '+' in datas else None
+
+                        diff, bonus = 0, 0
+
+                        if reste != None:
+                            diff = reste.split('/')[1] if '/' in reste else 0
+                            bonus = reste.split(
+                                '/')[0] if '/' in reste else reste
 
                         output = roll_the_dice(
                             int(de_a_lancer), int(bonus), message, int(diff))
 
-                        asyncio.gather(
+                        gather(
                             sender(output[0], message),
                             obs_invoke(toggle_anim, output[1])
                         )
@@ -461,31 +509,10 @@ def bot(ld):
                                 str(message.author.mention))
                             if(val_stress != None):
 
-                                dice: int = random.randrange(0, 10) + 1
-                                index: int = dice + int(val_stress)
+                                string, anim = roll_the_stress(
+                                    message, val_stress)
 
-                                state, anim = listStates[index], str(
-                                    listStates[index])[:-2]+".avi"
-                                effect = listEffects[index]
-
-                                if(dice >= 8):
-                                    "Effet de stress négatif"
-                                    quote = quote_selection("STRESS NEGATIF")
-                                    increase_on_crit(
-                                        'Stress', str(message.author.mention), 1)
-                                elif(dice <= 2):
-                                    "Effet de stress positif"
-                                    quote = quote_selection("STRESS POSITIF")
-                                    increase_on_crit(
-                                        'Stress', str(message.author.mention), -1)
-                                else:
-                                    "Effet de stress médian"
-                                    quote = quote_selection("STRESS NEUTRE")
-
-                                string = f"{message.author.mention} > **{state}**\n> {dice+1} (dé) : {effect}\n> *{quote}*"
-                                output_msg(string)
-
-                                asyncio.gather(
+                                gather(
                                     sender(string, message),
                                     obs_invoke(toggle_anim, anim)
                                 )
@@ -517,9 +544,9 @@ def bot(ld):
 def main():
     liste_dicos = dict()
     directory_in_str = "resx/"
-    directory = os.fsencode(directory_in_str)
-    for file in os.listdir(directory):
-        filename = os.fsdecode(file)
+    directory = fsencode(directory_in_str)
+    for file in listdir(directory):
+        filename = fsdecode(file)
         if filename.endswith(".ini"):
             liste_dicos[filename] = l.Loader(f"{directory_in_str}{filename}")
     # dico par défaut
@@ -529,4 +556,6 @@ def main():
 
 
 if __name__ == "__main__":
+    path.append('../')
+    my_logs_global_config("LOG_Patounes")
     main()
