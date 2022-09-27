@@ -46,7 +46,8 @@ def init():
         'Arts et culture': 'E27',
         'Empathie': 'E28',
         'Charme et influence': 'E29',
-        'Stress': 'G31'
+        'Stress': 'G31',
+        'Héroisme': 'C32'
     }
 
     dict_links: dict = {}
