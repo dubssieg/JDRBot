@@ -198,6 +198,26 @@ def increase_on_crit(stat: str, name: str, valeur=1):
 
 
 @googleask
+def hero_point_update(name: str, checking: bool) -> bool:
+    """
+    Update la valeur de stat en cas de critique
+    * stat (str) : stat à modifier
+    * name (str) : nom du joueur chez qui chercher la fiche
+    * valeur (int - def. 1) : l'incrément à apposer à la stat
+    """
+    if checking:
+        cellule: str = 'C32'
+        sh = gc.open(dict_links[f"{name}"])
+        wks = sh[0]
+        value = int(wks.cell(cellule).value)
+        if value > 0:
+            wks.update_value(cellule, value-1)
+            return True
+        return False
+    return False
+
+
+@googleask
 def get_stress(name: str):
     """
     Renvoie la valeur de stress pour le jet de dés
@@ -225,24 +245,24 @@ def get_stats(name: str) -> dict:
 ################ Pour lancer un dé #################
 
 
-def roll_the_dice(faces, modificateur: int = 0, valeur_difficulte: int = 0, hero_point: bool = False, stat_testee: str = "") -> str:
+def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int = 0, hero_point: bool = False, stat_testee: str = "") -> str:
     res = randrange(1, faces)  # jet de dé
     value = res + modificateur  # valeur globale du jet
     if stat_testee != "":
         stat_testee = f"({stat_testee})"
-    if hero_point:
-        str_resultat = f"**REUSSITE** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['REUSSITE'])}*"
+    if hero_point_update(message.author.mention, hero_point):
+        res += modificateur
     if valeur_difficulte > 0:
         if res == faces:
-            str_resultat = f"**REUSSITE CRITIQUE** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['REUSSITE CRITIQUE'])}*"
+            str_resultat = f"{message.author.mention} > **REUSSITE CRITIQUE** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['REUSSITE CRITIQUE'])}*"
         elif res == 0:
-            str_resultat = f"**ECHEC CRITIQUE** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['ECHEC CRITIQUE'])}*"
+            str_resultat = f"{message.author.mention} > **ECHEC CRITIQUE** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['ECHEC CRITIQUE'])}*"
         elif value >= valeur_difficulte:
-            str_resultat = f"**REUSSITE** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['REUSSITE'])}*"
+            str_resultat = f"{message.author.mention} > **REUSSITE** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['REUSSITE'])}*"
         else:
-            str_resultat = f"**ECHEC** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['ECHEC'])}*"
+            str_resultat = f"{message.author.mention} > **ECHEC** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['ECHEC'])}*"
     else:
-        str_resultat = f"**INCONNU** {stat_testee}\n> Le résultat du dé est **{value}** ({res}/{faces}+{modificateur}) !\n> *{choice(quotes['INCONNU'])}*"
+        str_resultat = f"{message.author.mention} > **INCONNU** {stat_testee}\n> Le résultat du dé est **{value}** ({res}/{faces}+{modificateur}) !\n> *{choice(quotes['INCONNU'])}*"
     return str_resultat
 
 
@@ -274,7 +294,7 @@ def roll_the_dice(faces, modificateur: int = 0, valeur_difficulte: int = 0, hero
 )
 async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte: int = -1, point_heroisme: bool = False):
     values = stat_from_player(charac, ctx.author.mention)[2:].split('+')
-    await ctx.send(roll_the_dice(int(values[0]), int(values[1]), valeur_difficulte, hero_point=point_heroisme, stat_testee=charac))
+    await ctx.send(roll_the_dice(ctx, int(values[0]), int(values[1]), valeur_difficulte, hero_point=point_heroisme, stat_testee=charac))
 
 
 def roll_the_stress(message, val_stress):
@@ -285,7 +305,7 @@ def roll_the_stress(message, val_stress):
     *message* (discord.message) > source de la commande
     *val_stress* (str) > valeur du stress indiqué dans le message
     """
-    dice: int = randrange(0, 10) + 1
+    dice: int = randrange(1, 10)
     index: int = dice + int(val_stress)
     state, anim = listStates[index], str(
         listStates[index])[:-2]+".avi"
@@ -315,7 +335,8 @@ def roll_the_stress(message, val_stress):
     scope=guild_id,
 )
 async def stress(ctx: interactions.CommandContext):
-    await ctx.send(roll_the_stress(ctx, get_stress(ctx.author.mention))[0])
+    chaine, anim = roll_the_stress(ctx, get_stress(ctx.author.mention))
+    await ctx.send(chaine)
 
 
 @bot.command(
@@ -350,7 +371,7 @@ async def stress(ctx: interactions.CommandContext):
     ],
 )
 async def dice(ctx: interactions.CommandContext, faces: int = 20, modificateur: int = 0, valeur_difficulte: int = -1, point_heroisme: bool = False):
-    await ctx.send(roll_the_dice(faces, modificateur, valeur_difficulte, point_heroisme))
+    await ctx.send(roll_the_dice(ctx, faces, modificateur, valeur_difficulte, point_heroisme))
 
 
 @bot.command(
@@ -360,7 +381,7 @@ async def dice(ctx: interactions.CommandContext, faces: int = 20, modificateur: 
 )
 async def toss(ctx: interactions.CommandContext) -> None:
     res = "**PILE**" if(random() > 0.5) else "**FACE**"
-    await ctx.send(f"La pièce est tombée sur {res} !\n> *Un lancer de pièce, pour remettre son sort au destin...*")
+    await ctx.send(f"{ctx.author.mention} > La pièce est tombée sur {res} !\n> *Un lancer de pièce, pour remettre son sort au destin...*")
 
 
 bot.start()
