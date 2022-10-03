@@ -88,6 +88,7 @@ async def save_file(ctx):
 
 @bot.modal("mod_app_form")
 async def modal_response(ctx, response: str):
+    await ctx.defer()
     dict_links[f"{ctx.author.mention}"] = f"{response}"
     save_json('links', dict_links)
     await ctx.send(f"La fiche nommée {response} vous a été liée !", ephemeral=True)
@@ -451,6 +452,7 @@ async def dice(ctx: interactions.CommandContext, faces: int = 20, modificateur: 
     scope=guild_id,
 )
 async def toss(ctx: interactions.CommandContext) -> None:
+    await ctx.defer()
     res = "**PILE**" if(random() > 0.5) else "**FACE**"
     await ctx.send(f"{ctx.author.mention} > La pièce est tombée sur {res} !\n> *Un lancer de pièce, pour remettre son sort au destin...*")
 
