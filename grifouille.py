@@ -326,9 +326,10 @@ async def toss(ctx: interactions.CommandContext) -> None:
     res = "**PILE**" if(random() > 0.5) else "**FACE**"
     await ctx.send(f"{ctx.author.mention} > La pièce est tombée sur {res} !\n> *Un lancer de pièce, pour remettre son sort au destin...*")
 
-
+"""
 @bot.event
 async def on_ready():
-    await bot.change_presence(Streaming(name="des commandes slash !", url="https://www.twitch.tv/TharosTV"))
+    await bot.change_presence(presence=Streaming(name="des commandes slash !", url="https://www.twitch.tv/TharosTV"))
+"""
 
 bot.start()
