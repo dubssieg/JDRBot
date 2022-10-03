@@ -4,6 +4,7 @@ from random import randrange, random, choice
 from lib import load_json, save_json
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
+from discord import Streaming
 
 #############################
 ### Chargement des tokens ###
@@ -325,5 +326,9 @@ async def toss(ctx: interactions.CommandContext) -> None:
     res = "**PILE**" if(random() > 0.5) else "**FACE**"
     await ctx.send(f"{ctx.author.mention} > La pièce est tombée sur {res} !\n> *Un lancer de pièce, pour remettre son sort au destin...*")
 
+
+@bot.event
+async def on_ready():
+    await bot.change_presence(activity=Streaming(name="des commandes slash !", url="https://www.twitch.tv/TharosTV"))
 
 bot.start()
