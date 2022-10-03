@@ -140,6 +140,7 @@ async def toggle_anim(ws, name) -> None:
 
 ################ Pour faire un weekpoll ############
 
+"""
 @bot.command(
     name="weekpoll",
     description="Effectue un sondage de dates pour trouver une correspondance",
@@ -215,6 +216,7 @@ async def modal_response(ctx, title_emb: str, start: str, duration: str, sub: st
         text="Après vote, merci de cliquer sur la case \U00002705 !")
 
     await ctx.send("Commande par Tharos, merci de répondre au plus vite !", embeds=my_embed, ephemeral=True)
+"""
 
 ################ Commandes GSHEETS #################
 
