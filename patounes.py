@@ -25,6 +25,12 @@ class TimeoutError(Exception):
         return repr(self.value)
 
 
+# tokens OBS-WS
+tokens_obsws: dict = load_json("obs_ws")
+host: str = tokens_obsws["host"]
+port: int = tokens_obsws["port"]
+password: str = tokens_obsws["password"]
+
 # tokens GSheets
 gc = authorize(service_file='env/connectsheets-341012-fddaa9df86d9.json')
 
@@ -285,10 +291,6 @@ def timeout(seconds_before_timeout):
 @timeout(8)
 async def obs_invoke(f, *args) -> None:
     "appel avec unpacking via l'étoile"
-
-    host = "192.168.1.36"
-    port = 4444
-    password = "duboisie97"
 
     try:
         ws = obsws(host, port, password)
