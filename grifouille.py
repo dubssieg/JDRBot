@@ -354,6 +354,7 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
     ],
 )
 async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte: int = -1, point_heroisme: bool = False):
+    await ctx.defer()
     values = stat_from_player(charac, ctx.author.mention)[2:].split('+')
     message, anim = roll_the_dice(ctx, int(values[0]), int(
         values[1]), valeur_difficulte, hero_point=point_heroisme, stat_testee=charac)
@@ -399,6 +400,7 @@ def roll_the_stress(message, val_stress):
     scope=guild_id,
 )
 async def stress(ctx: interactions.CommandContext):
+    await ctx.defer()
     message, anim = roll_the_stress(ctx, get_stress(ctx.author.mention))
     await obs_invoke(toggle_anim, anim)
     await ctx.send(message)
@@ -436,6 +438,7 @@ async def stress(ctx: interactions.CommandContext):
     ],
 )
 async def dice(ctx: interactions.CommandContext, faces: int = 20, modificateur: int = 0, valeur_difficulte: int = -1, point_heroisme: bool = False):
+    await ctx.defer()
     message, anim = roll_the_dice(
         ctx, faces, modificateur, valeur_difficulte, point_heroisme)
     await obs_invoke(toggle_anim, anim)
