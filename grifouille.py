@@ -2,11 +2,14 @@ from re import S
 import interactions
 import discord
 import datetime
+import asyncio
+import signal
 
 from random import randrange, random, choice
 from lib import load_json, save_json
 from pygsheets import authorize
 from string import ascii_uppercase
+from obswebsocket import obsws, requests
 
 #############################
 ### Chargement des tokens ###
@@ -82,6 +85,55 @@ async def modal_response(ctx, response: str):
     dict_links[f"{ctx.author.mention}"] = f"{response}"
     save_json('links', dict_links)
     await ctx.send(f"La fiche nommée {response} vous a été liée !", ephemeral=True)
+
+################ OBS Websocket functions #################
+
+
+def timeout(seconds_before_timeout):
+    def decorate(f):
+        def handler(signum, frame):
+            raise TimeoutError()
+
+        def new_f(*args, **kwargs):
+            old = signal.signal(signal.SIGALRM, handler)
+            signal.alarm(seconds_before_timeout)
+            try:
+                result = f(*args, **kwargs)
+            finally:
+                signal.signal(signal.SIGALRM, old)
+            signal.alarm(0)
+            return result
+        new_f.__name__ = f.__name__
+        return new_f
+    return decorate
+
+
+@timeout(8)
+async def obs_invoke(f, *args) -> None:
+    "appel avec unpacking via l'étoile"
+
+    host = "192.168.1.36"
+    port = 4444
+    password = "duboisie97"
+
+    try:
+        ws = obsws(host, port, password)
+        ws.connect()
+        await f(ws, args)  # exécution de la fonction
+        ws.disconnect()
+    except:
+        pass
+
+
+async def toggle_anim(ws, name) -> None:
+    try:
+        ws.call(requests.SetSceneItemProperties(
+            scene_name="Animations", item=name[0], visible=True))
+        await asyncio.sleep(5)
+        ws.call(requests.SetSceneItemProperties(
+            scene_name="Animations", item=name[0], visible=False))
+    except:
+        pass
 
 
 ################ Pour faire un weekpoll ############

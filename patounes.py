@@ -12,7 +12,7 @@ from sys import path
 from pygsheets import authorize
 from obswebsocket import obsws, requests
 from string import ascii_uppercase
-from lib import output_msg, load_json, save_json, OBS_Shutdown, Wrapped_Exception, Sheets_Exception, my_logs_global_config
+from lib import output_msg, load_json, save_json, Wrapped_Exception, Sheets_Exception, my_logs_global_config
 
 ##################### TOKENS DE CONNEXION ##########################
 
