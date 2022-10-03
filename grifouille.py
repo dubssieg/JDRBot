@@ -329,6 +329,6 @@ async def toss(ctx: interactions.CommandContext) -> None:
 
 @bot.event
 async def on_ready():
-    await bot.change_presence(activity=Streaming(name="des commandes slash !", url="https://www.twitch.tv/TharosTV"))
+    await bot.change_presence(Streaming(name="des commandes slash !", url="https://www.twitch.tv/TharosTV"))
 
 bot.start()
