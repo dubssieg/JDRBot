@@ -13,6 +13,7 @@ from pygsheets import authorize
 from obswebsocket import obsws, requests
 from string import ascii_uppercase
 from lib import output_msg, load_json, save_json, Wrapped_Exception, Sheets_Exception, my_logs_global_config
+from obs_interactions import obs_invoke, toggle_anim
 
 ##################### TOKENS DE CONNEXION ##########################
 
@@ -268,51 +269,6 @@ def embedlink(message, dico: dict, descs: str):
 ####################################################################
 
 
-def timeout(seconds_before_timeout):
-    def decorate(f):
-        def handler(signum, frame):
-            raise TimeoutError()
-
-        def new_f(*args, **kwargs):
-            old = signal.signal(signal.SIGALRM, handler)
-            signal.alarm(seconds_before_timeout)
-            try:
-                result = f(*args, **kwargs)
-            finally:
-                output_msg("Stack clear !")
-                signal.signal(signal.SIGALRM, old)
-            signal.alarm(0)
-            return result
-        new_f.__name__ = f.__name__
-        return new_f
-    return decorate
-
-
-@timeout(8)
-async def obs_invoke(f, *args) -> None:
-    "appel avec unpacking via l'étoile"
-
-    try:
-        ws = obsws(host, port, password)
-        ws.connect()
-        await f(ws, args)  # exécution de la fonction
-        ws.disconnect()
-    except:
-        pass
-
-
-async def toggle_anim(ws, name) -> None:
-    try:
-        ws.call(requests.SetSceneItemProperties(
-            scene_name="Animations", item=name[0], visible=True))
-        output_msg(f"L'animation {name} est lancée !")
-        await asyncio.sleep(5)
-        ws.call(requests.SetSceneItemProperties(
-            scene_name="Animations", item=name[0], visible=False))
-    except:
-        pass
-
-
 def roll_the_stress(message, val_stress):
     """
     Lance un dé de stress et en traite les conséquences
@@ -507,7 +463,7 @@ def bot(ld):
 
                             await sender(output[0], message)
                             # system(f"python obs.py {output[1]}")
-                            await obs_invoke(toggle_anim, output[1])
+                            await obs_invoke(toggle_anim, host, port, password, output[1])
 
                         # erreur si on la trouve pas
                         else:
@@ -537,7 +493,7 @@ def bot(ld):
 
                         await sender(output[0], message)
                         # system(f"python obs.py {output[1]}")
-                        await obs_invoke(toggle_anim, output[1])
+                        await obs_invoke(toggle_anim, host, port, password, output[1])
 
                     elif(contents[:2] == '!s'):  # lancer de dé de stress
                         #contents = string_cleaner(contents)
@@ -553,7 +509,7 @@ def bot(ld):
 
                                 await sender(string, message)
                                 #system(f"python obs.py {anim}")
-                                await obs_invoke(toggle_anim, anim)
+                                await obs_invoke(toggle_anim, host, port, password, anim)
 
                             else:
                                 await error_nofile(client, message)

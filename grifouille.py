@@ -1,15 +1,9 @@
 from re import S
 import interactions
-import discord
-import datetime
-import asyncio
-import signal
-
 from random import randrange, random, choice
 from lib import load_json, save_json
 from pygsheets import authorize
-from string import ascii_uppercase
-from obswebsocket import obsws, requests
+from obs_interactions import obs_invoke, toggle_anim
 
 #############################
 ### Chargement des tokens ###
@@ -93,131 +87,6 @@ async def modal_response(ctx, response: str):
     save_json('links', dict_links)
     await ctx.send(f"La fiche nommée {response} vous a été liée !", ephemeral=True)
 
-################ OBS Websocket functions #################
-
-
-def timeout(seconds_before_timeout):
-    def decorate(f):
-        def handler(signum, frame):
-            raise TimeoutError()
-
-        def new_f(*args, **kwargs):
-            old = signal.signal(signal.SIGALRM, handler)
-            signal.alarm(seconds_before_timeout)
-            try:
-                result = f(*args, **kwargs)
-            finally:
-                signal.signal(signal.SIGALRM, old)
-            signal.alarm(0)
-            return result
-        new_f.__name__ = f.__name__
-        return new_f
-    return decorate
-
-
-@timeout(8)
-async def obs_invoke(f, *args) -> None:
-    "appel avec unpacking via l'étoile"
-
-    try:
-        ws = obsws(host, port, password)
-        ws.connect()
-        await f(ws, args)  # exécution de la fonction
-        ws.disconnect()
-    except:
-        pass
-
-
-async def toggle_anim(ws, name) -> None:
-    try:
-        ws.call(requests.SetSceneItemProperties(
-            scene_name="Animations", item=name[0], visible=True))
-        await asyncio.sleep(5)
-        ws.call(requests.SetSceneItemProperties(
-            scene_name="Animations", item=name[0], visible=False))
-    except:
-        pass
-
-
-################ Pour faire un weekpoll ############
-
-"""
-@bot.command(
-    name="weekpoll",
-    description="Effectue un sondage de dates pour trouver une correspondance",
-    scope=guild_id,
-)
-async def weekpoll(ctx):
-    modal = interactions.Modal(
-        title="Assistant de calendrirer",
-        custom_id="calendar_form",
-        components=[
-            interactions.TextInput(
-                style=interactions.TextStyleType.SHORT,
-                label="Entrez le titre du sondage",
-                custom_id="title",
-                min_length=1,
-                max_length=30,
-            ),
-            interactions.TextInput(
-                style=interactions.TextStyleType.SHORT,
-                label="Entrez la date de début (format jj/mm/aaaa)",
-                custom_id="start",
-                min_length=10,
-                max_length=10,
-            ),
-            interactions.TextInput(
-                style=interactions.TextStyleType.SHORT,
-                label="Nombre de jours sur lequel se déroule le sondage (max. 18)",
-                custom_id="duration",
-                min_length=1,
-                max_length=2,
-            ),
-            interactions.TextInput(
-                style=interactions.TextStyleType.SHORT,
-                label="Entrez le sous-texte du sondage",
-                custom_id="sub",
-                min_length=1,
-                max_length=30,
-            ),
-        ],
-    )
-    await ctx.popup(modal)
-
-
-@bot.modal("calendar_form")
-async def modal_response(ctx, title_emb: str, start: str, duration: str, sub: str):
-    nb_jours: int = int(duration) if int(duration) < 19 else 18
-    list_days: list = ["Lundi", "Mardi", "Mercredi",
-                       "Jeudi", "Vendredi", "Samedi", "Dimanche"]
-
-    my_embed = discord.Embed(
-        title=title_emb,
-        description="Votez pour les dates qui vous conviennent !",
-        color=0xF9BEE4
-    )
-
-    increment: int = int(5) if int(5) > 0 else 0
-    liste_lettres = list(ascii_uppercase)
-    liste_jours: dict = dict()
-    for day in range(1, nb_jours+1, 1):
-        future = datetime.datetime.today() + datetime.timedelta(days=day+increment)
-        horaire = f"21h, ou peut être placé en journée si préférable." if future.weekday(
-        ) >= 5 else "21h tapantes, essayez d'être à l'heure !"
-        liste_jours[f"{liste_lettres[day-1]} - {list_days[future.weekday()]} {future.day}.{future.month}"] = horaire
-
-    auteur: str = ((str(ctx.author)).split("#"))[0]
-    my_embed.set_author(name=f"{auteur}", url="https://twitter.com/Tharos_le_Vif",
-                        icon_url="https://media.discordapp.net/attachments/555328372213809153/946500250422632479/logo_discord.png")
-
-    for key, value in liste_jours.items():
-        my_embed.add_field(name=f"{key}", value=f"{value}", inline=False)
-
-    my_embed.set_footer(
-        text="Après vote, merci de cliquer sur la case \U00002705 !")
-
-    await ctx.send("Commande par Tharos, merci de répondre au plus vite !", embeds=my_embed, ephemeral=True)
-"""
 
 ################ Commandes GSHEETS #################
 
@@ -359,7 +228,7 @@ async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte:
     values = stat_from_player(charac, ctx.author.mention)[2:].split('+')
     message, anim = roll_the_dice(ctx, int(values[0]), int(
         values[1]), valeur_difficulte, hero_point=point_heroisme, stat_testee=charac)
-    await obs_invoke(toggle_anim, anim)
+    await obs_invoke(toggle_anim, host, port, password, anim)
     await ctx.send(message)
 
 
@@ -403,7 +272,7 @@ def roll_the_stress(message, val_stress):
 async def stress(ctx: interactions.CommandContext):
     await ctx.defer()
     message, anim = roll_the_stress(ctx, get_stress(ctx.author.mention))
-    await obs_invoke(toggle_anim, anim)
+    await obs_invoke(toggle_anim, host, port, password, anim)
     await ctx.send(message)
 
 
@@ -442,7 +311,7 @@ async def dice(ctx: interactions.CommandContext, faces: int = 20, modificateur: 
     await ctx.defer()
     message, anim = roll_the_dice(
         ctx, faces, modificateur, valeur_difficulte, point_heroisme)
-    await obs_invoke(toggle_anim, anim)
+    await obs_invoke(toggle_anim, host, port, password, anim)
     await ctx.send(message)
 
 
