@@ -305,19 +305,24 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
     if stat_testee != "":
         stat_testee = f"({stat_testee})"
     if hero_point_update(message.author.mention, hero_point):
-        res += modificateur
+        value += modificateur
     if valeur_difficulte > 0:
         if res == faces:
+            anim = "R_CRIT.avi"
             str_resultat = f"{message.author.mention} > **REUSSITE CRITIQUE** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['REUSSITE CRITIQUE'])}*"
-        elif res == 0:
+        elif res == 1:
+            anim = "E_CRIT.avi"
             str_resultat = f"{message.author.mention} > **ECHEC CRITIQUE** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['ECHEC CRITIQUE'])}*"
         elif value >= valeur_difficulte:
+            anim = "R_STD.avi"
             str_resultat = f"{message.author.mention} > **REUSSITE** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['REUSSITE'])}*"
         else:
+            anim = "E_STD.avi"
             str_resultat = f"{message.author.mention} > **ECHEC** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['ECHEC'])}*"
     else:
+        anim = ""
         str_resultat = f"{message.author.mention} > **INCONNU** {stat_testee}\n> Le résultat du dé est **{value}** ({res}/{faces}+{modificateur}) !\n> *{choice(quotes['INCONNU'])}*"
-    return str_resultat
+    return (str_resultat, anim)
 
 
 @bot.command(
@@ -348,7 +353,9 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
 )
 async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte: int = -1, point_heroisme: bool = False):
     values = stat_from_player(charac, ctx.author.mention)[2:].split('+')
-    await ctx.send(roll_the_dice(ctx, int(values[0]), int(values[1]), valeur_difficulte, hero_point=point_heroisme, stat_testee=charac))
+    (message, anim): tuple = roll_the_dice(ctx, int(values[0]), int(values[1]), valeur_difficulte, hero_point=point_heroisme, stat_testee=charac)
+    obs_invoke(toggle_anim, anim)
+    await ctx.send(message)
 
 
 def roll_the_stress(message, val_stress):
@@ -389,8 +396,9 @@ def roll_the_stress(message, val_stress):
     scope=guild_id,
 )
 async def stress(ctx: interactions.CommandContext):
-    chaine, anim = roll_the_stress(ctx, get_stress(ctx.author.mention))
-    await ctx.send(chaine)
+    (message, anim): tuple = roll_the_stress(ctx, get_stress(ctx.author.mention))
+    obs_invoke(toggle_anim, anim)
+    await ctx.send(message)
 
 
 @bot.command(
@@ -425,7 +433,9 @@ async def stress(ctx: interactions.CommandContext):
     ],
 )
 async def dice(ctx: interactions.CommandContext, faces: int = 20, modificateur: int = 0, valeur_difficulte: int = -1, point_heroisme: bool = False):
-    await ctx.send(roll_the_dice(ctx, faces, modificateur, valeur_difficulte, point_heroisme))
+    (message, anim): tuple = roll_the_dice(ctx, faces, modificateur, valeur_difficulte, point_heroisme)
+    obs_invoke(toggle_anim, anim)
+    await ctx.send(message)
 
 
 @bot.command(
