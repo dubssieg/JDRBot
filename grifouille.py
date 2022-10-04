@@ -5,6 +5,7 @@ from lib import load_json, save_json
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
 from discord import Streaming
+from gsheets_interactions import stat_from_player, hero_point_update, increase_on_crit, get_stress
 
 #############################
 ### Chargement des tokens ###
@@ -21,25 +22,23 @@ tokens_connexion: dict = load_json("token")
 token_grifouille: str = tokens_connexion['token']
 guild_id: int = tokens_connexion['guild_id']
 
+# déclaration du client
 bot = interactions.Client(
     token=token_grifouille)
 
 # tokens GSheets
-gc = authorize(service_file='env/connectsheets-341012-fddaa9df86d9.json')
-
+gc = authorize(service_file='env/connect_sheets.json')
 
 # datas d'environnement
 dict_stats: dict = load_json("stats")
 dict_pos: dict = load_json("pos")
 dict_links: dict = load_json("links")
 dict_stress: dict = load_json("stress")
-
 embed_projets: dict = load_json("embed_projets")
 embed_jdr: dict = load_json("embed_jdr")
 quotes: dict = load_json("quotes")
 
 # préparation du dico de stress
-
 listStates = [key for key in dict_stress.keys()]
 listEffects = [value for value in dict_stress.values()]
 
@@ -89,86 +88,6 @@ async def modal_response(ctx, response: str):
     await ctx.send(f"La fiche nommée {response} vous a été liée !", ephemeral=True)
 
 
-################ Commandes GSHEETS #################
-
-
-def stat_from_player(stat, joueur):
-    stats = get_stats(joueur)
-    if stats != None:
-        return get_stats(joueur)[stat]
-    return None
-
-
-def googleask(func):
-    "Décorateur. Gère si l'utilisateur a bien une fiche à son nom"
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except:
-            return None
-    return wrapper
-
-
-@googleask
-def increase_on_crit(stat: str, name: str, valeur=1):
-    """
-    Update la valeur de stat en cas de critique
-    * stat (str) : stat à modifier
-    * name (str) : nom du joueur chez qui chercher la fiche
-    * valeur (int - def. 1) : l'incrément à apposer à la stat
-    """
-    cellule = dict_pos[stat]
-    sh = gc.open(dict_links[f"{name}"])
-    wks = sh[0]
-    value = int(wks.cell(cellule).value)
-    wks.update_value(cellule, value+valeur)
-
-
-@googleask
-def hero_point_update(name: str, checking: bool) -> bool:
-    """
-    Update la valeur de stat en cas de critique
-    * stat (str) : stat à modifier
-    * name (str) : nom du joueur chez qui chercher la fiche
-    * valeur (int - def. 1) : l'incrément à apposer à la stat
-    """
-    if checking:
-        cellule: str = 'C32'
-        sh = gc.open(dict_links[f"{name}"])
-        wks = sh[0]
-        value = int(wks.cell(cellule).value)
-        if value > 0:
-            wks.update_value(cellule, value-1)
-            return True
-        return False
-    return False
-
-
-@googleask
-def get_stress(name: str):
-    """
-    Renvoie la valeur de stress pour le jet de dés
-    * name (str) : nom du joueur
-    """
-    return gc.open(dict_links[f"{name}"])[0].cell('G31').value
-
-
-@googleask
-def get_stats(name: str) -> dict:
-    """
-    Renvoie un dictionnaire de stats
-    *name (str) : nom du joueur
-    """
-    # connexion
-    sh = gc.open(dict_links[f"{name}"])
-    wks = sh[0]
-    # récupération des cellules d'intérêt
-    cell_list = wks.range('C12:E29')
-    d = dict()
-    for e in cell_list:
-        d[e[0].value] = e[1].value + e[2].value
-    return d
-
 ################ Pour lancer un dé #################
 
 
@@ -177,7 +96,7 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
     value = res + modificateur  # valeur globale du jet
     if stat_testee != "":
         stat_testee = f"({stat_testee})"
-    if hero_point_update(message.author.mention, hero_point):
+    if hero_point_update(gc, message.author.mention, hero_point, dict_links):
         value += modificateur
     if valeur_difficulte > 0:
         if res == faces:
@@ -226,7 +145,8 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
 )
 async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte: int = -1, point_heroisme: bool = False):
     await ctx.defer()
-    values = stat_from_player(charac, ctx.author.mention)[2:].split('+')
+    values = stat_from_player(gc, charac, ctx.author.mention, dict_links)[
+        2:].split('+')
     message, anim = roll_the_dice(ctx, int(values[0]), int(
         values[1]), valeur_difficulte, hero_point=point_heroisme, stat_testee=charac)
     await ctx.send(message)
@@ -250,13 +170,13 @@ def roll_the_stress(message, val_stress):
     if(dice >= 8):
         "Effet de stress négatif"
         quote = choice(quotes["STRESS NEGATIF"])
-        increase_on_crit(
-            'Stress', str(message.author.mention), 1)
+        increase_on_crit(gc, 'Stress', str(
+            message.author.mention), dict_pos, dict_links, 1)
     elif(dice <= 2):
         "Effet de stress positif"
         quote = choice(quotes["STRESS POSITIF"])
-        increase_on_crit(
-            'Stress', str(message.author.mention), -1)
+        increase_on_crit(gc, 'Stress', str(
+            message.author.mention), dict_pos, dict_links, -1)
     else:
         "Effet de stress médian"
         quote = choice(quotes["STRESS NEUTRE"])
@@ -272,7 +192,8 @@ def roll_the_stress(message, val_stress):
 )
 async def stress(ctx: interactions.CommandContext):
     await ctx.defer()
-    message, anim = roll_the_stress(ctx, get_stress(ctx.author.mention))
+    message, anim = roll_the_stress(
+        ctx, get_stress(gc, ctx.author.mention, dict_links))
     await ctx.send(message)
     await obs_invoke(toggle_anim, host, port, password, anim)
 

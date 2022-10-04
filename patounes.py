@@ -1,19 +1,17 @@
 # A REBUILD
 import resx.pnj as p
 import resx.loader as l
-import asyncio
-import signal
 import datetime
 # OK
 from discord import Embed, Client, Streaming, File
-from os import fsencode, fsdecode, listdir, system
+from os import fsencode, fsdecode, listdir
 from random import random, choice, randrange
 from sys import path
 from pygsheets import authorize
-from obswebsocket import obsws, requests
 from string import ascii_uppercase
 from lib import output_msg, load_json, save_json, Wrapped_Exception, Sheets_Exception, my_logs_global_config
 from obs_interactions import obs_invoke, toggle_anim
+from gsheets_interactions import stat_from_player, increase_on_crit, get_stress
 
 ##################### TOKENS DE CONNEXION ##########################
 
@@ -33,7 +31,7 @@ port: int = tokens_obsws["port"]
 password: str = tokens_obsws["password"]
 
 # tokens GSheets
-gc = authorize(service_file='env/connectsheets-341012-fddaa9df86d9.json')
+gc = authorize(service_file='env/connect_sheets.json')
 
 # tokens discord
 tokens_connexion: dict = load_json("connect_discord")
@@ -70,69 +68,8 @@ help_string: str = "Vous pouvez utiliser les commandes :\n" + \
     "\n".join([f"**{key}** - *{val}*" for key,
               val in load_json("helps").items()])
 
-##################### GSHEETS ##########################
-
-
-def stat_from_player(stat, joueur):
-    stats = get_stats(joueur)
-    if stats != None:
-        return get_stats(joueur)[stat]
-    return None
-
-
-def googleask(func):
-    "Décorateur. Gère si l'utilisateur a bien une fiche à son nom"
-    def wrapper(*args, **kwargs):
-        try:
-            retour = func(*args, **kwargs)
-        except:
-            return None
-        return retour
-    return wrapper
-
-
-@googleask
-def increase_on_crit(stat: str, name: str, valeur=1):
-    """
-    Update la valeur de stat en cas de critique
-    * stat (str) : stat à modifier
-    * name (str) : nom du joueur chez qui chercher la fiche
-    * valeur (int - def. 1) : l'incrément à apposer à la stat
-    """
-    cellule = dict_pos[stat]
-    sh = gc.open(dict_links[f"{name}"])
-    wks = sh[0]
-    value = int(wks.cell(cellule).value)
-    wks.update_value(cellule, value+valeur)
-
-
-@googleask
-def get_stress(name: str):
-    """
-    Renvoie la valeur de stress pour le jet de dés
-    * name (str) : nom du joueur
-    """
-    return gc.open(dict_links[f"{name}"])[0].cell('G31').value
-
-
-@googleask
-def get_stats(name: str) -> dict:
-    """
-    Renvoie un dictionnaire de stats
-    *name (str) : nom du joueur
-    """
-    # connexion
-    sh = gc.open(dict_links[f"{name}"])
-    wks = sh[0]
-    # récupération des cellules d'intérêt
-    cell_list = wks.range('C12:E29')
-    d = dict()
-    for e in cell_list:
-        d[e[0].value] = e[1].value + e[2].value
-    return d
-
-
 ############################### WRAPPER #################################
+
 
 def commande(func):
     def wrapper(*args, **kwargs):
@@ -286,13 +223,13 @@ def roll_the_stress(message, val_stress):
     if(dice >= 8):
         "Effet de stress négatif"
         quote = quote_selection("STRESS NEGATIF")
-        increase_on_crit(
-            'Stress', str(message.author.mention), 1)
+        increase_on_crit(gc, 'Stress', str(
+            message.author.mention), dict_pos, dict_links, 1)
     elif(dice <= 2):
         "Effet de stress positif"
         quote = quote_selection("STRESS POSITIF")
-        increase_on_crit(
-            'Stress', str(message.author.mention), -1)
+        increase_on_crit(gc, 'Stress', str(
+            message.author.mention), dict_pos, dict_links, -1)
     else:
         "Effet de stress médian"
         quote = quote_selection("STRESS NEUTRE")
@@ -319,8 +256,8 @@ def roll_the_dice(de_a_lancer: int, bonus: int, message, valeur_difficulte: int 
     elif dice == de_a_lancer:
         state, anim = "REUSSITE CRITIQUE", "R_CRIT.avi"
         if(statistique != ""):
-            increase_on_crit(statistique[1:-1], str(message.author.mention))
-            # increase_on_crit(statistique, str(message.author)) <--- ????
+            increase_on_crit(gc, 'Stress', str(
+                message.author.mention), dict_pos, dict_links, 1)
     else:
         if valeur_difficulte == 0:
             state, anim = "INCONNU", ""
@@ -448,8 +385,8 @@ def bot(ld):
                     elif(contents[:4] in dict_stats.keys()):
                         contents = string_cleaner(contents)
 
-                        stat = stat_from_player(
-                            dict_stats[contents[:4]], (str(message.author.mention)).split("#")[0])[2:]
+                        stat = stat_from_player(gc, dict_stats[contents[:4]], (str(
+                            message.author.mention)).split("#")[0], dict_links)[2:]
                         if stat != None:
                             valeur_difficulte = contents.split(
                                 "/")[1] if "/" in contents else 0
@@ -492,23 +429,20 @@ def bot(ld):
                             int(de_a_lancer), int(bonus), message, int(diff))
 
                         await sender(output[0], message)
-                        # system(f"python obs.py {output[1]}")
                         await obs_invoke(toggle_anim, host, port, password, output[1])
 
                     elif(contents[:2] == '!s'):  # lancer de dé de stress
-                        #contents = string_cleaner(contents)
                         if (contents[2:] != ''):
                             val_stress: int = int(contents[2:])
                         else:
                             val_stress: int = get_stress(
-                                str(message.author.mention))
+                                gc, str(message.author.mention), dict_links)
                             if(val_stress != None):
 
                                 string, anim = roll_the_stress(
                                     message, val_stress)
 
                                 await sender(string, message)
-                                #system(f"python obs.py {anim}")
                                 await obs_invoke(toggle_anim, host, port, password, anim)
 
                             else:
