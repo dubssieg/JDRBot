@@ -4,9 +4,9 @@
 
 
 def stat_from_player(gc, stat, joueur, dict_links):
-    stats = get_stats(joueur)
+    stats = get_stats(gc, joueur, dict_links)
     if stats != None:
-        return get_stats(gc, joueur, dict_links)[stat]
+        return stats[stat]
     return None
 
 

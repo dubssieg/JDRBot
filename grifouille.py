@@ -73,7 +73,7 @@ async def save_file(ctx):
                 label="Entrez le nom de votre fiche sur GoogleSheets",
                 custom_id="text_input_response",
                 min_length=1,
-                max_length=20,
+                max_length=50,
             )
         ],
     )
