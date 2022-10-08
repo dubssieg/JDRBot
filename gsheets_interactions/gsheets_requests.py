@@ -3,13 +3,6 @@
 ################ Commandes GSHEETS #################
 
 
-def stat_from_player(gc, stat, joueur, dict_links):
-    stats = get_stats(gc, joueur, dict_links)
-    if stats != None:
-        return stats[stat]
-    return None
-
-
 def googleask(func):
     "Décorateur. Gère si l'utilisateur a bien une fiche à son nom"
     def wrapper(*args, **kwargs):
@@ -65,17 +58,5 @@ def get_stress(gc, name: str, dict_links: dict):
 
 
 @googleask
-def get_stats(gc, name: str, dict_links: dict) -> dict:
-    """
-    Renvoie un dictionnaire de stats
-    *name (str) : nom du joueur
-    """
-    # connexion
-    sh = gc.open(dict_links[f"{name}"])
-    wks = sh[0]
-    # récupération des cellules d'intérêt
-    cell_list = wks.range('C12:E29')
-    d = dict()
-    for e in cell_list:
-        d[e[0].value] = e[1].value + e[2].value
-    return d
+def stat_from_player(gc, stat: str, joueur: str, dict_links: dict) -> str | None:
+    return {e[0].value: e[1].value + e[2].value for e in gc.open(dict_links[f"{joueur}"])[0].range('C12:E29')}[stat]
