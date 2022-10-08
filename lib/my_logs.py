@@ -5,7 +5,7 @@ from logging import info, basicConfig, DEBUG
 
 def output_msg(string: str) -> None:
     "Prints the date and time of action + info specified in str"
-    info(f"{string}")
+    # info(f"{string}")
     print(f"[{str(datetime.now())}] {string}")
 
 

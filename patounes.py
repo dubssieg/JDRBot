@@ -9,7 +9,7 @@ from random import random, choice, randrange
 from sys import path
 from pygsheets import authorize
 from string import ascii_uppercase
-from lib import output_msg, load_json, save_json, Wrapped_Exception, Sheets_Exception, my_logs_global_config
+from lib import output_msg, load_json, save_json, Wrapped_Exception, Sheets_Exception
 from obs_interactions import obs_invoke, toggle_anim
 from gsheets_interactions import stat_from_player, increase_on_crit, get_stress
 
@@ -488,5 +488,4 @@ def main():
 
 if __name__ == "__main__":
     path.append('../')
-    my_logs_global_config("LOG_Patounes")
     main()
