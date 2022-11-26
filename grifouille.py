@@ -271,6 +271,30 @@ async def toss(ctx: interactions.CommandContext) -> None:
     res = "**PILE**" if(random() > 0.5) else "**FACE**"
     await ctx.send(f"{ctx.author.mention} > La pièce est tombée sur {res} !\n> *Un lancer de pièce, pour remettre son sort au destin...*")
 
+
+@bot.command(
+    name="join",
+    description="Fait rejoindre la salon vocal actuel à Grifouille",
+    scope=guild_id,
+)
+async def join(ctx: interactions.CommandContext) -> None:
+    if ctx.author.voice:
+        await ctx.message.author.voice.channel.connect()
+    else:
+        await ctx.send(ValueError(f"{ctx.author.mention} n'est pas dans un chan vocal... je ne peux pas te rejoindre."))
+
+
+@bot.command(
+    name="leave",
+    description="Fait rejoindre la salon vocal actuel à Grifouille",
+    scope=guild_id,
+)
+async def leave(ctx: interactions.CommandContext) -> None:
+    if ctx.voice_cilent:
+        await ctx.guild.voice_client.disconnect()
+    else:
+        await ctx.send(ValueError(f"Je ne suis pas dans chan vocal..."))
+
 """
 @bot.event
 async def on_ready():
