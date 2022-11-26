@@ -5,7 +5,6 @@ from lib import load_json, save_json
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
 from gsheets_interactions import stat_from_player, hero_point_update, increase_on_crit, get_stress
-from errors import StatgetterException
 
 #############################
 ### Chargement des tokens ###
@@ -96,7 +95,7 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
     value = res + modificateur  # valeur globale du jet
     if stat_testee != "":
         stat_testee = f"({stat_testee})"
-    if hero_point_update(gc, message.author.mention, hero_point, dict_links):
+    if hero_point_update(message.author.mention, dict_links, gc, hero_point):
         value += modificateur
     if valeur_difficulte > 0:
         if res == faces:
@@ -154,14 +153,17 @@ async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte:
     """
     await ctx.defer()
     try:
-        values = stat_from_player(gc, charac, ctx.author.mention, dict_links)[
+        values = stat_from_player(ctx.author.mention, dict_links, gc, charac)[
             2:].split('+')
         message, anim = roll_the_dice(ctx, int(values[0]), int(
             values[1]), valeur_difficulte, hero_point=point_heroisme, stat_testee=charac)
         await obs_invoke(toggle_anim, host, port, password, anim)
-    except:
-        message = StatgetterException(
-            f"Impossible d'atteindre la valeur de {charac} pour {ctx.author.mention}")
+    except ConnectionError:
+        message = ConnectionError(
+            f"Impossible d'atteindre la valeur de {charac} pour {ctx.author.mention}.")
+    except ValueError:
+        message = ValueError(
+            f"Désolé {ctx.author.mention}, tu ne sembles pas avoir de fiche liée dans ma base de données.")
     finally:
         await ctx.send(message)
 
@@ -183,13 +185,13 @@ def roll_the_stress(message, val_stress):
     if(dice >= 8):
         "Effet de stress négatif"
         quote = choice(quotes["STRESS NEGATIF"])
-        increase_on_crit(gc, 'Stress', str(
-            message.author.mention), dict_pos, dict_links, 1)
+        increase_on_crit(str(message.author.mention),
+                         dict_links, gc, 'Stress', dict_pos,  1)
     elif(dice <= 2):
         "Effet de stress positif"
         quote = choice(quotes["STRESS POSITIF"])
-        increase_on_crit(gc, 'Stress', str(
-            message.author.mention), dict_pos, dict_links, -1)
+        increase_on_crit(str(message.author.mention),
+                         dict_links, gc, 'Stress', dict_pos,  -1)
     else:
         "Effet de stress médian"
         quote = choice(quotes["STRESS NEUTRE"])
@@ -205,10 +207,19 @@ def roll_the_stress(message, val_stress):
 )
 async def stress(ctx: interactions.CommandContext):
     await ctx.defer()
-    message, anim = roll_the_stress(
-        ctx, get_stress(gc, ctx.author.mention, dict_links))
-    await ctx.send(message)
-    await obs_invoke(toggle_anim, host, port, password, anim)
+    try:
+        message, anim = roll_the_stress(
+            ctx, get_stress(ctx.author.mention, dict_links, gc))
+        await ctx.send(message)
+        await obs_invoke(toggle_anim, host, port, password, anim)
+    except ConnectionError:
+        message = ConnectionError(
+            f"Impossible d'atteindre la valeur de stress pour {ctx.author.mention}.")
+    except ValueError:
+        message = ValueError(
+            f"Désolé {ctx.author.mention}, tu ne sembles pas avoir de fiche liée dans ma base de données.")
+    finally:
+        await ctx.send(message)
 
 
 @ bot.command(

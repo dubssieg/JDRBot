@@ -6,15 +6,18 @@
 def googleask(func):
     "Décorateur. Gère si l'utilisateur a bien une fiche à son nom"
     def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except:
-            return None
+        if args[0] in args[1]:
+            try:
+                return func(*args, **kwargs)
+            except:
+                raise ConnectionError()
+        else:
+            raise ValueError()
     return wrapper
 
 
 @googleask
-def increase_on_crit(gc, stat: str, name: str, dict_pos: str, dict_links: dict, valeur=1):
+def increase_on_crit(name: str, dict_links: dict, gc, stat: str,  dict_pos: str, valeur=1) -> None:
     """
     Update la valeur de stat en cas de critique
     * stat (str) : stat à modifier
@@ -29,7 +32,7 @@ def increase_on_crit(gc, stat: str, name: str, dict_pos: str, dict_links: dict, 
 
 
 @googleask
-def hero_point_update(gc, name: str, checking: bool, dict_links: dict) -> bool:
+def hero_point_update(name: str, dict_links: dict, gc, checking: bool) -> bool:
     """
     Update la valeur de stat en cas de critique
     * stat (str) : stat à modifier
@@ -49,7 +52,7 @@ def hero_point_update(gc, name: str, checking: bool, dict_links: dict) -> bool:
 
 
 @googleask
-def get_stress(gc, name: str, dict_links: dict):
+def get_stress(name: str, dict_links: dict, gc) -> str:
     """
     Renvoie la valeur de stress pour le jet de dés
     * name (str) : nom du joueur
@@ -58,5 +61,5 @@ def get_stress(gc, name: str, dict_links: dict):
 
 
 @googleask
-def stat_from_player(gc, stat: str, joueur: str, dict_links: dict) -> str | None:
-    return {e[0].value: e[1].value + e[2].value for e in gc.open(dict_links[f"{joueur}"])[0].range('C12:E29')}[stat]
+def stat_from_player(name: str, dict_links: dict, gc, stat: str) -> str:
+    return {e[0].value: e[1].value + e[2].value for e in gc.open(dict_links[f"{name}"])[0].range('C12:E29')}[stat]

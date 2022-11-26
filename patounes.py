@@ -223,13 +223,13 @@ def roll_the_stress(message, val_stress):
     if(dice >= 8):
         "Effet de stress négatif"
         quote = quote_selection("STRESS NEGATIF")
-        increase_on_crit(gc, 'Stress', str(
-            message.author.mention), dict_pos, dict_links, 1)
+        increase_on_crit(str(message.author.mention),
+                         dict_links, gc, 'Stress', dict_pos, 1)
     elif(dice <= 2):
         "Effet de stress positif"
         quote = quote_selection("STRESS POSITIF")
-        increase_on_crit(gc, 'Stress', str(
-            message.author.mention), dict_pos, dict_links, -1)
+        increase_on_crit(str(message.author.mention),
+                         dict_links, gc, 'Stress', dict_pos, -1)
     else:
         "Effet de stress médian"
         quote = quote_selection("STRESS NEUTRE")
@@ -256,8 +256,8 @@ def roll_the_dice(de_a_lancer: int, bonus: int, message, valeur_difficulte: int 
     elif dice == de_a_lancer:
         state, anim = "REUSSITE CRITIQUE", "R_CRIT.avi"
         if(statistique != ""):
-            increase_on_crit(gc, 'Stress', str(
-                message.author.mention), dict_pos, dict_links, 1)
+            increase_on_crit(str(message.author.mention),
+                             dict_links, gc, 'Stress', dict_pos, 1)
     else:
         if valeur_difficulte == 0:
             state, anim = "INCONNU", ""
@@ -385,8 +385,8 @@ def bot(ld):
                     elif(contents[:4] in dict_stats.keys()):
                         contents = string_cleaner(contents)
 
-                        stat = stat_from_player(gc, dict_stats[contents[:4]], (str(
-                            message.author.mention)).split("#")[0], dict_links)[2:]
+                        stat = stat_from_player((str(message.author.mention)).split(
+                            "#")[0], dict_links, gc, dict_stats[contents[:4]])[2:]
                         if stat != None:
                             valeur_difficulte = contents.split(
                                 "/")[1] if "/" in contents else 0
@@ -436,7 +436,7 @@ def bot(ld):
                             val_stress: int = int(contents[2:])
                         else:
                             val_stress: int = get_stress(
-                                gc, str(message.author.mention), dict_links)
+                                str(message.author.mention), dict_links, gc)
                             if(val_stress != None):
 
                                 string, anim = roll_the_stress(
