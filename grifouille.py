@@ -4,8 +4,8 @@ from random import randrange, random, choice
 from lib import load_json, save_json
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
-from discord import Streaming
 from gsheets_interactions import stat_from_player, hero_point_update, increase_on_crit, get_stress
+from errors import StatgetterException
 
 #############################
 ### Chargement des tokens ###
@@ -144,13 +144,26 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
     ],
 )
 async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte: int = -1, point_heroisme: bool = False):
+    """Lance un dé d'une statistique associée à une fiche google sheets
+
+    Args:
+        ctx (interactions.CommandContext): contexte d'envoi du message
+        charac (str): la caractéristique à tester
+        valeur_difficulte (int, optional): difficulté à battre ou égaler pour que le jet soit une réussite. Defaults to -1.
+        point_heroisme (bool, optional): stipule si on tente d'utiliser son point d'héroïsme. Defaults to False.
+    """
     await ctx.defer()
-    values = stat_from_player(gc, charac, ctx.author.mention, dict_links)[
-        2:].split('+')
-    message, anim = roll_the_dice(ctx, int(values[0]), int(
-        values[1]), valeur_difficulte, hero_point=point_heroisme, stat_testee=charac)
-    await ctx.send(message)
-    await obs_invoke(toggle_anim, host, port, password, anim)
+    try:
+        values = stat_from_player(gc, charac, ctx.author.mention, dict_links)[
+            2:].split('+')
+        message, anim = roll_the_dice(ctx, int(values[0]), int(
+            values[1]), valeur_difficulte, hero_point=point_heroisme, stat_testee=charac)
+        await obs_invoke(toggle_anim, host, port, password, anim)
+    except:
+        message = StatgetterException(
+            f"Impossible d'atteindre la valeur de {charac} pour {ctx.author.mention}")
+    finally:
+        await ctx.send(message)
 
 
 def roll_the_stress(message, val_stress):
@@ -185,7 +198,7 @@ def roll_the_stress(message, val_stress):
     return (string, anim)
 
 
-@bot.command(
+@ bot.command(
     name="stress",
     description="Lance un jet de stress !",
     scope=guild_id,
@@ -198,7 +211,7 @@ async def stress(ctx: interactions.CommandContext):
     await obs_invoke(toggle_anim, host, port, password, anim)
 
 
-@bot.command(
+@ bot.command(
     name="dice",
     description="Simule un dé à n faces !",
     scope=guild_id,
