@@ -1,0 +1,23 @@
+[
+    {
+        "char_name": "Couleur des yeux",
+        "values": [
+            "bleus profond",
+            "bleus",
+            "oranges",
+            "gris",
+            "marrons",
+            "azur"
+        ],
+        "default": "clairs"
+    },
+    {
+        "char_name": "Teinte de peau",
+        "values": [
+            "bleu",
+            "vert",
+            "orangée"
+        ],
+        "default": "jaune d'arcane"
+    }
+]

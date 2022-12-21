@@ -1,7 +1,7 @@
 from re import S
 import interactions
 from random import randrange, random, choice
-from lib import load_json, save_json
+from lib import load_json, save_json, create_char
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
 from gsheets_interactions import stat_from_player, hero_point_update, increase_on_crit, get_stress
@@ -53,6 +53,39 @@ list_days: list = ["Lundi", "Mardi", "Mercredi",
 
 stats_choices: list = [interactions.Choice(
     name=val, value=val) for val in dict_stats.values()]
+
+
+#################### Créer un personnage ##################
+
+@bot.command(
+    name="create_char",
+    description="Génère les caractéristiques d'un personnage",
+    scope=guild_id,
+)
+async def save_file(ctx):
+    modal = interactions.Modal(
+        title="Créer un personnage",
+        custom_id="create_char_form",
+        components=[
+            interactions.Option(
+                type=interactions.OptionType.STRING,
+                label="Choisissez l'ethnie du personnage",
+                custom_id="text_choice_response",
+                required=True,
+                choices=[
+                    interactions.Choice(name="Alastr'aar", value="alastraar"),
+                    interactions.Choice(name="Aïùi", value="aiui")
+                ]
+            )
+        ],
+    )
+    await ctx.popup(modal)
+
+
+@bot.modal("create_char_form")
+async def modal_response(ctx, response: str):
+    await ctx.send(f"{create_char(response)}", ephemeral=True)
+
 
 ################ Pour demander la fiche #################
 

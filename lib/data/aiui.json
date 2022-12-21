@@ -1,0 +1,21 @@
+[
+    {
+        "char_name": "Couleur des yeux",
+        "values": [
+            "jaunes",
+            "verts",
+            "gris",
+            "verts profond"
+        ],
+        "default": "clairs"
+    },
+    {
+        "char_name": "Teinte de peau",
+        "values": [
+            "blanc",
+            "beige",
+            "grisâtre"
+        ],
+        "default": "cendreuse"
+    }
+]
