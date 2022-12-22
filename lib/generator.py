@@ -1,7 +1,9 @@
 from json import load
 from random import choice, choices
+from pandas import read_csv
 
 data_directory: str = "data/"
+reference_dataset = read_csv(f"{data_directory}dataset.csv")
 
 
 def unpack_char(current_properties: dict, char: dict) -> dict:
@@ -34,12 +36,16 @@ def name() -> str:
     particles: dict = load(open(f'{data_directory}names.json', 'r'))
     debut, fin, mid1, mid2 = choice(particles["debut"]), choice(
         particles["fin"]), choice(particles["mid"]), choice(particles["mid"])
-    return choice[f"{debut}{mid1}{mid2}{fin}", f"{debut}{mid1}{fin}", f"{debut}{fin}"]
+    return choice([f"{debut}{mid1}{mid2}{fin}", f"{debut}{mid1}{fin}", f"{debut}{fin}"])
 
 
 def create_char(ethny: str) -> dict:
-    character: dict = {'name': name()}
+    character: dict = {'Nom': name()}
     property_set: list = load(open(f'{data_directory}{ethny}.json', 'r'))
     for char in property_set:
         character = unpack_char(character, char)
     return character
+
+
+def get_personnas() -> dict:
+    return load(open(f'{data_directory}descriptors.json', 'r'))

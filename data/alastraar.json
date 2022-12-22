@@ -19,5 +19,21 @@
             "orangée"
         ],
         "default": "jaune d'arcane"
+    },
+    {
+        "char_name": "Forme des yeux",
+        "values": [
+            "amande",
+            "ronds",
+            "retroussés",
+            "tombants"
+        ],
+        "proba": [
+            65,
+            10,
+            15,
+            10
+        ],
+        "default": "cendreuse"
     }
 ]

@@ -1,0 +1,20 @@
+[
+    {
+        "char_name": "Couleur des cheveux",
+        "values": [
+            "roux clair",
+            "roux moyen",
+            "noir",
+            "brun",
+            "châtain foncé",
+            "châtain",
+            "châtain clair",
+            "blond foncé",
+            "blond moyen",
+            "blond clair",
+            "blond très clair",
+            "blond platine"
+        ],
+        "default": "clairs"
+    }
+]

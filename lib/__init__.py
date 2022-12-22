@@ -14,3 +14,4 @@ from .my_logs import my_function_timer
 from .my_logs import my_logs_global_config
 
 from .generator import create_char
+from .generator import get_personnas

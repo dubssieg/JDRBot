@@ -1,7 +1,7 @@
 from re import S
 import interactions
 from random import randrange, random, choice
-from lib import load_json, save_json, create_char
+from lib import load_json, save_json, create_char, get_personnas
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
 from gsheets_interactions import stat_from_player, hero_point_update, increase_on_crit, get_stress
@@ -53,41 +53,30 @@ list_days: list = ["Lundi", "Mardi", "Mercredi",
 
 stats_choices: list = [interactions.Choice(
     name=val, value=val) for val in dict_stats.values()]
-
+char_choices: list = [interactions.Choice(
+    name=val, value=key) for key, val in get_personnas().items()]
 
 #################### Créer un personnage ##################
 
+
 @bot.command(
     name="create_char",
-    description="Génère les caractéristiques d'un personnage",
+    description="Génère les caractéristiques d'un personnage aléatoire !",
     scope=guild_id,
+    options=[
+        interactions.Option(
+            name="type",
+            description="Type de personnage à générer",
+            type=interactions.OptionType.STRING,
+            choices=char_choices,
+            required=True,
+        )
+    ],
 )
-async def save_file(ctx):
-    modal = interactions.Modal(
-        title="Créer un personnage",
-        custom_id="create_char_form",
-        components=[
-            interactions.Option(
-                type=interactions.OptionType.STRING,
-                label="Choisissez l'ethnie du personnage",
-                custom_id="text_choice_response",
-                required=True,
-                choices=[
-                    interactions.Choice(name="Alastr'aar", value="alastraar"),
-                    interactions.Choice(name="Aïùi", value="aiui")
-                ]
-            )
-        ],
-    )
-    await ctx.popup(modal)
+async def generate_char(ctx: interactions.CommandContext, type: str):
+    await ctx.send('\n'.join([f"*{k}*  -->  **{v}**" for k, v in create_char(type).items()]), ephemeral=True)
 
-
-@bot.modal("create_char_form")
-async def modal_response(ctx, response: str):
-    await ctx.send(f"{create_char(response)}", ephemeral=True)
-
-
-################ Pour demander la fiche #################
+    ################ Pour demander la fiche #################
 
 
 @bot.command(
@@ -96,7 +85,7 @@ async def modal_response(ctx, response: str):
     scope=guild_id,
 )
 async def save_file(ctx):
-    modal = interactions.Modal(
+    modal2 = interactions.Modal(
         title="Lier une feuille de stats",
         custom_id="mod_app_form",
         components=[
@@ -109,7 +98,7 @@ async def save_file(ctx):
             )
         ],
     )
-    await ctx.popup(modal)
+    await ctx.popup(modal2)
 
 
 @bot.modal("mod_app_form")
