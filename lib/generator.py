@@ -19,7 +19,7 @@ def unpack_char(current_properties: dict, char: dict) -> dict:
     """
     try:
         if 'proba' in char:
-            value = choices(char['values'], k=1, weights=char['proba'])
+            value = choices(char['values'], k=1, weights=char['proba'])[0]
         else:
             value = choice(char['values'])
     except:
