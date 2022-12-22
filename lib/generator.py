@@ -1,9 +1,9 @@
 from json import load
 from random import choice, choices
-from pandas import read_csv
+#from pandas import read_csv
 
 data_directory: str = "data/"
-reference_dataset = read_csv(f"{data_directory}dataset.csv")
+#reference_dataset = read_csv(f"{data_directory}dataset.csv")
 
 
 def unpack_char(current_properties: dict, char: dict) -> dict:
