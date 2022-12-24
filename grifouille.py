@@ -5,7 +5,7 @@ from lib import load_json, save_json, create_char, get_personnas
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
 from gsheets_interactions import stat_from_player, hero_point_update, increase_on_crit, get_stress
-from time import wait
+from time import sleep
 
 #############################
 ### Chargement des tokens ###
@@ -303,4 +303,4 @@ if __name__ == "__main__":
             print(KeyboardInterrupt("Keyboard interrupt, terminating Grifouille"))
             exit()
         except:
-            wait(10)
+            sleep(10)
