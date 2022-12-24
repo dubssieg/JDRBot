@@ -10,6 +10,22 @@
         "default": "clairs"
     },
     {
+        "char_name": "Coupe de cheveux",
+        "values": [
+            "tombants",
+            "demi-queue",
+            "frange",
+            "queue de cheval",
+            "pixie",
+            "rabattus",
+            "mi-longs",
+            "longs",
+            "rattachés",
+            "tressés"
+        ],
+        "default": "mi-longs"
+    },
+    {
         "char_name": "Teinte de peau",
         "values": [
             "blanc",

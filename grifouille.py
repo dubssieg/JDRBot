@@ -1,10 +1,11 @@
-from re import S
+
 import interactions
 from random import randrange, random, choice
 from lib import load_json, save_json, create_char, get_personnas
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
 from gsheets_interactions import stat_from_player, hero_point_update, increase_on_crit, get_stress
+from time import wait
 
 #############################
 ### Chargement des tokens ###
@@ -293,4 +294,13 @@ async def toss(ctx: interactions.CommandContext) -> None:
     res = "**PILE**" if(random() > 0.5) else "**FACE**"
     await ctx.send(f"{ctx.author.mention} > La pièce est tombée sur {res} !\n> *Un lancer de pièce, pour remettre son sort au destin...*")
 
-bot.start()
+if __name__ == "__main__":
+    while(True):
+        try:
+            bot.start()
+            print("GRIFOUILLE EST PRET !")
+        except KeyboardInterrupt:
+            print(KeyboardInterrupt("Keyboard interrupt, terminating Grifouille"))
+            exit()
+        except:
+            wait(10)

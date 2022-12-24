@@ -16,5 +16,44 @@
             "blond platine"
         ],
         "default": "clairs"
+    },
+    {
+        "char_name": "Coupe de cheveux",
+        "values": [
+            "tombants",
+            "demi-queue",
+            "frange",
+            "queue de cheval",
+            "pixie",
+            "rabattus",
+            "mi-longs",
+            "longs",
+            "rattachés",
+            "tressés"
+        ],
+        "default": "mi-longs"
+    },
+    {
+        "char_name": "Teinte de peau",
+        "values": [
+            "blanc",
+            "beige",
+            "rose",
+            "pâle"
+        ],
+        "default": "cendreuse"
+    },
+    {
+        "char_name": "Couleur des yeux",
+        "values": [
+            "gris",
+            "marrons",
+            "noirs",
+            "verts",
+            "bleus",
+            "orangés",
+            "blancs"
+        ],
+        "default": "clairs"
     }
 ]
