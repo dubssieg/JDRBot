@@ -298,7 +298,6 @@ if __name__ == "__main__":
     while(True):
         try:
             bot.start()
-            print("GRIFOUILLE EST PRET !")
         except KeyboardInterrupt:
             print(KeyboardInterrupt("Keyboard interrupt, terminating Grifouille"))
             exit()
