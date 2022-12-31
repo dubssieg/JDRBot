@@ -15,3 +15,6 @@ from .my_logs import my_logs_global_config
 
 from .generator import create_char
 from .generator import get_personnas
+
+from .switcher import switch
+from .switcher import get_scene_list

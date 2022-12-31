@@ -1,7 +1,7 @@
 
 import interactions
 from random import randrange, random, choice
-from lib import load_json, save_json, create_char, get_personnas
+from lib import load_json, save_json, create_char, get_personnas, get_scene_list, switch
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
 from gsheets_interactions import stat_from_player, hero_point_update, increase_on_crit, get_stress
@@ -42,6 +42,9 @@ quotes: dict = load_json("quotes")
 listStates = [key for key in dict_stress.keys()]
 listEffects = [value for value in dict_stress.values()]
 
+# liste des scènes disponibles au switch
+list_of_scenes: list = get_scene_list(tokens_obsws)
+
 # listes utiles à déclarer en amont
 list_letters: list = ["\U0001F1E6", "\U0001F1E7", "\U0001F1E8", "\U0001F1E9", "\U0001F1EA", "\U0001F1EB", "\U0001F1EC", "\U0001F1ED",
                       "\U0001F1EE", "\U0001F1EF", "\U0001F1F0", "\U0001F1F1", "\U0001F1F2", "\U0001F1F3", "\U0001F1F4", "\U0001F1F5", "\U0001F1F6", "\U0001F1F7"]
@@ -56,6 +59,31 @@ stats_choices: list = [interactions.Choice(
     name=val, value=val) for val in dict_stats.values()]
 char_choices: list = [interactions.Choice(
     name=val, value=key) for key, val in get_personnas().items()]
+scene_choices: list = [interactions.Choice(
+    name=sc, value=sc) for sc in list_of_scenes]
+
+######################## Autorégie ########################
+
+
+@bot.command(
+    name="scene_switch",
+    description="Change la scène actuelle",
+    scope=guild_id,
+    options=[
+        interactions.Option(
+            name="scene",
+            description="Scène vers laquelle switch",
+            type=interactions.OptionType.STRING,
+            choices=scene_choices,
+            required=True,
+        )
+    ],
+)
+async def stress(ctx: interactions.CommandContext, scene: str):
+    await ctx.defer()
+    switch(tokens_obsws, scene)
+    await ctx.send(f"La scène a été changée pour {scene}")
+
 
 #################### Créer un personnage ##################
 
@@ -77,7 +105,8 @@ char_choices: list = [interactions.Choice(
 async def generate_char(ctx: interactions.CommandContext, type: str):
     await ctx.send('\n'.join([f"*{k}*  -->  **{v}**" for k, v in create_char(type).items()]), ephemeral=True)
 
-    ################ Pour demander la fiche #################
+
+################ Pour demander la fiche #################
 
 
 @bot.command(
