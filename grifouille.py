@@ -44,6 +44,8 @@ listEffects = [value for value in dict_stress.values()]
 
 # liste des scènes disponibles au switch
 list_of_scenes: list = get_scene_list(tokens_obsws)
+abbrev_scenes: list = [sc[:20] if len(
+    sc) > 20 else sc for sc in list_of_scenes]
 
 # listes utiles à déclarer en amont
 list_letters: list = ["\U0001F1E6", "\U0001F1E7", "\U0001F1E8", "\U0001F1E9", "\U0001F1EA", "\U0001F1EB", "\U0001F1EC", "\U0001F1ED",
@@ -60,7 +62,7 @@ stats_choices: list = [interactions.Choice(
 char_choices: list = [interactions.Choice(
     name=val, value=key) for key, val in get_personnas().items()]
 scene_choices: list = [interactions.Choice(
-    name=sc[:25] if len(sc) > 25 else sc, value=sc) for sc in list_of_scenes]
+    name=abbrev, value=i) for i, abbrev in enumerate(abbrev_scenes)]
 
 ######################## Autorégie ########################
 
@@ -79,10 +81,10 @@ scene_choices: list = [interactions.Choice(
         )
     ],
 )
-async def stress(ctx: interactions.CommandContext, scene: str):
+async def stress(ctx: interactions.CommandContext, scene: int):
     await ctx.defer()
-    switch(tokens_obsws, scene)
-    await ctx.send(f"La scène a été changée pour {scene}")
+    switch(tokens_obsws, list_of_scenes[scene])
+    await ctx.send(f"La scène a été changée pour {list_of_scenes[scene]}")
 
 
 #################### Créer un personnage ##################
