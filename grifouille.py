@@ -60,7 +60,7 @@ stats_choices: list = [interactions.Choice(
 char_choices: list = [interactions.Choice(
     name=val, value=key) for key, val in get_personnas().items()]
 scene_choices: list = [interactions.Choice(
-    name=sc, value=sc) for sc in list_of_scenes]
+    name=sc[:25] if len(sc) > 25 else sc, value=sc) for sc in list_of_scenes]
 
 ######################## Autorégie ########################
 
