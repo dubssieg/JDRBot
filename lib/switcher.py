@@ -5,9 +5,8 @@ from websocket._exceptions import WebSocketConnectionClosedException
 
 
 def switch(creditentials: dict, requested_name: str) -> None:
-    with open(f"{path.dirname(__file__)}/creditentials.json", 'r') as creds:
-        ws = obsws(creditentials["host"],
-                   creditentials["port"], creditentials["password"])
+    ws = obsws(creditentials["host"],
+               creditentials["port"], creditentials["password"])
     try:
         ws.connect()
         ws.call(requests.SetCurrentScene(requested_name))
@@ -24,9 +23,8 @@ def switch(creditentials: dict, requested_name: str) -> None:
 
 
 def get_scene_list(creditentials: dict) -> list:
-    with open(f"{path.dirname(__file__)}/creditentials.json", 'r') as creds:
-        ws = obsws(creditentials["host"],
-                   creditentials["port"], creditentials["password"])
+    ws = obsws(creditentials["host"],
+               creditentials["port"], creditentials["password"])
     try:
         ws.connect()
         return [scene['name'] for scene in ws.call(requests.GetSceneList()).getScenes()]
