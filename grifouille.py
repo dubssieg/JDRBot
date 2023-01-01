@@ -62,7 +62,7 @@ stats_choices: list = [interactions.Choice(
 char_choices: list = [interactions.Choice(
     name=val, value=key) for key, val in get_personnas().items()]
 scene_choices: list = [interactions.Choice(
-    name=abbrev, value=i) for i, abbrev in enumerate(abbrev_scenes)]
+    name=abbrev, value=str(i)) for i, abbrev in enumerate(abbrev_scenes)]
 
 ######################## Autorégie ########################
 
@@ -81,10 +81,10 @@ scene_choices: list = [interactions.Choice(
         )
     ],
 )
-async def stress(ctx: interactions.CommandContext, scene: int):
+async def stress(ctx: interactions.CommandContext, scene: str):
     await ctx.defer()
-    switch(tokens_obsws, list_of_scenes[scene])
-    await ctx.send(f"La scène a été changée pour {list_of_scenes[scene]}")
+    switch(tokens_obsws, list_of_scenes[int(scene)])
+    await ctx.send(f"La scène a été changée pour {list_of_scenes[int(scene)]}")
 
 
 #################### Créer un personnage ##################
