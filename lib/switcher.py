@@ -2,6 +2,17 @@ from obswebsocket import obsws, requests
 from os import path
 from obswebsocket.exceptions import ConnectionFailure
 from websocket._exceptions import WebSocketConnectionClosedException
+from requests import get
+from urllib.parse import urlencode
+from time import sleep
+
+SCENES_WHERE_SHOWING: list = ["Discussion_Solo",
+                              "Presentation", "Dual", "Fullscreen", "Rolls_Solo_Tharos", "Rolls_Solo_Yoka", "Rolls_Solo_Invité_1", "Rolls_Solo_Invité_2", "Main_Pause_Rolls"]
+NAME_OF_EMBED_SCENE: str = "Embed"
+NAME_OF_BROWSER_SOURCE: str = "twitter_embed"
+X_IN_SCENE: int = 1580
+X_OUT_OF_BOUNDS: int = 2000
+Y_POS: int = 150
 
 
 def switch(creditentials: dict, requested_name: str) -> None:

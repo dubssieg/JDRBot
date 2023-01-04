@@ -85,7 +85,7 @@ scene_choices: list = [interactions.Choice(
 async def stress(ctx: interactions.CommandContext, scene: str):
     await ctx.defer()
     switch(tokens_obsws, scene)
-    await ctx.send(f"La scène a été changée pour {scene}")
+    await ctx.send(f"La scène a été changée pour {scene}", ephemeral=True)
 
 
 #################### Créer un personnage ##################
