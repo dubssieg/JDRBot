@@ -66,6 +66,8 @@ char_choices: list = [interactions.Choice(
 #scene_choices: list = [interactions.Choice(name=abbrev, value=str(i)) for i, abbrev in enumerate(abbrev_scenes)]
 scene_choices: list = [interactions.Choice(
     name=name_scene, value=name_scene) for name_scene in list_of_scenes]
+manuel_choices: list = [interactions.Choice(
+    name=name_manual, value=name_manual) for name_manual in manuels]
 
 ######################## Autorégie ########################
 
@@ -101,7 +103,7 @@ async def stress(ctx: interactions.CommandContext, scene: str):
             name="manuel",
             description="Manuel à afficher",
             type=interactions.OptionType.STRING,
-            choices=manuels,
+            choices=manuel_choices,
             required=True,
         )
     ],
