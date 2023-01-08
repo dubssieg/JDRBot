@@ -2,4 +2,4 @@ env/
 __pycache__/
 old/
 LOG_Patounes.log
-*.png
+img/radial_stats.png

@@ -57,6 +57,7 @@ descs_projets: list = ["Liens vers mes projets", "Retrouvez tous les liens vers 
                        "Merci pour tous vos partages et vos retours, c'est adorable !"]
 list_days: list = ["Lundi", "Mardi", "Mercredi",
                    "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+manuels: list = ["one_shot"]
 
 stats_choices: list = [interactions.Choice(
     name=val, value=val) for val in dict_stats.values()]
@@ -88,6 +89,25 @@ async def stress(ctx: interactions.CommandContext, scene: str):
     switch(tokens_obsws, scene)
     await ctx.send(f"La scène a été changée pour {scene}", ephemeral=True)
 
+
+#################### Obtenir une fiche de règles ##################
+
+@bot.command(
+    name="get_manual",
+    description="Renvoie un résumé de règles du système demandé",
+    scope=guild_id,
+    options=[
+        interactions.Option(
+            name="manuel",
+            description="Manuel à afficher",
+            type=interactions.OptionType.STRING,
+            choices=manuels,
+            required=True,
+        )
+    ],
+)
+async def stress(ctx: interactions.CommandContext, manuel: str):
+    await command_send(ctx, "Voici le manuel demandé !", files=interactions.File(filename=f"{manuel}.png"))
 
 #################### Créer un personnage ##################
 
