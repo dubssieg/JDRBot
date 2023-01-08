@@ -1,6 +1,6 @@
 
 import interactions
-from discord import File
+from interactions.ext.files import command_send
 from random import randrange, random, choice
 from lib import load_json, save_json, create_char, get_personnas, get_scene_list, switch, create_stats
 from pygsheets import authorize
@@ -107,7 +107,7 @@ async def stress(ctx: interactions.CommandContext, scene: str):
     ],
 )
 async def generate_char(ctx: interactions.CommandContext, type: str):
-    await ctx.send('\n'.join([f"*{k}*  -->  **{v}**" for k, v in create_char(type).items()]), file=File(create_stats()), ephemeral=True)
+    await command_send(ctx, '\n'.join([f"*{k}*  -->  **{v}**" for k, v in create_char(type).items()]), files=interactions.File(filename=create_stats()))
 
 
 ################ Pour demander la fiche #################
@@ -328,6 +328,7 @@ async def toss(ctx: interactions.CommandContext) -> None:
     await ctx.send(f"{ctx.author.mention} > La pièce est tombée sur {res} !\n> *Un lancer de pièce, pour remettre son sort au destin...*")
 
 if __name__ == "__main__":
+    bot.load('interactions.ext.files')
     while(True):
         try:
             bot.start()
