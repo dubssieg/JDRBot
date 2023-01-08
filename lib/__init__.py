@@ -18,3 +18,5 @@ from .generator import get_personnas
 
 from .switcher import switch
 from .switcher import get_scene_list
+
+from .stats import create_stats

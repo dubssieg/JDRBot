@@ -1,7 +1,8 @@
 
 import interactions
+from discord import File
 from random import randrange, random, choice
-from lib import load_json, save_json, create_char, get_personnas, get_scene_list, switch
+from lib import load_json, save_json, create_char, get_personnas, get_scene_list, switch, create_stats
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
 from gsheets_interactions import stat_from_player, hero_point_update, increase_on_crit, get_stress
@@ -106,7 +107,7 @@ async def stress(ctx: interactions.CommandContext, scene: str):
     ],
 )
 async def generate_char(ctx: interactions.CommandContext, type: str):
-    await ctx.send('\n'.join([f"*{k}*  -->  **{v}**" for k, v in create_char(type).items()]), ephemeral=True)
+    await ctx.send('\n'.join([f"*{k}*  -->  **{v}**" for k, v in create_char(type).items()]), file=File(create_stats()), ephemeral=True)
 
 
 ################ Pour demander la fiche #################
