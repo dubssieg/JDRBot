@@ -3,13 +3,13 @@ import resx.pnj as p
 import resx.loader as l
 import datetime
 # OK
-from discord import Embed, Client, Streaming, File
+from discord import Embed, Client, Streaming, File, FFmpegPCMAudio
 from os import fsencode, fsdecode, listdir
 from random import random, choice, randrange
 from sys import path
 from pygsheets import authorize
 from string import ascii_uppercase
-from lib import output_msg, load_json, save_json, Wrapped_Exception, Sheets_Exception
+from lib import output_msg, load_json, save_json, Wrapped_Exception, Sheets_Exception, YTDLSource
 from obs_interactions import obs_invoke, toggle_anim
 from gsheets_interactions import stat_from_player, increase_on_crit, get_stress
 
@@ -329,12 +329,29 @@ def bot(ld):
         contents: str = message.content
 
         # nettoyage
-        if(contents in ["!savelink", "!toss", "!disconnect", "!support", "!gennom", "!genpnj", "!meow", "!linkjdr", "!linkprojet"] or contents[:2] in ["!d", "!s", "!r"] or contents[:3] in ["!wp"] or contents[:4] in dict_stats.keys()):
+        if(contents in ["!join", "!leave", "!pause", "!resume", "!stop", "!savelink", "!toss", "!disconnect", "!support", "!gennom", "!genpnj", "!meow", "!linkjdr", "!linkprojet"] or contents[:5] in ["!play"] or contents[:2] in ["!d", "!s", "!r"] or contents[:3] in ["!wp"] or contents[:4] in dict_stats.keys()):
             output_msg(
                 f"Réception d'une commande de {str(message.author)} > {contents}")
             await delete_command(message)
 
             match contents:
+
+                case "!join":
+
+                    if not message.author.voice:
+                        await send_texte("Désolé, tu n'es pas dans un chan vocal :(", message)
+                        return
+                    else:
+                        channel = message.author.voice.channel
+                    await channel.connect()
+
+                case "!leave":
+
+                    voice_client = message.guild.voice_client
+                    if voice_client.is_connected():
+                        await voice_client.disconnect()
+                    else:
+                        await send_texte("Désolé, le bot est déjà déconnecté :(", message)
 
                 case "!linkprojet":
                     "Donne les liens vers les différents projets sous forme d'un embed"
@@ -376,7 +393,21 @@ def bot(ld):
 
                 case _:
 
-                    if contents[:9] == "!savefile":
+                    if contents[:5] == "!play":
+
+                        url: str = contents.split()[1]
+                        server = message.guild
+                        voice_channel = server.voice_client
+
+                        filename = await YTDLSource.from_url(url, loop=client.loop)
+                        try:
+                            voice_channel.play(FFmpegPCMAudio(
+                                executable="ffmpeg", source=filename))
+                            await send_texte(f'**Joue :** {filename}', message)
+                        except:
+                            await send_texte("Désolé, le bot n'est pas connecté :(", message)
+
+                    elif contents[:9] == "!savefile":
                         "Crée un lien symbolique entre un ID discord et une fiche"
                         tmp = savefile(message)
                         await send_texte(f"{tmp[1]}{tmp[0]}", message)
@@ -408,7 +439,7 @@ def bot(ld):
 
                     # dé simple avec ou sans valeur de difficulté
                     elif(contents[:2] == '!d'):
-                        #contents = string_cleaner(contents)
+                        # contents = string_cleaner(contents)
                         datas = contents[2:]
 
                         de_a_lancer = (datas.split("+")[0]).split("/")[0]

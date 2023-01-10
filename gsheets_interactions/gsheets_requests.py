@@ -62,4 +62,9 @@ def get_stress(name: str, dict_links: dict, gc) -> str:
 
 @googleask
 def stat_from_player(name: str, dict_links: dict, gc, stat: str) -> str:
-    return {e[0].value: e[1].value + e[2].value for e in gc.open(dict_links[f"{name}"])[0].range('C12:E29')}[stat]
+    return {e[0].value: e[1].value + e[3].value for e in gc.open(dict_links[f"{name}"])[0].range('B12:E29')}[stat]
+
+
+@googleask
+def values_from_player(name: str, dict_links: dict, gc) -> str:
+    return {e[0].value: {'valeur_max': int(e[3].value), 'seuil_critique': int(e[4].value), 'valeur_actuelle': int(e[5].value)} for e in gc.open(dict_links[f"{name}"])[0].range('A3:F8')}
