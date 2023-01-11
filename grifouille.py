@@ -438,7 +438,7 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
         id=979488514561421332
     )
 
-    msg = await ctx.message.channel.send(f"Merci de répondre au plus vite {emoji}", embeds=embed)
+    msg = await ctx.send(f"Merci de répondre au plus vite {emoji}", embeds=embed)
     # affiche les réactions pour le sondage
     for emoji in list_emoji:
         await msg.add_reaction(emoji)
