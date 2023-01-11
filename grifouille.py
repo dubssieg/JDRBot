@@ -417,10 +417,10 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
         ) >= 5 else "Rassemblement 20h45, début 21h !"
         if isinstance(horaire, list):
             for h in horaire:
-                liste_jours[f"{liste_lettres[step]} - {list_days[future.weekday()]} {future.day}.{future.month}"] = h
+                liste_jours[f"{list_letters[step]} - {list_days[future.weekday()]} {future.day}.{future.month}"] = h
                 step += 1
         else:
-            liste_jours[f"{liste_lettres[step]} - {list_days[future.weekday()]} {future.day}.{future.month}"] = horaire
+            liste_jours[f"{list_letters[step]} - {list_days[future.weekday()]} {future.day}.{future.month}"] = horaire
             step += 1
 
     # on définit une lise d'emoji de la longueur du nombre de réponses possibles
@@ -438,10 +438,10 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
         id=979488514561421332
     )
 
-    msg = await ctx.send(f"Merci de répondre au plus vite {emoji}", embeds=embed)
+    message = await ctx.send(f"Merci de répondre au plus vite {emoji}", embeds=embed)
     # affiche les réactions pour le sondage
     for emoji in list_emoji:
-        await msg.add_reaction(emoji)
+        await message.create_reaction(emoji)
 
 
 if __name__ == "__main__":
