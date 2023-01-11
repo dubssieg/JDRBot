@@ -245,7 +245,7 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
         await ctx.defer()
 
         values = values_from_player(ctx.author.mention, dict_links, gc)
-        labels: list = values.keys()
+        labels: list = list(values.keys())
         valeurs_max: list = [values[label]['valeur_max']
                              for label in labels]
         valeurs_actuelle: list = [values[label]
@@ -297,7 +297,7 @@ async def display(ctx: interactions.CommandContext):
     await ctx.defer()
     try:
         values = values_from_player(ctx.author.mention, dict_links, gc)
-        labels: list = values.keys()
+        labels: list = list(values.keys())
         valeurs_max: list = [values[label]['valeur_max'] for label in labels]
         valeurs_actuelle: list = [values[label]
                                   ['valeur_actuelle'] for label in labels]
