@@ -62,3 +62,59 @@ def create_stats() -> None:
         inverted_image.save(path)
 
     return path
+
+
+def display_stats(stats: list, current_values: list, maximum_values: list, critical_values: list) -> str:
+    color_critical: str = "#12b6b7"
+    color_maximum: str = "#4d12b7"
+    color_current: str = "#576e07"
+    current_values.append(current_values[0])
+    maximum_values.append(maximum_values[0])
+    critical_values.append(critical_values[0])
+
+    plt.figure(figsize=(4, 4), dpi=100)
+    ax = plt.subplot(polar=True)
+
+    theta = np.linspace(0, 2 * np.pi, len(current_values))
+
+    lines, labels = plt.thetagrids(range(0, 360, int(360/len(stats))), (stats))
+
+    ax.plot(theta, current_values, color=color_current)
+    ax.plot(theta, maximum_values, color=color_maximum)
+    ax.plot(theta, critical_values, color=color_critical)
+    ax.fill(theta, critical_values, alpha=0.1, color=color_critical)
+    ax.set_rlabel_position(0)
+
+    angles = np.linspace(0, 2*np.pi, len(ax.get_xticklabels())+1)
+    angles[np.cos(angles) < 0] = angles[np.cos(angles) < 0] + np.pi
+    angles = np.rad2deg(angles)
+    labels = []
+    for label, angle in zip(ax.get_xticklabels(), angles):
+        x, y = label.get_position()
+        lab = ax.text(x, y, label.get_text(), transform=label.get_transform(),
+                      ha=label.get_ha(), va=label.get_va())
+        if angle > 90:
+            lab.set_rotation(angle+90)
+        else:
+            lab.set_rotation(angle-90)
+        labels.append(lab)
+    ax.set_xticklabels([])
+
+    ax.set_ylim([0, 8])
+    path: str = "img/player_stats.png"
+    plt.savefig(path, transparent=True, bbox_inches='tight')
+
+    image = Image.open(path)
+    if image.mode == 'RGBA':
+        r, g, b, a = image.split()
+        rgb_image = Image.merge('RGB', (r, g, b))
+        inverted_image = invert(rgb_image)
+        r2, g2, b2 = inverted_image.split()
+        final_transparent_image = Image.merge('RGBA', (r2, g2, b2, a))
+        final_transparent_image.save(path)
+
+    else:
+        inverted_image = invert(image)
+        inverted_image.save(path)
+
+    return path

@@ -2,10 +2,10 @@
 import interactions
 from interactions.ext.files import command_send
 from random import randrange, random, choice
-from lib import load_json, save_json, create_char, get_personnas, get_scene_list, switch, create_stats
+from lib import load_json, save_json, create_char, get_personnas, get_scene_list, switch, create_stats, display_stats
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
-from gsheets_interactions import stat_from_player, hero_point_update, increase_on_crit, get_stress
+from gsheets_interactions import values_from_player, stat_from_player, hero_point_update, increase_on_crit, get_stress
 from time import sleep
 from string import ascii_uppercase
 from datetime import datetime, timedelta
@@ -201,6 +201,65 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
         anim = ""
         str_resultat = f"{message.author.mention} > **INCONNU** {stat_testee}\n> Le résultat du dé est **{value}** ({res}/{faces}+{modificateur}) !\n> *{choice(quotes['INCONNU'])}*"
     return (str_resultat, anim)
+
+
+@bot.command(
+    name="stat",
+    description="Jet d'un dé accordément à votre fiche de stats !",
+    scope=guild_id,
+    options=[
+        interactions.Option(
+            name="charac",
+            description="Caractéristique à tester !",
+            type=interactions.OptionType.STRING,
+            choices=stats_choices,
+            required=True,
+        ),
+        interactions.Option(
+            name="valeur_difficulte",
+            description="Palier à atteindre pour considérer le jet réussi",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
+        interactions.Option(
+            name="point_heroisme",
+            description="Point rendant le jet automatiquement réussi",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
+    ],
+)
+async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte: int = -1, point_heroisme: bool = False):
+    """Lance un dé d'une statistique associée à une fiche google sheets
+
+    Args:
+        ctx (interactions.CommandContext): contexte d'envoi du message
+        charac (str): la caractéristique à tester
+        valeur_difficulte (int, optional): difficulté à battre ou égaler pour que le jet soit une réussite. Defaults to -1.
+        point_heroisme (bool, optional): stipule si on tente d'utiliser son point d'héroïsme. Defaults to False.
+    """
+    await ctx.defer()
+    try:
+
+        values = values_from_player(ctx.author.mention, dict_links, gc)
+        labels: list = values.keys()
+        valeurs_max: list = [values[label]['valeur_max'] for label in labels]
+        valeurs_actuelle: list = [values[label]
+                                  ['valeur_actuelle'] for label in labels]
+        valeurs_critique: list = [values[label]
+                                  ['seuil_critique'] for label in labels]
+        path: str = display_stats(
+            labels, valeurs_actuelle, valeurs_max, valeurs_critique)
+        await command_send(ctx, f"Voici les stats actuelles de {ctx.author.mention}.", files=interactions.File(filename=path))
+
+    except ConnectionError:
+        message = ConnectionError(
+            f"Impossible d'atteindre la valeur de {charac} pour {ctx.author.mention}.")
+    except ValueError:
+        message = ValueError(
+            f"Désolé {ctx.author.mention}, tu ne sembles pas avoir de fiche liée dans ma base de données.")
+    finally:
+        await ctx.send(str(message))
 
 
 @bot.command(
