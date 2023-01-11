@@ -3,7 +3,7 @@ from youtube_dl import YoutubeDL, utils
 from discord import PCMVolumeTransformer
 from os import system
 
-system("mkdir music")
+system("mkdir -p music")
 
 utils.bug_reports_message = lambda: ''
 
