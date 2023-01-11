@@ -413,8 +413,8 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
     # on itère à travers les jours
     for day in range(1, nb_jours+1, 1):
         future = datetime.today() + timedelta(days=day+decalage)
-        horaire: str | list = ["Rassemblement 9h45, début 10h !", "Rassemblement 13h45, début 14h !", "Rassemblement 20h45, début 21h !"] if future.weekday(
-        ) >= 5 else "Rassemblement 20h45, début 21h !"
+        horaire: str | list = ["Rassemblement **9h45**, début 10h !", "Rassemblement **13h45**, début 14h !", "Rassemblement **20h45**, début 21h !"] if future.weekday(
+        ) >= 5 else "Rassemblement **20h45**, début 21h !"
         if isinstance(horaire, list):
             for h in horaire:
                 liste_jours[f"{list_letters[step]} - {list_days[future.weekday()]} {future.day}.{future.month}"] = h
@@ -423,9 +423,18 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
             liste_jours[f"{list_letters[step]} - {list_days[future.weekday()]} {future.day}.{future.month}"] = horaire
             step += 1
 
+    emoji_deny = interactions.Emoji(
+        name="patounes_no",
+        id=979517886961967165
+    )
+
+    emoji_validation = interactions.Emoji(
+        name="patounes_yes",
+        id=979516938231361646
+    )
     # on définit une lise d'emoji de la longueur du nombre de réponses possibles
     list_emoji: list = [list_letters[i]
-                        for i in range(step)] + ["\U00002705"] + ["\U0000274C"]
+                        for i in range(step)] + [emoji_validation] + [emoji_deny]
 
     # role = await interactions.get(bot, interactions.Role, object_id=ROLE_ID, parent_id=GUILD_ID) ajouter à embed.description les rôles à tag , avec champ de liste ?
     embed = interactions.Embed(title=titre)
@@ -433,12 +442,9 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
     for key, value in liste_jours.items():
         embed.add_field(name=f"{key}", value=f"{value}", inline=False)
 
-    emoji = interactions.Emoji(
-        name="patounes_tongue",
-        id=979488514561421332
-    )
+    information: str = f"Merci de répondre au plus vite !\nAprès avoir voté, cliquez sur {emoji_validation}\nSi aucune date ne vous convient, cliquez sur {emoji_deny}"
 
-    message = await ctx.send(f"Merci de répondre au plus vite {emoji}", embeds=embed)
+    message = await ctx.send(information, embeds=embed)
     # affiche les réactions pour le sondage
     for emoji in list_emoji:
         await message.create_reaction(emoji)
