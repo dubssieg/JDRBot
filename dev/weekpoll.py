@@ -1,6 +1,7 @@
 "Test pour calendrier"
 from string import ascii_uppercase
 from datetime import datetime, timedelta
+import interactions
 
 
 @bot.command(

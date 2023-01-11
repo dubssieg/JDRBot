@@ -86,7 +86,13 @@ manuel_choices: list = [interactions.Choice(
         )
     ],
 )
-async def stress(ctx: interactions.CommandContext, scene: str):
+async def scene_switch(ctx: interactions.CommandContext, scene: str):
+    """_summary_
+
+    Args:
+        ctx (interactions.CommandContext): _description_
+        scene (str): _description_
+    """
     await ctx.defer()
     switch(tokens_obsws, scene)
     await ctx.send(f"La scène a été changée pour {scene}", ephemeral=True)
@@ -144,6 +150,7 @@ async def save_file(ctx):
     modal2 = interactions.Modal(
         title="Lier une feuille de stats",
         custom_id="mod_app_form",
+
         components=[
             interactions.TextInput(
                 style=interactions.TextStyleType.SHORT,
@@ -152,7 +159,7 @@ async def save_file(ctx):
                 min_length=1,
                 max_length=50,
             )
-        ],
+        ],  # type: ignore
     )
     await ctx.popup(modal2)
 
@@ -230,6 +237,7 @@ async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte:
         point_heroisme (bool, optional): stipule si on tente d'utiliser son point d'héroïsme. Defaults to False.
     """
     await ctx.defer()
+    message = ""
     try:
         values = stat_from_player(ctx.author.mention, dict_links, gc, charac)[
             2:].split('+')
@@ -243,7 +251,7 @@ async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte:
         message = ValueError(
             f"Désolé {ctx.author.mention}, tu ne sembles pas avoir de fiche liée dans ma base de données.")
     finally:
-        await ctx.send(message)
+        await ctx.send(str(message))
 
 
 def roll_the_stress(message, val_stress):
@@ -284,6 +292,12 @@ def roll_the_stress(message, val_stress):
     scope=guild_id,
 )
 async def stress(ctx: interactions.CommandContext):
+    """_summary_
+
+    Args:
+        ctx (interactions.CommandContext): _description_
+    """
+    message = ""
     await ctx.defer()
     try:
         message, anim = roll_the_stress(
@@ -297,7 +311,7 @@ async def stress(ctx: interactions.CommandContext):
         message = ValueError(
             f"Désolé {ctx.author.mention}, tu ne sembles pas avoir de fiche liée dans ma base de données.")
     finally:
-        await ctx.send(message)
+        await ctx.send(str(message))
 
 
 @ bot.command(
@@ -348,6 +362,85 @@ async def toss(ctx: interactions.CommandContext) -> None:
     await ctx.defer()
     res = "**PILE**" if (random() > 0.5) else "**FACE**"
     await ctx.send(f"{ctx.author.mention} > La pièce est tombée sur {res} !\n> *Un lancer de pièce, pour remettre son sort au destin...*")
+
+
+@bot.command(
+    name="calendar",
+    description="Crée un sondage de disponibilités",
+    scope=guild_id,
+    options=[
+        interactions.Option(
+            name="duree",
+            description="Nombre de jours sur lequel s'étend le sondage. Maximum : 12, défaut : 7.",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
+        interactions.Option(
+            name="delai",
+            description="Décalage de début du sondage (en jours). Défaut : 0.",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
+        interactions.Option(
+            name="titre",
+            description="Texte de titre du sondage.",
+            type=interactions.OptionType.STRING,
+            required=False,
+        ),
+    ],
+)
+async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int = 0, titre: str = "Date pour la prochaine séance !") -> None:
+    """Crée un calendrier sous forme d'embed, pour faire un sondage sur les jours suivants
+
+    Args:
+        ctx (interactions.CommandContext): contexte de la commande
+        days (int, optional): Période de temps sur laquelle s'étend le sondage. Defaults to 7.
+        offset (int, optional): Décalage en jours. Defaults to 0.
+        description (str, optional): Un titre pour le sondage. Defaults to "Date pour la prochaine séance !".
+    """
+    nb_jours: int = duree if duree <= 12 and duree > 0 else 7
+    decalage: int = delai if delai >= 0 else 0
+    list_days: list = ["Lundi", "Mardi", "Mercredi",
+                       "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+    list_letters: list = ["\U0001F1E6", "\U0001F1E7", "\U0001F1E8", "\U0001F1E9", "\U0001F1EA", "\U0001F1EB", "\U0001F1EC", "\U0001F1ED",
+                          "\U0001F1EE", "\U0001F1EF", "\U0001F1F0", "\U0001F1F1", "\U0001F1F2", "\U0001F1F3", "\U0001F1F4", "\U0001F1F5", "\U0001F1F6", "\U0001F1F7"]
+    liste_lettres = list(ascii_uppercase)
+    liste_jours: dict = dict()
+    step: int = 0
+
+    # on itère à travers les jours
+    for day in range(1, nb_jours+1, 1):
+        future = datetime.today() + timedelta(days=day+decalage)
+        horaire: str | list = ["Rassemblement 9h45, début 10h !", "Rassemblement 13h45, début 14h !", "Rassemblement 20h45, début 21h !"] if future.weekday(
+        ) >= 5 else "Rassemblement 20h45, début 21h !"
+        if isinstance(horaire, list):
+            for h in horaire:
+                liste_jours[f"{liste_lettres[step]} - {list_days[future.weekday()]} {future.day}.{future.month}"] = h
+                step += 1
+        else:
+            liste_jours[f"{liste_lettres[step]} - {list_days[future.weekday()]} {future.day}.{future.month}"] = horaire
+            step += 1
+
+    # on définit une lise d'emoji de la longueur du nombre de réponses possibles
+    list_emoji: list = [list_letters[i]
+                        for i in range(step)] + ["\U00002705"] + ["\U0000274C"]
+
+    # role = await interactions.get(bot, interactions.Role, object_id=ROLE_ID, parent_id=GUILD_ID) ajouter à embed.description les rôles à tag , avec champ de liste ?
+    embed = interactions.Embed(title=titre)
+
+    for key, value in liste_jours.items():
+        embed.add_field(name=f"{key}", value=f"{value}", inline=False)
+
+    emoji = interactions.Emoji(
+        name="patounes_tongue",
+        id=979488514561421332
+    )
+
+    msg = await ctx.message.channel.send(f"Merci de répondre au plus vite {emoji}", embeds=embed)
+    # affiche les réactions pour le sondage
+    for emoji in list_emoji:
+        await msg.add_reaction(emoji)
+
 
 if __name__ == "__main__":
     bot.load('interactions.ext.files')
