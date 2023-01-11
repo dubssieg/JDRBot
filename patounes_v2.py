@@ -239,7 +239,7 @@ async def send_image(txt, img, message):
 
 @bot.event
 async def on_ready():
-    await client.change_presence(activity=Streaming(name="!support", url="https://www.twitch.tv/TharosTV"))
+    await bot.change_presence(activity=Streaming(name="!support", url="https://www.twitch.tv/TharosTV"))
     output_msg(f"PATOUNES EST PRET !")
 
 
@@ -293,7 +293,7 @@ async def week_poll(ctx, details):
         chaine = details.split(
             '|')[1] if '|' in details else ""
         sondage = weekpoll(
-            ctx.message, client, chaine, nb_jours, decalage)
+            ctx.message, bot, chaine, nb_jours, decalage)
         msg = await ctx.message.channel.send(sondage[1], embed=sondage[0])
         # affiche les réactions pour le sondage
         list_emoji = [list_letters[i]
