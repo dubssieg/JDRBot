@@ -252,10 +252,10 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
                                       ['valeur_actuelle'] for label in labels]
             valeurs_critique: list = [values[label]
                                       ['seuil_critique'] for label in labels]
-            nb_val_critique = count_crit_values(
-                valeurs_actuelle, valeurs_critique)
-            zero_stats = sum(
-                [1 for current in valeurs_actuelle if current == 0])
+            #nb_val_critique = count_crit_values(valeurs_actuelle, valeurs_critique)
+            #zero_stats = sum([1 for current in valeurs_actuelle if current == 0])
+
+            print(values)
 
             pos: int = labels.index(competence)
             if fixer is not None:
@@ -269,7 +269,7 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
 
             update_char(ctx.author.mention, competence_pos, competence,
                         future_value, dict_links, gc)
-
+            """
             values = values_from_player(ctx.author.mention, dict_links, gc)
             labels: list = values.keys()
             valeurs_actuelle: list = [values[label]
@@ -283,6 +283,7 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
                     await obs_invoke(toggle_anim, host, port, password, "Mort.avi")
                 elif new_count <= 2 or new_zero == 1:
                     await obs_invoke(toggle_anim, host, port, password, "Portes_Mort.avi")
+            """
         except:
             pass
 
