@@ -243,49 +243,49 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
 async def caracteristique(ctx: interactions.CommandContext, competence: str, ajouter=None, soustraire=None, fixer=None):
     if not (ajouter is None and soustraire is None and fixer is None):
         await ctx.defer()
-        try:
-            values = values_from_player(ctx.author.mention, dict_links, gc)
-            labels: list = values.keys()
-            valeurs_max: list = [values[label]['valeur_max']
-                                 for label in labels]
-            valeurs_actuelle: list = [values[label]
-                                      ['valeur_actuelle'] for label in labels]
-            valeurs_critique: list = [values[label]
-                                      ['seuil_critique'] for label in labels]
-            #nb_val_critique = count_crit_values(valeurs_actuelle, valeurs_critique)
-            #zero_stats = sum([1 for current in valeurs_actuelle if current == 0])
 
-            print(values)
+        values = values_from_player(ctx.author.mention, dict_links, gc)
+        labels: list = values.keys()
+        valeurs_max: list = [values[label]['valeur_max']
+                             for label in labels]
+        valeurs_actuelle: list = [values[label]
+                                  ['valeur_actuelle'] for label in labels]
+        valeurs_critique: list = [values[label]
+                                  ['seuil_critique'] for label in labels]
+        #nb_val_critique = count_crit_values(valeurs_actuelle, valeurs_critique)
+        #zero_stats = sum([1 for current in valeurs_actuelle if current == 0])
 
-            pos: int = labels.index(competence)
-            if fixer is not None:
-                future_value: int = max(min(fixer, valeurs_max[pos]), 0)
-            else:
-                future_value: int = valeurs_actuelle[pos]
-            if ajouter is not None:
-                future_value = min(future_value + ajouter, valeurs_max[pos])
-            if soustraire is not None:
-                future_value = max(future_value-soustraire, 0)
+        print(values)
 
-            update_char(ctx.author.mention, competence_pos, competence,
-                        future_value, dict_links, gc)
-            """
-            values = values_from_player(ctx.author.mention, dict_links, gc)
-            labels: list = values.keys()
-            valeurs_actuelle: list = [values[label]
-                                      ['valeur_actuelle'] for label in labels]
-            valeurs_critique: list = [values[label]
-                                      ['seuil_critique'] for label in labels]
-            new_count = count_crit_values(valeurs_actuelle, valeurs_critique)
-            new_zero = sum([1 for current in valeurs_actuelle if current == 0])
-            if new_count > nb_val_critique or new_zero > zero_stats:
-                if new_count >= 3 or new_zero >= 2:
-                    await obs_invoke(toggle_anim, host, port, password, "Mort.avi")
-                elif new_count <= 2 or new_zero == 1:
-                    await obs_invoke(toggle_anim, host, port, password, "Portes_Mort.avi")
-            """
-        except:
-            pass
+        pos: int = labels.index(competence)
+        if fixer is not None:
+            future_value: int = max(min(fixer, valeurs_max[pos]), 0)
+        else:
+            future_value: int = valeurs_actuelle[pos]
+        if ajouter is not None:
+            future_value = min(future_value + ajouter, valeurs_max[pos])
+        if soustraire is not None:
+            future_value = max(future_value-soustraire, 0)
+
+        update_char(ctx.author.mention, competence_pos, competence,
+                    future_value, dict_links, gc)
+        await ctx.send(f"La valeur de **{competence}** de {ctx.author.mention} a été changée de **{valeurs_actuelle[pos]}** à **{future_value}** !")
+
+        """
+        values = values_from_player(ctx.author.mention, dict_links, gc)
+        labels: list = values.keys()
+        valeurs_actuelle: list = [values[label]
+                                    ['valeur_actuelle'] for label in labels]
+        valeurs_critique: list = [values[label]
+                                    ['seuil_critique'] for label in labels]
+        new_count = count_crit_values(valeurs_actuelle, valeurs_critique)
+        new_zero = sum([1 for current in valeurs_actuelle if current == 0])
+        if new_count > nb_val_critique or new_zero > zero_stats:
+            if new_count >= 3 or new_zero >= 2:
+                await obs_invoke(toggle_anim, host, port, password, "Mort.avi")
+            elif new_count <= 2 or new_zero == 1:
+                await obs_invoke(toggle_anim, host, port, password, "Portes_Mort.avi")
+        """
 
 
 @ bot.command(
