@@ -3,5 +3,5 @@ __pycache__/
 old/
 LOG_Patounes.log
 img/radial_stats.png
-*.mp3
-*.m4a
+music/*
+ffmpeg.exe
