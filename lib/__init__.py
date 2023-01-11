@@ -21,5 +21,6 @@ from .switcher import get_scene_list
 
 from .stats import create_stats
 from .stats import display_stats
+from .stats import count_crit_values
 
 from .dl_utility import YTDLSource

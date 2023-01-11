@@ -100,7 +100,8 @@ def display_stats(stats: list, current_values: list, maximum_values: list, criti
         labels.append(lab)
     ax.set_xticklabels([])
 
-    ax.set_ylim([0, 8])
+    ax.set_ylim([0, 24])
+    ax.set_yticklabels([])
     path: str = "img/player_stats.png"
     plt.savefig(path, transparent=True, bbox_inches='tight')
 
@@ -118,3 +119,7 @@ def display_stats(stats: list, current_values: list, maximum_values: list, criti
         inverted_image.save(path)
 
     return path
+
+
+def count_crit_values(current_values: list, critical_values: list) -> str:
+    return sum([1 for i, current in enumerate(current_values) if current < critical_values[i]])

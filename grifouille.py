@@ -2,7 +2,7 @@
 import interactions
 from interactions.ext.files import command_send
 from random import randrange, random, choice
-from lib import load_json, save_json, create_char, get_personnas, get_scene_list, switch, create_stats, display_stats
+from lib import load_json, save_json, create_char, get_personnas, get_scene_list, switch, create_stats, display_stats, count_crit_values
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
 from gsheets_interactions import values_from_player, stat_from_player, hero_point_update, increase_on_crit, get_stress
@@ -221,7 +221,7 @@ async def display(ctx: interactions.CommandContext):
                                   ['seuil_critique'] for label in labels]
         path: str = display_stats(
             labels, valeurs_actuelle, valeurs_max, valeurs_critique)
-        await command_send(ctx, f"Voici les stats actuelles de {ctx.author.mention}.", files=interactions.File(filename=path))
+        await command_send(ctx, f"Voici les stats actuelles de {ctx.author.mention}.\nTu as {count_crit_values(valeurs_actuelle,valeurs_critique)} valeurs de caractéristique en dessous du seuil critique.", files=interactions.File(filename=path))
 
     except ConnectionError:
         message = ConnectionError(
