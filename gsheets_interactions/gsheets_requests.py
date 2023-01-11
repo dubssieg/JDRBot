@@ -71,7 +71,7 @@ def values_from_player(name: str, dict_links: dict, gc) -> str:
 
 
 @googleask
-def update_char(name: str, competence_pos: dict, nom_competence: str, nouvelle_valeur: int, dict_links: dict, gc):
+def update_char(name: str, dict_links: dict, gc, competence_pos: dict, nom_competence: str, nouvelle_valeur: int):
     cellule = competence_pos[nom_competence]
     sh = gc.open(dict_links[f"{name}"])
     wks = sh[0]

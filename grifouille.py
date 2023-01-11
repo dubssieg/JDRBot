@@ -267,8 +267,8 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
         if soustraire is not None:
             future_value = max(future_value-soustraire, 0)
 
-        update_char(ctx.author.mention, competence_pos, competence,
-                    future_value, dict_links, gc)
+        update_char(ctx.author.mention, dict_links, gc, competence_pos, competence,
+                    future_value)
         await ctx.send(f"La valeur de **{competence}** de {ctx.author.mention} a été changée de **{valeurs_actuelle[pos]}** à **{future_value}** !")
 
         """
