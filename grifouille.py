@@ -63,7 +63,7 @@ stats_choices: list = [interactions.Choice(
     name=val, value=val) for val in dict_stats.values()]
 char_choices: list = [interactions.Choice(
     name=val, value=key) for key, val in get_personnas().items()]
-#scene_choices: list = [interactions.Choice(name=abbrev, value=str(i)) for i, abbrev in enumerate(abbrev_scenes)]
+# scene_choices: list = [interactions.Choice(name=abbrev, value=str(i)) for i, abbrev in enumerate(abbrev_scenes)]
 scene_choices: list = [interactions.Choice(
     name=name_scene, value=name_scene) for name_scene in list_of_scenes]
 manuel_choices: list = [interactions.Choice(
@@ -108,8 +108,8 @@ async def stress(ctx: interactions.CommandContext, scene: str):
         )
     ],
 )
-async def stress(ctx: interactions.CommandContext, manuel: str):
-    await command_send(ctx, "Voici le manuel demandé !", files=interactions.File(filename=f"{manuel}.png"))
+async def get_manual(ctx: interactions.CommandContext, manuel: str):
+    await command_send(ctx, "Voici le manuel demandé !", files=interactions.File(filename=f"img/{manuel}.png"))
 
 #################### Créer un personnage ##################
 
@@ -260,12 +260,12 @@ def roll_the_stress(message, val_stress):
         listStates[index])[:-2]+".avi"
     effect = listEffects[index]
 
-    if(dice >= 8):
+    if (dice >= 8):
         "Effet de stress négatif"
         quote = choice(quotes["STRESS NEGATIF"])
         increase_on_crit(str(message.author.mention),
                          dict_links, gc, 'Stress', dict_pos,  1)
-    elif(dice <= 2):
+    elif (dice <= 2):
         "Effet de stress positif"
         quote = choice(quotes["STRESS POSITIF"])
         increase_on_crit(str(message.author.mention),
@@ -346,12 +346,12 @@ async def dice(ctx: interactions.CommandContext, faces: int = 20, modificateur: 
 )
 async def toss(ctx: interactions.CommandContext) -> None:
     await ctx.defer()
-    res = "**PILE**" if(random() > 0.5) else "**FACE**"
+    res = "**PILE**" if (random() > 0.5) else "**FACE**"
     await ctx.send(f"{ctx.author.mention} > La pièce est tombée sur {res} !\n> *Un lancer de pièce, pour remettre son sort au destin...*")
 
 if __name__ == "__main__":
     bot.load('interactions.ext.files')
-    while(True):
+    while (True):
         try:
             bot.start()
         except KeyboardInterrupt:
