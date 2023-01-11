@@ -257,10 +257,10 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
             zero_stats = sum(
                 [1 for current in valeurs_actuelle if current == 0])
 
+            pos: int = labels.index(competence)
             if fixer is not None:
-                future_value: int = fixer
+                future_value: int = max(min(fixer, valeurs_max[pos]), 0)
             else:
-                pos: int = labels.index(competence)
                 future_value: int = valeurs_actuelle[pos]
             if ajouter is not None:
                 future_value = min(future_value + ajouter, valeurs_max[pos])
