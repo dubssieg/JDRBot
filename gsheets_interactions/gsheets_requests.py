@@ -68,3 +68,11 @@ def stat_from_player(name: str, dict_links: dict, gc, stat: str) -> str:
 @googleask
 def values_from_player(name: str, dict_links: dict, gc) -> str:
     return {e[0].value: {'valeur_max': int(e[3].value), 'seuil_critique': int(e[4].value), 'valeur_actuelle': int(e[5].value)} for e in gc.open(dict_links[f"{name}"])[0].range('A3:F8')}
+
+
+@googleask
+def update_char(name: str, competence_pos: dict, nom_competence: str, nouvelle_valeur: int, dict_links: dict, gc):
+    cellule = competence_pos[nom_competence]
+    sh = gc.open(dict_links[f"{name}"])
+    wks = sh[0]
+    wks.update_value(cellule, nouvelle_valeur)

@@ -5,7 +5,7 @@ from random import randrange, random, choice
 from lib import load_json, save_json, create_char, get_personnas, get_scene_list, switch, create_stats, display_stats, count_crit_values
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
-from gsheets_interactions import values_from_player, stat_from_player, hero_point_update, increase_on_crit, get_stress
+from gsheets_interactions import values_from_player, stat_from_player, hero_point_update, increase_on_crit, get_stress, update_char
 from time import sleep
 from string import ascii_uppercase
 from datetime import datetime, timedelta
@@ -60,6 +60,11 @@ descs_projets: list = ["Liens vers mes projets", "Retrouvez tous les liens vers 
 list_days: list = ["Lundi", "Mardi", "Mercredi",
                    "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 manuels: list = ["one_shot"]
+competence_choices: list = [interactions.Choice(
+    name=val, value=val) for val in ["Constitution", "Intelligence", "Force", "Conscience", "Agilité", "Social"]]
+competence_pos: dict = {"Constitution": "F3", "Intelligence": "F4",
+                        "Force": "F5", "Conscience": "F6", "Agilité": "F7", "Social": "F8"}
+
 
 stats_choices: list = [interactions.Choice(
     name=val, value=val) for val in dict_stats.values()]
@@ -204,6 +209,85 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
 
 
 @bot.command(
+    name="caracteristique",
+    description="Permet de changer une valeur sur votre fiche de stats.",
+    scope=guild_id,
+    options=[
+        interactions.Option(
+            name="competence",
+            description="Caractéristique à modifier !",
+            type=interactions.OptionType.STRING,
+            choices=competence_choices,
+            required=True,
+        ),
+        interactions.Option(
+            name="ajouter",
+            description="Nombre à ajouter à la caractéristique",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
+        interactions.Option(
+            name="soustraire",
+            description="Nombre à soustraire à la caractéristique",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
+        interactions.Option(
+            name="fixer",
+            description="Nombre auquel fixer la caractéristique",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
+    ],
+)
+async def caracteristique(ctx: interactions.CommandContext, competence: str, ajouter=None, soustraire=None, fixer=None):
+    if not (ajouter is None and soustraire is None and fixer is None):
+        await ctx.defer()
+        try:
+            values = values_from_player(ctx.author.mention, dict_links, gc)
+            labels: list = values.keys()
+            valeurs_max: list = [values[label]['valeur_max']
+                                 for label in labels]
+            valeurs_actuelle: list = [values[label]
+                                      ['valeur_actuelle'] for label in labels]
+            valeurs_critique: list = [values[label]
+                                      ['seuil_critique'] for label in labels]
+            nb_val_critique = count_crit_values(
+                valeurs_actuelle, valeurs_critique)
+            zero_stats = sum(
+                [1 for current in valeurs_actuelle if current == 0])
+
+            if fixer is not None:
+                future_value: int = fixer
+            else:
+                pos: int = labels.index(competence)
+                future_value: int = valeurs_actuelle[pos]
+            if ajouter is not None:
+                future_value = min(future_value + ajouter, valeurs_max[pos])
+            if soustraire is not None:
+                future_value = max(future_value-soustraire, 0)
+
+            update_char(ctx.author.mention, competence_pos, competence,
+                        future_value, dict_links, gc)
+
+            values = values_from_player(ctx.author.mention, dict_links, gc)
+            labels: list = values.keys()
+            valeurs_actuelle: list = [values[label]
+                                      ['valeur_actuelle'] for label in labels]
+            valeurs_critique: list = [values[label]
+                                      ['seuil_critique'] for label in labels]
+            new_count = count_crit_values(valeurs_actuelle, valeurs_critique)
+            new_zero = sum([1 for current in valeurs_actuelle if current == 0])
+            if new_count > nb_val_critique or new_zero > zero_stats:
+                if new_count >= 3 or new_zero >= 2:
+                    await obs_invoke(toggle_anim, host, port, password, "Mort.avi")
+                elif new_count <= 2 or new_zero == 1:
+                    await obs_invoke(toggle_anim, host, port, password, "Portes_Mort.avi")
+        except:
+            pass
+
+
+@ bot.command(
     name="display",
     description="Affiche les statistiques actuelles de la fiche active.",
     scope=guild_id,
@@ -211,7 +295,6 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
 async def display(ctx: interactions.CommandContext):
     await ctx.defer()
     try:
-
         values = values_from_player(ctx.author.mention, dict_links, gc)
         labels: list = values.keys()
         valeurs_max: list = [values[label]['valeur_max'] for label in labels]
@@ -231,7 +314,7 @@ async def display(ctx: interactions.CommandContext):
             f"Désolé {ctx.author.mention}, tu ne sembles pas avoir de fiche liée dans ma base de données.")
 
 
-@bot.command(
+@ bot.command(
     name="stat",
     description="Jet d'un dé accordément à votre fiche de stats !",
     scope=guild_id,
@@ -383,7 +466,7 @@ async def dice(ctx: interactions.CommandContext, faces: int = 20, modificateur: 
     await obs_invoke(toggle_anim, host, port, password, anim)
 
 
-@bot.command(
+@ bot.command(
     name="toss",
     description="Lance une pièce !",
     scope=guild_id,
@@ -394,7 +477,7 @@ async def toss(ctx: interactions.CommandContext) -> None:
     await ctx.send(f"{ctx.author.mention} > La pièce est tombée sur {res} !\n> *Un lancer de pièce, pour remettre son sort au destin...*")
 
 
-@bot.command(
+@ bot.command(
     name="calendar",
     description="Crée un sondage de disponibilités",
     scope=guild_id,
