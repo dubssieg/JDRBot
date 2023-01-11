@@ -204,40 +204,11 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
 
 
 @bot.command(
-    name="stat",
-    description="Jet d'un dé accordément à votre fiche de stats !",
+    name="display",
+    description="Affiche les statistiques actuelles de la fiche active.",
     scope=guild_id,
-    options=[
-        interactions.Option(
-            name="charac",
-            description="Caractéristique à tester !",
-            type=interactions.OptionType.STRING,
-            choices=stats_choices,
-            required=True,
-        ),
-        interactions.Option(
-            name="valeur_difficulte",
-            description="Palier à atteindre pour considérer le jet réussi",
-            type=interactions.OptionType.INTEGER,
-            required=False,
-        ),
-        interactions.Option(
-            name="point_heroisme",
-            description="Point rendant le jet automatiquement réussi",
-            type=interactions.OptionType.BOOLEAN,
-            required=False,
-        ),
-    ],
 )
-async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte: int = -1, point_heroisme: bool = False):
-    """Lance un dé d'une statistique associée à une fiche google sheets
-
-    Args:
-        ctx (interactions.CommandContext): contexte d'envoi du message
-        charac (str): la caractéristique à tester
-        valeur_difficulte (int, optional): difficulté à battre ou égaler pour que le jet soit une réussite. Defaults to -1.
-        point_heroisme (bool, optional): stipule si on tente d'utiliser son point d'héroïsme. Defaults to False.
-    """
+async def display(ctx: interactions.CommandContext):
     await ctx.defer()
     try:
 
@@ -254,7 +225,7 @@ async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte:
 
     except ConnectionError:
         message = ConnectionError(
-            f"Impossible d'atteindre la valeur de {charac} pour {ctx.author.mention}.")
+            f"Impossible d'atteindre la fiche pour {ctx.author.mention}.")
     except ValueError:
         message = ValueError(
             f"Désolé {ctx.author.mention}, tu ne sembles pas avoir de fiche liée dans ma base de données.")
