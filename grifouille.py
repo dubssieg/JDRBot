@@ -229,8 +229,6 @@ async def display(ctx: interactions.CommandContext):
     except ValueError:
         message = ValueError(
             f"Désolé {ctx.author.mention}, tu ne sembles pas avoir de fiche liée dans ma base de données.")
-    finally:
-        await ctx.send(str(message))
 
 
 @bot.command(
