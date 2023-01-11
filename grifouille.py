@@ -7,6 +7,8 @@ from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
 from gsheets_interactions import stat_from_player, hero_point_update, increase_on_crit, get_stress
 from time import sleep
+from string import ascii_uppercase
+from datetime import datetime, timedelta
 
 #############################
 ### Chargement des tokens ###
