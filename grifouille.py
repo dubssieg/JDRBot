@@ -252,8 +252,8 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
                                   ['valeur_actuelle'] for label in labels]
         valeurs_critique: list = [values[label]
                                   ['seuil_critique'] for label in labels]
-        #nb_val_critique = count_crit_values(valeurs_actuelle, valeurs_critique)
-        #zero_stats = sum([1 for current in valeurs_actuelle if current == 0])
+        nb_val_critique = count_crit_values(valeurs_actuelle, valeurs_critique)
+        zero_stats = sum([1 for current in valeurs_actuelle if current == 0])
 
         print(values)
 
@@ -269,23 +269,22 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
 
         update_char(ctx.author.mention, dict_links, gc, competence_pos, competence,
                     future_value)
-        await ctx.send(f"La valeur de **{competence}** de {ctx.author.mention} a été changée de **{valeurs_actuelle[pos]}** à **{future_value}** !")
 
-        """
         values = values_from_player(ctx.author.mention, dict_links, gc)
         labels: list = values.keys()
         valeurs_actuelle: list = [values[label]
-                                    ['valeur_actuelle'] for label in labels]
+                                  ['valeur_actuelle'] for label in labels]
         valeurs_critique: list = [values[label]
-                                    ['seuil_critique'] for label in labels]
+                                  ['seuil_critique'] for label in labels]
         new_count = count_crit_values(valeurs_actuelle, valeurs_critique)
         new_zero = sum([1 for current in valeurs_actuelle if current == 0])
-        if new_count > nb_val_critique or new_zero > zero_stats:
+        if new_count != nb_val_critique or new_zero != zero_stats:
+            # si il y a un changement d'état
             if new_count >= 3 or new_zero >= 2:
                 await obs_invoke(toggle_anim, host, port, password, "Mort.avi")
             elif new_count <= 2 or new_zero == 1:
                 await obs_invoke(toggle_anim, host, port, password, "Portes_Mort.avi")
-        """
+        await ctx.send(f"La valeur de **{competence}** de {ctx.author.mention} a été changée de **{valeurs_actuelle[pos]}** à **{future_value}** !\nTu as {new_count} valeurs en dessous du seuil critique, et {new_zero} valeurs à zéro.")
 
 
 @ bot.command(
@@ -501,9 +500,15 @@ async def toss(ctx: interactions.CommandContext) -> None:
             type=interactions.OptionType.STRING,
             required=False,
         ),
+        interactions.Option(
+            name="mentions",
+            description="Petit texte en-dessous pour mentionner des rôles, ou donner des détails.",
+            type=interactions.OptionType.STRING,
+            required=False,
+        ),
     ],
 )
-async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int = 0, titre: str = "Date pour la prochaine séance !") -> None:
+async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int = 0, titre: str = "Date pour la prochaine séance !", mentions: str | None = None) -> None:
     """Crée un calendrier sous forme d'embed, pour faire un sondage sur les jours suivants
 
     Args:
@@ -549,7 +554,12 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
                         for i in range(step)] + [emoji_validation] + [emoji_deny]
 
     # role = await interactions.get(bot, interactions.Role, object_id=ROLE_ID, parent_id=GUILD_ID) ajouter à embed.description les rôles à tag , avec champ de liste ?
-    embed = interactions.Embed(title=titre)
+    if mentions is not None:
+        embed = interactions.Embed(
+            title=titre, description=mentions, color='#c2e9aa')
+    else:
+        embed = interactions.Embed(
+            title=titre, color='#c2e9aa')
 
     for key, value in liste_jours.items():
         embed.add_field(name=f"{key}", value=f"{value}", inline=False)
