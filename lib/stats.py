@@ -121,5 +121,14 @@ def display_stats(stats: list, current_values: list, maximum_values: list, criti
     return path
 
 
-def count_crit_values(current_values: list, critical_values: list) -> str:
-    return sum([1 for i, current in enumerate(current_values) if current < critical_values[i]])
+def count_crit_values(current_values: list, critical_values: list) -> tuple:
+    """Etant donné un tableau de valeurs, donne les comptes des valeurs sous le seuil et égales à zéro
+
+    Args:
+        current_values (list): liste de valeurs actuelles
+        critical_values (list): bornes auxquelles comparer
+
+    Returns:
+        tuple: (|valeurs sous seuil critique|, |valeurs à 0|)
+    """
+    return sum([1 for i, current in enumerate(current_values) if current < critical_values[i]]), sum([1 for current in current_values if current == 0])

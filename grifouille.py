@@ -252,8 +252,8 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
                                   ['valeur_actuelle'] for label in labels]
         valeurs_critique: list = [values[label]
                                   ['seuil_critique'] for label in labels]
-        nb_val_critique = count_crit_values(valeurs_actuelle, valeurs_critique)
-        zero_stats = sum([1 for current in valeurs_actuelle if current == 0])
+        nb_val_critique, zero_stats = count_crit_values(
+            valeurs_actuelle, valeurs_critique)
 
         print(values)
 
@@ -272,19 +272,18 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
 
         values = values_from_player(ctx.author.mention, dict_links, gc)
         labels: list = values.keys()
-        valeurs_actuelle: list = [values[label]
-                                  ['valeur_actuelle'] for label in labels]
-        valeurs_critique: list = [values[label]
-                                  ['seuil_critique'] for label in labels]
-        new_count = count_crit_values(valeurs_actuelle, valeurs_critique)
-        new_zero = sum([1 for current in valeurs_actuelle if current == 0])
+        new_valeurs: list = [values[label]
+                             ['valeur_actuelle'] for label in labels]
+        new_critique: list = [values[label]
+                              ['seuil_critique'] for label in labels]
+        new_count, new_zero = count_crit_values(new_valeurs, new_critique)
         if new_count != nb_val_critique or new_zero != zero_stats:
             # si il y a un changement d'état
             if new_count >= 3 or new_zero >= 2:
                 await obs_invoke(toggle_anim, host, port, password, "Mort.avi")
             elif new_count <= 2 or new_zero == 1:
                 await obs_invoke(toggle_anim, host, port, password, "Portes_Mort.avi")
-        await ctx.send(f"La valeur de **{competence}** de {ctx.author.mention} a été changée de **{valeurs_actuelle[pos]}** à **{future_value}** !\nTu as {new_count} valeurs en dessous du seuil critique, et {new_zero} valeurs à zéro.")
+        await ctx.send(f"La valeur de **{competence}** de {ctx.author.mention} a été changée de **{valeurs_actuelle[pos]}** à **{future_value}** !\nTu as {new_count} valeurs en dessous du seuil critique, dont {new_zero} valeurs à zéro.")
 
 
 @ bot.command(
@@ -304,7 +303,8 @@ async def display(ctx: interactions.CommandContext):
                                   ['seuil_critique'] for label in labels]
         path: str = display_stats(
             labels, valeurs_actuelle, valeurs_max, valeurs_critique)
-        await command_send(ctx, f"Voici les stats actuelles de {ctx.author.mention}.\nTu as {count_crit_values(valeurs_actuelle,valeurs_critique)} valeurs de caractéristique en dessous du seuil critique.", files=interactions.File(filename=path))
+        crit, zero = count_crit_values(valeurs_actuelle, valeurs_critique)
+        await command_send(ctx, f"Voici les stats actuelles de {ctx.author.mention}.\nTu as {crit} valeurs en dessous du seuil critique, dont {zero} valeurs à zéro.", files=interactions.File(filename=path))
 
     except ConnectionError:
         message = ConnectionError(
