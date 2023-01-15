@@ -572,6 +572,62 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
         await message.create_reaction(emoji)
 
 
+@ bot.command(
+    name="poll",
+    description="Crée un sondage simple à deux options",
+    scope=guild_id,
+    options=[
+        interactions.Option(
+            name="titre",
+            description="Texte de titre du sondage.",
+            type=interactions.OptionType.STRING,
+            required=True,
+        ),
+        interactions.Option(
+            name="mentions",
+            description="Petit texte en-dessous pour mentionner des rôles, ou donner des détails.",
+            type=interactions.OptionType.STRING,
+            required=False,
+        ),
+    ],
+)
+async def poll(ctx: interactions.CommandContext, titre: str, mentions: str | None = None) -> None:
+    patounes_tongue = interactions.Emoji(
+        name="patounes_tongue",
+        id=979488514561421332
+    )
+    emoji_deny = interactions.Emoji(
+        name="patounes_no",
+        id=979517886961967165
+    )
+
+    emoji_validation = interactions.Emoji(
+        name="patounes_yes",
+        id=979516938231361646
+    )
+    list_emoji: list = [emoji_validation, emoji_deny]
+
+    if mentions is not None:
+        embed = interactions.Embed(
+            title=titre, description=mentions, color=0xC2E9AA)
+    else:
+        embed = interactions.Embed(
+            title=titre, color=0xC2E9AA)
+
+    poll_embed = {f'{emoji_validation} - Je suis intéressé.e !': "La date sera déterminée ultérieurement",
+                  f'{emoji_deny} - Je ne souhaite pas participer': "Merci de cliquer pour montrer que vous avez lu"}
+
+    for key, value in poll_embed.items():
+        embed.add_field(name=f"{key}", value=f"{value}", inline=False)
+
+    information: str = f"Merci de répondre au plus vite ! {patounes_tongue}"
+
+    message = await ctx.send(information, embeds=embed)
+    # affiche les réactions pour le sondage
+    for emoji in list_emoji:
+        await message.create_reaction(emoji)
+
+
 if __name__ == "__main__":
     bot.load('interactions.ext.files')
     while (True):
