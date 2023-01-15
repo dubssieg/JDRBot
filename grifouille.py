@@ -559,7 +559,7 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
             title=titre, description=mentions, color='#c2e9aa')
     else:
         embed = interactions.Embed(
-            title=titre, color='#c2e9aa')
+            title=titre, color='0xC2E9AA')
 
     for key, value in liste_jours.items():
         embed.add_field(name=f"{key}", value=f"{value}", inline=False)
