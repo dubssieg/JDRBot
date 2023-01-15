@@ -277,8 +277,8 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
         new_critique: list = [values[label]
                               ['seuil_critique'] for label in labels]
         new_count, new_zero = count_crit_values(new_valeurs, new_critique)
-        if new_count != nb_val_critique or new_zero != zero_stats:
-            # si il y a un changement d'état
+        if new_count > nb_val_critique or new_zero > zero_stats:
+            # si il y a un changement d'état, qui empire
             if new_count >= 3 or new_zero >= 2:
                 await obs_invoke(toggle_anim, host, port, password, "Mort.avi")
             elif new_count <= 2 or new_zero == 1:
