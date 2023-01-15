@@ -556,10 +556,10 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
     # role = await interactions.get(bot, interactions.Role, object_id=ROLE_ID, parent_id=GUILD_ID) ajouter à embed.description les rôles à tag , avec champ de liste ?
     if mentions is not None:
         embed = interactions.Embed(
-            title=titre, description=mentions, color='0xC2E9AA')
+            title=titre, description=mentions, color=0xC2E9AA)
     else:
         embed = interactions.Embed(
-            title=titre, color='0xC2E9AA')
+            title=titre, color=0xC2E9AA)
 
     for key, value in liste_jours.items():
         embed.add_field(name=f"{key}", value=f"{value}", inline=False)
