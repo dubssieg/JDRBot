@@ -239,7 +239,7 @@ async def send_image(txt, img, message):
 
 @bot.event
 async def on_ready():
-    await bot.change_presence(activity=Streaming(name="!support", url="https://www.twitch.tv/TharosTV"))
+    await bot.change_presence(activity=Streaming(name="des pôtichats", url="https://www.twitch.tv/TharosTV"))
     output_msg(f"PATOUNES EST PRET !")
 
 
