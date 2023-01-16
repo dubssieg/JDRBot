@@ -25,9 +25,17 @@ tokens_connexion: dict = load_json("token")
 token_grifouille: str = tokens_connexion['token']
 guild_id: int = tokens_connexion['guild_id']
 
+patounes_love = interactions.Emoji(
+    name="patounes_heart",
+    id=979510606216462416
+)
+
+
 # déclaration du client
 bot = interactions.Client(
-    token=token_grifouille)
+    token=token_grifouille, presence=interactions.ClientPresence(status=interactions.StatusType.IDLE,
+                                                                 activities=[interactions.PresenceActivity(name=f"{patounes_love} Essaie d'être Patounes", type=interactions.PresenceActivityType.CUSTOM)
+                                                                             ]))
 
 # tokens GSheets
 gc = authorize(service_file='env/connect_sheets.json')
@@ -79,7 +87,7 @@ manuel_choices: list = [interactions.Choice(
 ######################## Autorégie ########################
 
 
-@bot.command(
+@ bot.command(
     name="scene_switch",
     description="Change la scène actuelle",
     scope=guild_id,
@@ -107,7 +115,7 @@ async def scene_switch(ctx: interactions.CommandContext, scene: str):
 
 #################### Obtenir une fiche de règles ##################
 
-@bot.command(
+@ bot.command(
     name="get_manual",
     description="Renvoie un résumé de règles du système demandé",
     scope=guild_id,
@@ -127,7 +135,7 @@ async def get_manual(ctx: interactions.CommandContext, manuel: str):
 #################### Créer un personnage ##################
 
 
-@bot.command(
+@ bot.command(
     name="create_char",
     description="Génère les caractéristiques d'un personnage aléatoire !",
     scope=guild_id,
@@ -148,7 +156,7 @@ async def generate_char(ctx: interactions.CommandContext, type: str):
 ################ Pour demander la fiche #################
 
 
-@bot.command(
+@ bot.command(
     name="save_file",
     description="Sauvegarde un lien avec une fiche de statisitiques",
     scope=guild_id,
@@ -171,7 +179,7 @@ async def save_file(ctx):
     await ctx.popup(modal2)
 
 
-@bot.modal("mod_app_form")
+@ bot.modal("mod_app_form")
 async def modal_response(ctx, response: str):
     await ctx.defer()
     dict_links[f"{ctx.author.mention}"] = f"{response}"
@@ -208,7 +216,7 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
     return (str_resultat, anim)
 
 
-@bot.command(
+@ bot.command(
     name="caracteristique",
     description="Permet de changer une valeur sur votre fiche de stats.",
     scope=guild_id,
