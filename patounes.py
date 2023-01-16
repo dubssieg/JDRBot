@@ -254,9 +254,18 @@ async def play(ctx, url):
             filename = await YTDLSource.from_url(url, loop=bot.loop)
             voice_channel.play(FFmpegPCMAudio(
                 executable="ffmpeg", source=filename))
-            await send_texte(f'**Joue :** {filename}', ctx.message)
+            await send_texte(f'**Joue :** <{url}>', ctx.message)
     except:
         await send_texte("Désolé, le bot n'est pas connecté :(", ctx.message)
+
+
+@bot.command(name='stop', help='Arrête la musique')
+async def stop(ctx):
+    voice_client = ctx.message.guild.voice_client
+    if voice_client.is_playing():
+        await voice_client.stop()
+    else:
+        await send_texte("The bot is not playing anything at the moment.", ctx.message)
 
 
 @bot.command(name='fetch', help='Pré-télécharge une musique')
@@ -264,7 +273,7 @@ async def play(ctx, url):
     await delete_command(ctx.message)
     async with ctx.typing():
         filename = await YTDLSource.from_url(url, loop=bot.loop)
-        await send_texte(f'**Téléchargé avec succès :** {filename}', ctx.message)
+        await send_texte(f'**Téléchargé avec succès :** {url}', ctx.message)
 
 
 @bot.command(name='join', help='Demander à Patounes de rejoindre un vocal')
