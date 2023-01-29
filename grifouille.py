@@ -190,13 +190,26 @@ async def modal_response(ctx, response: str):
 ################ Pour lancer un dé #################
 
 
-def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int = 0, hero_point: bool = False, stat_testee: str = "") -> str:
+def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int = 0, hero_point: bool = False, stat_testee: str = "") -> tuple:
+    """Lance un dé dans la stat testée et renvoie le résultat.
+
+    Args:
+        message (_type_): _description_
+        faces (_type_): _description_
+        modificateur (int, optional): _description_. Defaults to 0.
+        valeur_difficulte (int, optional): _description_. Defaults to 0.
+        hero_point (bool, optional): _description_. Defaults to False.
+        stat_testee (str, optional): _description_. Defaults to "".
+
+    Returns:
+        tuple: chaîne décrivant le résultat et nom de l'anim à envoyer
+    """
     res = randrange(1, faces)  # jet de dé
     value = res + modificateur  # valeur globale du jet
     if stat_testee != "":
         stat_testee = f"({stat_testee})"
-    if hero_point_update(message.author.mention, dict_links, gc, hero_point):
-        value += modificateur
+        if hero_point_update(message.author.mention, dict_links, gc, hero_point):
+            value += modificateur
     if valeur_difficulte > 0:
         if res == faces:
             anim = "R_CRIT.avi"
@@ -211,12 +224,12 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
             anim = "E_STD.avi"
             str_resultat = f"{message.author.mention} > **ECHEC** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['ECHEC'])}*"
     else:
-        anim = ""
+        anim = "INCONNU.avi"
         str_resultat = f"{message.author.mention} > **INCONNU** {stat_testee}\n> Le résultat du dé est **{value}** ({res}/{faces}+{modificateur}) !\n> *{choice(quotes['INCONNU'])}*"
     return (str_resultat, anim)
 
 
-@ bot.command(
+@bot.command(
     name="caracteristique",
     description="Permet de changer une valeur sur votre fiche de stats.",
     scope=guild_id,
@@ -375,30 +388,37 @@ async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte:
         await ctx.send(str(message))
 
 
-def roll_the_stress(message, val_stress):
+def roll_the_stress(message, val_stress, player_has_file: bool = True):
     """
     Lance un dé de stress et en traite les conséquences
 
     Keywords arguments:
     *message* (discord.message) > source de la commande
     *val_stress* (str) > valeur du stress indiqué dans le message
+    *player_has_file* (bool) > si le joueur a une fiche qui lui est associée
     """
-    dice: int = randrange(1, 10)
+    if player_has_file:
+        val_max: int = 10
+    else:
+        val_max: int = 30
+    dice: int = randrange(1, val_max)
     index: int = dice + int(val_stress)
     state, anim = listStates[index], str(
         listStates[index])[:-2]+".avi"
     effect = listEffects[index]
 
-    if (dice >= 8):
+    if (dice >= 0.8*val_max):
         "Effet de stress négatif"
         quote = choice(quotes["STRESS NEGATIF"])
+        if player_has_file
         increase_on_crit(str(message.author.mention),
                          dict_links, gc, 'Stress', dict_pos,  1)
-    elif (dice <= 2):
+    elif (dice <= 0.2*val_max):
         "Effet de stress positif"
         quote = choice(quotes["STRESS POSITIF"])
-        increase_on_crit(str(message.author.mention),
-                         dict_links, gc, 'Stress', dict_pos,  -1)
+        if player_has_file:
+            increase_on_crit(str(message.author.mention),
+                             dict_links, gc, 'Stress', dict_pos,  -1)
     else:
         "Effet de stress médian"
         quote = choice(quotes["STRESS NEUTRE"])
@@ -425,12 +445,15 @@ async def stress(ctx: interactions.CommandContext):
             ctx, get_stress(ctx.author.mention, dict_links, gc))
         await ctx.send(message)
         await obs_invoke(toggle_anim, host, port, password, anim)
-    except ConnectionError:
-        message = ConnectionError(
-            f"Impossible d'atteindre la valeur de stress pour {ctx.author.mention}.")
-    except ValueError:
-        message = ValueError(
-            f"Désolé {ctx.author.mention}, tu ne sembles pas avoir de fiche liée dans ma base de données.")
+    except:
+        try:
+            message, anim = roll_the_stress(ctx, 0, False)
+        except ConnectionError:
+            message = ConnectionError(
+                f"Impossible d'atteindre la valeur de stress pour {ctx.author.mention}.")
+        except ValueError:
+            message = ValueError(
+                f"Désolé {ctx.author.mention}, tu ne sembles pas avoir de fiche liée dans ma base de données.")
     finally:
         await ctx.send(str(message))
 
