@@ -410,9 +410,9 @@ def roll_the_stress(message, val_stress, player_has_file: bool = True):
     if (dice >= 0.8*val_max):
         "Effet de stress négatif"
         quote = choice(quotes["STRESS NEGATIF"])
-        if player_has_file
-        increase_on_crit(str(message.author.mention),
-                         dict_links, gc, 'Stress', dict_pos,  1)
+        if player_has_file:
+            increase_on_crit(str(message.author.mention),
+                             dict_links, gc, 'Stress', dict_pos,  1)
     elif (dice <= 0.2*val_max):
         "Effet de stress positif"
         quote = choice(quotes["STRESS POSITIF"])
