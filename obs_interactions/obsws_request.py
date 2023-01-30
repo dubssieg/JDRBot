@@ -1,3 +1,4 @@
+"Script to invoke anims in OBS Studio"
 import signal
 import asyncio
 from obswebsocket import obsws, requests
@@ -22,7 +23,7 @@ def timeout(seconds_before_timeout):
     return decorate
 
 
-@timeout(8)
+# @timeout(8)
 async def obs_invoke(f, *args) -> None:
     "appel avec unpacking via l'étoile"
 
@@ -31,16 +32,17 @@ async def obs_invoke(f, *args) -> None:
         ws.connect()
         await f(ws, args[3:])  # exécution de la fonction
         ws.disconnect()
-    except:
-        pass
+    except Exception:
+        print(ConnectionError("A error occured when connecting to OBS Studio."))
 
 
 async def toggle_anim(ws, name) -> None:
+    "toggle anim on, plays it, and toggles it off."
     try:
         ws.call(requests.SetSceneItemProperties(
             scene_name="Animations", item=name[0], visible=True))
         await asyncio.sleep(5)
         ws.call(requests.SetSceneItemProperties(
             scene_name="Animations", item=name[0], visible=False))
-    except:
-        pass
+    except Exception:
+        print(ConnectionError("A error occured when connecting to OBS Studio."))
