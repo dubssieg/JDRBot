@@ -666,6 +666,7 @@ if __name__ == "__main__":
             bot.start()
         except KeyboardInterrupt:
             print(KeyboardInterrupt("Keyboard interrupt, terminating Grifouille"))
-            exit()
-        except:
+            break
+        except Exception as exc:
+            print(exc)
             sleep(10)
