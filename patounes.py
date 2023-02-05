@@ -7,6 +7,7 @@ from sys import path
 from pygsheets import authorize
 from string import ascii_uppercase
 from lib import output_msg, load_json, save_json, Wrapped_Exception, Sheets_Exception, YTDLSource
+from obs_interactions import toggle_filter, obs_invoke
 
 ##################### TOKENS DE CONNEXION ##########################
 
@@ -42,6 +43,9 @@ dict_stress: dict = load_json("stress")
 embed_projets: dict = load_json("embed_projets")
 embed_jdr: dict = load_json("embed_jdr")
 quotes: dict = load_json("quotes")
+
+name_tags: dict = {'MJ': {'chan': None, 'mute': False}, 'Joueur1':  {'chan': None, 'mute': False}, 'Joueur2':  {'chan': None, 'mute': False},
+                   'Joueur3':  {'chan': None, 'mute': False}, 'Joueur4':  {'chan': None, 'mute': False}, 'Joueur5':  {'chan': None, 'mute': False}}
 
 # préparation du dico de stress
 
@@ -122,19 +126,6 @@ def meow(message) -> dict:
         "img/eyes_cat.gif"
     ]
     return {'info': 'Meow', 'chaine': choice(list_meows)}
-
-
-@commande
-def disconnect(message, client) -> dict:
-    """
-    TODO fix la fonction
-    Déconnecte le client de manière safe
-    """
-    if (str(message.author.id) == str(admin)):
-        client.close()
-        return {'info': 'Tentative de déconnexion...', 'chaine': "Déconnexion du serveur. A bientôt !"}
-    else:
-        return {'info': 'Tentative de déconnexion...', 'chaine': "Vous n'avez pas les droits pour déconnecter le bot."}
 
 
 @commande
@@ -240,6 +231,11 @@ async def send_image(txt, img, message):
 @bot.event
 async def on_ready():
     await bot.change_presence(activity=Streaming(name="des pôtichats", url="https://www.twitch.tv/TharosTV"))
+    for tag in name_tags:
+        try:
+            await obs_invoke(toggle_filter, host, port, password, f"Cam_{tag}", ['AFK_SAT', 'AFK_BLUR'], True)
+        except Exception as exc:
+            print(exc)
     output_msg(f"PATOUNES EST PRET !")
 
 
@@ -317,6 +313,31 @@ async def week_poll(ctx, details):
                       for i in range(0, nb_jours, 1)] + ["\U00002705"] + ["\U0000274C"]
         for emoji in list_emoji:
             await msg.add_reaction(emoji)
+
+
+@bot.event
+async def on_voice_state_update(member, before, after):
+    """Regarde ce que l'utilisateur fait du vocal ; si il est mute,
+    ou dans un chan différent du MJ, met un effet sur sa caméra !
+
+    Args:
+        member : le membre qui vient d'effectuer une action sur le vocal
+        before : état du vocal avant changement
+        after : état du vocal après changement
+    """
+    roles = [str(role.name) for role in member.roles]
+    for tag in name_tags.keys():
+        if tag in roles:
+            try:
+                name_tags[tag]['chan'] = after.channel.id
+            except AttributeError:
+                name_tags[tag]['chan'] = None
+            name_tags[tag]['mute'] = after.self_mute
+    for tag_name, infos in name_tags.items():
+        try:
+            await obs_invoke(toggle_filter, host, port, password, f"Cam_{tag_name}", ['AFK_SAT', 'AFK_BLUR'], infos['chan'] != name_tags['MJ']['chan'] or infos['mute'])
+        except Exception as exc:
+            print(exc)
 
 
 if __name__ == "__main__":
