@@ -34,7 +34,6 @@ async def obs_invoke(f, *args) -> None:
         ws.disconnect()
     except Exception as exc:
         print(exc)
-        print(ConnectionError("A error occured when connecting to OBS Studio."))
 
 
 async def toggle_anim(ws, name) -> None:
@@ -45,8 +44,8 @@ async def toggle_anim(ws, name) -> None:
         await asyncio.sleep(5)
         ws.call(requests.SetSceneItemProperties(
             scene_name="Animations", item=name[0], visible=False))
-    except Exception:
-        print(ConnectionError("A error occured when connecting to OBS Studio."))
+    except Exception as exc:
+        print(exc)
 
 
 async def toggle_filter(ws, name, filter_name, visibility) -> None:
@@ -57,4 +56,3 @@ async def toggle_filter(ws, name, filter_name, visibility) -> None:
                 sourceName=name, filterEnabled=visibility, filterName=elt))
     except Exception as exc:
         print(exc)
-        print(ConnectionError("A error occured when connecting to OBS Studio."))
