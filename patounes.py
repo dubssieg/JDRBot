@@ -78,6 +78,7 @@ async def on_ready() -> None:
 
 
 @bot.command(name='play', help='Envoyer de la bonne zik via Patounes')
+@commands.has_permissions(administrator = True)
 async def play(ctx, url: str) -> None:
     "Télécharge et joue une musique via un vocal discord"
     await delete_command(ctx.message)
@@ -95,8 +96,14 @@ async def play(ctx, url: str) -> None:
         print(exc)
         await send_texte("Désolé, le bot n'est pas connecté :(", ctx.message)
 
+@play.error
+async def play_error(ctx,error):
+    if isinstance(error,commands.CheckFailure):
+        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.",ctx.message)
+
 
 @bot.command(name='stop', help='Arrête la musique')
+@commands.has_permissions(administrator = True)
 async def stop(ctx):
     "Demande au bot de stopper la musique"
     voice_client = ctx.message.guild.voice_client
@@ -105,8 +112,14 @@ async def stop(ctx):
     else:
         await send_texte("Le bot ne joue rien actuellement.", ctx.message)
 
+@stop.error
+async def stop_error(ctx,error):
+    if isinstance(error,commands.CheckFailure):
+        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.",ctx.message)
+
 
 @bot.command(name='fetch', help='Pré-télécharge une musique')
+@commands.has_permissions(administrator = True)
 async def fetch(ctx, url):
     "Demande au bot de pré-télécharger une musique"
     await delete_command(ctx.message)
@@ -114,8 +127,14 @@ async def fetch(ctx, url):
         _ = await YTDLSource.from_url(url, loop=bot.loop)
         await send_texte(f'**Téléchargé avec succès :** {url}', ctx.message)
 
+@fetch.error
+async def fetch_error(ctx,error):
+    if isinstance(error,commands.CheckFailure):
+        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.",ctx.message)
+
 
 @bot.command(name='join', help='Demander à Patounes de rejoindre un vocal')
+@commands.has_permissions(administrator = True)
 async def join(ctx):
     "Demande au bot de rejoindre le vocal"
     await delete_command(ctx.message)
@@ -126,8 +145,14 @@ async def join(ctx):
         channel = ctx.message.author.voice.channel
     await channel.connect()
 
+@join.error
+async def join_error(ctx,error):
+    if isinstance(error,commands.CheckFailure):
+        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.",ctx.message)
+
 
 @bot.command(name='leave', help='Demander à Patounes de quitter un vocal')
+@commands.has_permissions(administrator = True)
 async def leave(ctx):
     "Demande au bot de quitter le vocal"
     await delete_command(ctx.message)
@@ -136,6 +161,11 @@ async def leave(ctx):
         await voice_client.disconnect()
     else:
         await send_texte("Désolé, le bot est déjà déconnecté :(", ctx.message)
+
+@leave.error
+async def leave_error(ctx,error):
+    if isinstance(error,commands.CheckFailure):
+        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.",ctx.message)
 
 
 @bot.event
