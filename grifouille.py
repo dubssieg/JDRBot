@@ -375,7 +375,7 @@ async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte:
     try:
         values = stat_from_player(ctx.author.mention, dict_links, gc, charac)[
             2:].split('+')
-        message, anim = roll_the_dice(ctx, int(values[0]), int(
+        message, anim = roll_the_dice(ctx, int(float(values[0].replace(',', '.'))), int(
             values[1]), valeur_difficulte, hero_point=point_heroisme, stat_testee=charac)
         await obs_invoke(toggle_anim, host, port, password, anim)
     except ConnectionError:
