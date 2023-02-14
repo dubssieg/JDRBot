@@ -39,11 +39,11 @@ async def obs_invoke(f, *args) -> None:
 async def toggle_anim(ws, name) -> None:
     "toggle anim on, plays it, and toggles it off."
     try:
-        print(ws.call(requests.SetSceneItemProperties(
-            scene_name="Animations", item=name[0], visible=True)))
+        ws.call(requests.SetSceneItemProperties(
+            scene_name="Animations", item=name, visible=True))
         await asyncio.sleep(5)
-        print(ws.call(requests.SetSceneItemProperties(
-            scene_name="Animations", item=name[0], visible=False)))
+        ws.call(requests.SetSceneItemProperties(
+            scene_name="Animations", item=name, visible=False))
     except Exception as exc:
         print(exc)
 
