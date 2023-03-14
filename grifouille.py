@@ -5,7 +5,7 @@ from random import randrange, random, choice
 from lib import load_json, save_json, create_char, get_personnas, get_scene_list, switch, create_stats, display_stats, count_crit_values
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
-from gsheets_interactions import values_from_player, stat_from_player, hero_point_update, increase_on_crit, get_stress, update_char
+from gsheets_interactions import values_from_player, stat_from_player, hero_point_update, increase_on_crit, get_stress, update_char, get_url
 from time import sleep
 from string import ascii_uppercase
 from datetime import datetime, timedelta
@@ -305,6 +305,19 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
             elif new_count <= 2 or new_zero == 1:
                 await obs_invoke(toggle_anim, host, port, password, "Portes_Mort.avi")
         await ctx.send(f"La valeur de **{competence}** de {ctx.author.mention} a été changée de **{valeurs_actuelle[pos]}** à **{future_value}** !\nTu as {new_count} valeurs en dessous du seuil critique, dont {new_zero} valeurs à zéro.")
+
+
+@ bot.command(
+    name="link",
+    description="Renvoie le lien vers la fiche personnage liée, ou un message si aucune fiche n'est liée.",
+    scope=guild_id,
+)
+async def link(ctx: interactions.CommandContext):
+    await ctx.defer()
+    try:
+        await ctx.send(f"Voici l'URL de ta fiche personnage liée ! {patounes_love}\n{get_url(ctx.author.mention, dict_links, gc)}")
+    except Exception:
+        await ctx.send("Désolé, tu ne semble pas avoir de fiche liée. N'hésite pas à en lier une avec **/save_file** !")
 
 
 @ bot.command(

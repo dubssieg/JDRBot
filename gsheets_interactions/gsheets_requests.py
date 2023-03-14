@@ -22,8 +22,16 @@ def googleask(func):
                 print(ConnectionError(
                     "Impossible to connect to the specified sheet."))
         else:
-            print(ValueError("Impossible to get the required value."))
+            print(ValueError(f"{args[0]} is not a refferenced user."))
     return wrapper
+
+
+@googleask
+def get_url(name: str, dict_links: dict, gc) -> str:
+    "Récupère l'URL de la fiche personnage"
+    sh = gc.open(dict_links[f"{name}"])
+
+    return f"https://docs.google.com/spreadsheets/d/{sh.id}/edit#gid={sh[0].id}"
 
 
 @googleask

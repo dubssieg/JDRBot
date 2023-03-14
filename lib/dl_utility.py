@@ -3,6 +3,8 @@ from youtube_dl import YoutubeDL, utils
 from discord import PCMVolumeTransformer
 from os import system
 
+# fix ytdl => pip install git+https://github.com/ytdl-org/youtube-dl.git@master#egg=youtube_dl --force-reinstall
+
 system("mkdir -p music")
 
 utils.bug_reports_message = lambda: ''
