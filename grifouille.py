@@ -307,7 +307,7 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
         await ctx.send(f"La valeur de **{competence}** de {ctx.author.mention} a été changée de **{valeurs_actuelle[pos]}** à **{future_value}** !\nTu as {new_count} valeurs en dessous du seuil critique, dont {new_zero} valeurs à zéro.")
 
 
-@ bot.command(
+@bot.command(
     name="link",
     description="Renvoie le lien vers la fiche personnage liée, ou un message si aucune fiche n'est liée.",
     scope=guild_id,
@@ -315,12 +315,12 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
 async def link(ctx: interactions.CommandContext):
     await ctx.defer()
     try:
-        await ctx.send(f"Voici l'URL de ta fiche personnage liée ! {patounes_love}\n{get_url(ctx.author.mention, dict_links, gc)}")
+        await ctx.send(f"Voici l'URL de ta fiche personnage liée ! {patounes_love}\n{get_url(ctx.author.mention, dict_links, gc)}", ephemeral=True)
     except Exception:
-        await ctx.send("Désolé, tu ne semble pas avoir de fiche liée. N'hésite pas à en lier une avec **/save_file** !")
+        await ctx.send("Désolé, tu ne semble pas avoir de fiche liée. N'hésite pas à en lier une avec **/save_file** !", ephemeral=True)
 
 
-@ bot.command(
+@bot.command(
     name="display",
     description="Affiche les statistiques actuelles de la fiche active.",
     scope=guild_id,
@@ -348,7 +348,7 @@ async def display(ctx: interactions.CommandContext):
             f"Désolé {ctx.author.mention}, tu ne sembles pas avoir de fiche liée dans ma base de données.")
 
 
-@ bot.command(
+@bot.command(
     name="stat",
     description="Jet d'un dé accordément à votre fiche de stats !",
     scope=guild_id,
@@ -440,7 +440,7 @@ def roll_the_stress(message, val_stress, player_has_file: bool = True):
     return (string, anim)
 
 
-@ bot.command(
+@bot.command(
     name="stress",
     description="Lance un jet de stress !",
     scope=guild_id,
@@ -471,7 +471,7 @@ async def stress(ctx: interactions.CommandContext):
         await ctx.send(str(message))
 
 
-@ bot.command(
+@bot.command(
     name="dice",
     description="Simule un dé à n faces !",
     scope=guild_id,
@@ -510,7 +510,7 @@ async def dice(ctx: interactions.CommandContext, faces: int = 20, modificateur: 
     await obs_invoke(toggle_anim, host, port, password, anim)
 
 
-@ bot.command(
+@bot.command(
     name="toss",
     description="Lance une pièce !",
     scope=guild_id,
@@ -521,7 +521,7 @@ async def toss(ctx: interactions.CommandContext) -> None:
     await ctx.send(f"{ctx.author.mention} > La pièce est tombée sur {res} !\n> *Un lancer de pièce, pour remettre son sort au destin...*")
 
 
-@ bot.command(
+@bot.command(
     name="calendar",
     description="Crée un sondage de disponibilités",
     scope=guild_id,
