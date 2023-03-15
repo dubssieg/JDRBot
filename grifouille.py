@@ -1,4 +1,5 @@
-
+"GRIFOUILLE !!!"
+from typing import NoReturn
 import interactions
 from interactions.ext.files import command_send
 from random import randrange, random, choice
@@ -672,16 +673,19 @@ async def poll(ctx: interactions.CommandContext, titre: str, mentions: str | Non
         await message.create_reaction(emoji)
 
 
-if __name__ == "__main__":
+def main() -> NoReturn:
+    "Main loop for Grifouille"
     bot.load('interactions.ext.files')
     while (True):
         try:
             bot.start()
         except KeyboardInterrupt:
             print(KeyboardInterrupt("Keyboard interrupt, terminating Grifouille"))
-            break
+            exit(0)
         except Exception as exc:
             print(exc)
             sleep(10)
-        finally:
-            continue
+
+
+if __name__ == "__main__":
+    main()

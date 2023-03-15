@@ -1,5 +1,7 @@
 "PATOUNES !!!"
 from sys import path
+from time import sleep
+from typing import NoReturn
 from discord.ext import commands
 from discord import Client, Streaming, FFmpegPCMAudio, Intents, ClientException
 from pygsheets import authorize
@@ -78,7 +80,7 @@ async def on_ready() -> None:
 
 
 @bot.command(name='play', help='Envoyer de la bonne zik via Patounes')
-@commands.has_permissions(administrator = True)
+@commands.has_permissions(administrator=True)
 async def play(ctx, url: str) -> None:
     "Télécharge et joue une musique via un vocal discord"
     await delete_command(ctx.message)
@@ -96,14 +98,15 @@ async def play(ctx, url: str) -> None:
         print(exc)
         await send_texte("Désolé, le bot n'est pas connecté :(", ctx.message)
 
+
 @play.error
-async def play_error(ctx,error):
-    if isinstance(error,commands.CheckFailure):
-        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.",ctx.message)
+async def play_error(ctx, error):
+    if isinstance(error, commands.CheckFailure):
+        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
 
 
 @bot.command(name='stop', help='Arrête la musique')
-@commands.has_permissions(administrator = True)
+@commands.has_permissions(administrator=True)
 async def stop(ctx):
     "Demande au bot de stopper la musique"
     voice_client = ctx.message.guild.voice_client
@@ -112,29 +115,31 @@ async def stop(ctx):
     else:
         await send_texte("Le bot ne joue rien actuellement.", ctx.message)
 
+
 @stop.error
-async def stop_error(ctx,error):
-    if isinstance(error,commands.CheckFailure):
-        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.",ctx.message)
+async def stop_error(ctx, error):
+    if isinstance(error, commands.CheckFailure):
+        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
 
 
 @bot.command(name='fetch', help='Pré-télécharge une musique')
-@commands.has_permissions(administrator = True)
+@commands.has_permissions(administrator=True)
 async def fetch(ctx, url):
     "Demande au bot de pré-télécharger une musique"
     await delete_command(ctx.message)
     async with ctx.typing():
-        _ = await YTDLSource.from_url(url, loop=bot.loop)
+        _ = await YTDLSource.from_url(url, loop=bot.loop)  # type: ignore
         await send_texte(f'**Téléchargé avec succès :** {url}', ctx.message)
 
+
 @fetch.error
-async def fetch_error(ctx,error):
-    if isinstance(error,commands.CheckFailure):
-        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.",ctx.message)
+async def fetch_error(ctx, error):
+    if isinstance(error, commands.CheckFailure):
+        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
 
 
 @bot.command(name='join', help='Demander à Patounes de rejoindre un vocal')
-@commands.has_permissions(administrator = True)
+@commands.has_permissions(administrator=True)
 async def join(ctx):
     "Demande au bot de rejoindre le vocal"
     await delete_command(ctx.message)
@@ -145,14 +150,15 @@ async def join(ctx):
         channel = ctx.message.author.voice.channel
     await channel.connect()
 
+
 @join.error
-async def join_error(ctx,error):
-    if isinstance(error,commands.CheckFailure):
-        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.",ctx.message)
+async def join_error(ctx, error):
+    if isinstance(error, commands.CheckFailure):
+        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
 
 
 @bot.command(name='leave', help='Demander à Patounes de quitter un vocal')
-@commands.has_permissions(administrator = True)
+@commands.has_permissions(administrator=True)
 async def leave(ctx):
     "Demande au bot de quitter le vocal"
     await delete_command(ctx.message)
@@ -162,10 +168,11 @@ async def leave(ctx):
     else:
         await send_texte("Désolé, le bot est déjà déconnecté :(", ctx.message)
 
+
 @leave.error
-async def leave_error(ctx,error):
-    if isinstance(error,commands.CheckFailure):
-        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.",ctx.message)
+async def leave_error(ctx, error):
+    if isinstance(error, commands.CheckFailure):
+        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
 
 
 @bot.event
@@ -195,6 +202,19 @@ async def on_voice_state_update(member, _, after):
             print(exc)
 
 
-if __name__ == "__main__":
+def main() -> NoReturn:
+    "Main loop for Patounes"
     path.append('../')
-    bot.run(token)
+    while (True):
+        try:
+            bot.run(token)
+        except KeyboardInterrupt:
+            print(KeyboardInterrupt("Keyboard interrupt, terminating Grifouille"))
+            exit(0)
+        except Exception as exc:
+            print(exc)
+            sleep(10)
+
+
+if __name__ == "__main__":
+    main()
