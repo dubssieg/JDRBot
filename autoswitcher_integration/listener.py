@@ -1,10 +1,16 @@
+import interactions
 "Tentative pour record en continu vers local et écoute du flux"
 # requires interactions v5
 # pip uninstall interactions
 # pip install git+https://github.com/interactions-py/interactions.py.git@5.x
 
+"""
+Idée complète : mapping rôles-personnes
+> le mapping contrôle les caméras + le déclenchement des switchs
 
-import interactions
+> si la personne parle, 
+> (optionnel) s'en servir pour root l'audio dans OBS? peut-on récup chaque caméra par ce biais ?
+"""
 
 
 @interactions.component_callback("start_recording")
