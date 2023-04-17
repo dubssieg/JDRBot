@@ -101,8 +101,8 @@ async def play(ctx, url: str) -> None:
                 voice_channel.play(FFmpegPCMAudio(
                     executable="ffmpeg", source=filename))
                 await send_texte(f'**Joue :** <{url}>', ctx.message)
-            except:
-                print("Error on playing.")
+            except Exception as e:
+                raise e
     except ClientException as exc:
         print("Error on play.")
         print(exc)
