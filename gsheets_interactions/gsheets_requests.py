@@ -30,7 +30,6 @@ def googleask(func):
 def get_url(name: str, dict_links: dict, gc) -> str:
     "Récupère l'URL de la fiche personnage"
     sh = gc.open(dict_links[f"{name}"])
-
     return f"https://docs.google.com/spreadsheets/d/{sh.id}/edit#gid={sh[0].id}"
 
 

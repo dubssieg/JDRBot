@@ -34,9 +34,19 @@ patounes_love = interactions.Emoji(
 
 # déclaration du client
 bot = interactions.Client(
-    token=token_grifouille, presence=interactions.ClientPresence(status=interactions.StatusType.ONLINE,
-                                                                 activities=[interactions.PresenceActivity(name='des pôtichats', url="https://www.twitch.tv/TharosTV", emoji=patounes_love, type=interactions.PresenceActivityType.STREAMING)
-                                                                             ]))
+    token=token_grifouille,
+    presence=interactions.ClientPresence(
+        status=interactions.StatusType.ONLINE,
+        activities=[
+            interactions.PresenceActivity(
+                name='des pôtichats',
+                url="https://www.twitch.tv/TharosTV",
+                emoji=patounes_love,
+                type=interactions.PresenceActivityType.STREAMING
+                )
+        ]
+    )
+    )
 
 # tokens GSheets
 gc = authorize(service_file='env/connect_sheets.json')

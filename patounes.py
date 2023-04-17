@@ -87,14 +87,24 @@ async def play(ctx, url: str) -> None:
     try:
         server = ctx.message.guild
         voice_channel = server.voice_client
-
-        async with ctx.typing():
-            filename = await YTDLSource.from_url(  # type: ignore
-                url, loop=bot.loop)
-            voice_channel.play(FFmpegPCMAudio(
-                executable="ffmpeg", source=filename))
-            await send_texte(f'**Joue :** <{url}>', ctx.message)
     except ClientException as exc:
+        print("Error onn gathering data.")
+        print(exc)
+    try:
+        async with ctx.typing():
+            try:
+                filename = await YTDLSource.from_url(  # type: ignore
+                    url, loop=bot.loop)
+            except:
+                print("Error on download.")
+            try:
+                voice_channel.play(FFmpegPCMAudio(
+                    executable="ffmpeg", source=filename))
+                await send_texte(f'**Joue :** <{url}>', ctx.message)
+            except:
+                print("Error on playing.")
+    except ClientException as exc:
+        print("Error on play.")
         print(exc)
         await send_texte("Désolé, le bot n'est pas connecté :(", ctx.message)
 
