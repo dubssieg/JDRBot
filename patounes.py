@@ -80,8 +80,21 @@ async def on_ready() -> None:
 
 
 @bot.command()
-async def test(ctx):
-    ctx.send("Reacting to test!")
+async def test1(ctx):
+    print("Detecting test1!")
+    ctx.send("Reacting to test1!")
+
+
+@bot.command(name='test2')
+async def _test2(ctx):
+    print("Detecting test2!")
+    ctx.send("Reacting to test2!")
+
+
+@bot.command(name='test3')
+async def test3(ctx):
+    print("Detecting test3!")
+    ctx.send("Reacting to test3!")
 
 
 @bot.command(name='play', help='Envoyer de la bonne zik via Patounes')
