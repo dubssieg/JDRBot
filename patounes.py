@@ -3,7 +3,7 @@ from sys import path
 from time import sleep
 from typing import NoReturn
 from discord.ext import commands
-from discord import Client, Streaming, FFmpegPCMAudio, Intents, ClientException
+from discord import Streaming, FFmpegPCMAudio, Intents, ClientException
 from pygsheets import authorize
 from lib import output_msg, load_json, YTDLSource
 from obs_interactions import toggle_filter, obs_invoke
@@ -35,8 +35,8 @@ name_tags: dict = {
 
 ############################## DEF BOT ##################################
 
-intents = Intents().all()
-client = Client(intents=intents)
+intents = Intents.default()
+intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 ############################## DEF BOT ##################################
@@ -79,37 +79,32 @@ async def on_ready() -> None:
     output_msg("PATOUNES EST PRET !")
 
 
+@bot.command()
+async def test(ctx):
+    ctx.send("Reacting to test!")
+
+
 @bot.command(name='play', help='Envoyer de la bonne zik via Patounes')
 @commands.has_permissions(administrator=True)
-async def play(ctx, url: str) -> None:
+async def _play(ctx, url: str) -> None:
     "Télécharge et joue une musique via un vocal discord"
     await delete_command(ctx.message)
     try:
         server = ctx.message.guild
         voice_channel = server.voice_client
-    except ClientException as exc:
-        print("Error onn gathering data.")
-        print(exc)
-    try:
         async with ctx.typing():
-            try:
-                filename = await YTDLSource.from_url(  # type: ignore
-                    url, loop=bot.loop)
-            except:
-                print("Error on download.")
-            try:
-                voice_channel.play(FFmpegPCMAudio(
-                    executable="ffmpeg", source=filename))
-                await send_texte(f'**Joue :** <{url}>', ctx.message)
-            except Exception as e:
-                raise e
+            filename = await YTDLSource.from_url(  # type: ignore
+                url, loop=bot.loop)
+            voice_channel.play(FFmpegPCMAudio(
+                executable="ffmpeg", source=filename))
+            await send_texte(f'**Joue :** <{url}>', ctx.message)
     except ClientException as exc:
         print("Error on play.")
         print(exc)
         await send_texte("Désolé, le bot n'est pas connecté :(", ctx.message)
 
 
-@play.error
+@_play.error
 async def play_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
         await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
@@ -117,7 +112,7 @@ async def play_error(ctx, error):
 
 @bot.command(name='stop', help='Arrête la musique')
 @commands.has_permissions(administrator=True)
-async def stop(ctx):
+async def _stop(ctx):
     "Demande au bot de stopper la musique"
     voice_client = ctx.message.guild.voice_client
     if voice_client.is_playing():
@@ -126,7 +121,7 @@ async def stop(ctx):
         await send_texte("Le bot ne joue rien actuellement.", ctx.message)
 
 
-@stop.error
+@_stop.error
 async def stop_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
         await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
@@ -134,7 +129,7 @@ async def stop_error(ctx, error):
 
 @bot.command(name='fetch', help='Pré-télécharge une musique')
 @commands.has_permissions(administrator=True)
-async def fetch(ctx, url):
+async def _fetch(ctx, url):
     "Demande au bot de pré-télécharger une musique"
     await delete_command(ctx.message)
     async with ctx.typing():
@@ -142,7 +137,7 @@ async def fetch(ctx, url):
         await send_texte(f'**Téléchargé avec succès :** {url}', ctx.message)
 
 
-@fetch.error
+@_fetch.error
 async def fetch_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
         await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
@@ -150,7 +145,7 @@ async def fetch_error(ctx, error):
 
 @bot.command(name='join', help='Demander à Patounes de rejoindre un vocal')
 @commands.has_permissions(administrator=True)
-async def join(ctx):
+async def _join(ctx):
     "Demande au bot de rejoindre le vocal"
     await delete_command(ctx.message)
     if not ctx.message.author.voice:
@@ -161,7 +156,7 @@ async def join(ctx):
     await channel.connect()
 
 
-@join.error
+@_join.error
 async def join_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
         await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
@@ -169,7 +164,7 @@ async def join_error(ctx, error):
 
 @bot.command(name='leave', help='Demander à Patounes de quitter un vocal')
 @commands.has_permissions(administrator=True)
-async def leave(ctx):
+async def _leave(ctx):
     "Demande au bot de quitter le vocal"
     await delete_command(ctx.message)
     voice_client = ctx.message.guild.voice_client
@@ -179,7 +174,7 @@ async def leave(ctx):
         await send_texte("Désolé, le bot est déjà déconnecté :(", ctx.message)
 
 
-@leave.error
+@_leave.error
 async def leave_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
         await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
