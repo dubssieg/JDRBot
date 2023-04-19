@@ -42,24 +42,9 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 ############################## DEF BOT ##################################
 
 
-async def delete_command(message) -> None:
-    "Supprime le message à l'origine de la commande"
-    messages = await message.channel.history(limit=1).flatten()
-    for each_message in messages:
-        await each_message.delete()
-
-
-async def send_texte(chaine: str, source, kwargs: dict | None = None):
-    """
-    Envoie le message {chaine} dans le chan de la commande
-    Les kwargs peuvent contenir
-        file: File = ...
-        embed: Embed = ...
-    """
-    if kwargs is None:
-        await source.channel.send(chaine)
-    else:
-        await source.channel.send(chaine, **kwargs)
+# messages = await message.channel.history(limit=1).flatten()
+# for each_message in messages:
+#    await each_message.delete()
 
 
 @bot.event
@@ -80,29 +65,10 @@ async def on_ready() -> None:
 
 
 @bot.command()
-async def test1(ctx):
-    print("Detecting test1!")
-    await ctx.send("Reacting to test1!")
-
-
-@bot.command(name='test2')
-async def _test2(ctx):
-    print("Detecting test2!")
-    await ctx.send("Reacting to test2!")
-
-
-@bot.command(name='test3')
-async def test3(ctx):
-    print("Detecting test3!")
-    await ctx.send("Reacting to test3!")
-
-
-# @commands.has_permissions(administrator=True)
-@bot.command()
+@commands.has_permissions(administrator=True)
 async def play(ctx, url: str) -> None:
     "Télécharge et joue une musique via un vocal discord"
     print("Detecting play!")
-    # await delete_command(ctx.message)
     try:
         server = ctx.message.guild
         voice_channel = server.voice_client
@@ -111,88 +77,91 @@ async def play(ctx, url: str) -> None:
                 url, loop=bot.loop)
             voice_channel.play(FFmpegPCMAudio(
                 executable="ffmpeg", source=filename))
-            await send_texte(f'**Joue :** <{url}>', ctx.message)
+            await ctx.send(f'**Joue :** <{url}>')
     except ClientException as exc:
         print("Error on play.")
         print(exc)
-        await send_texte("Désolé, le bot n'est pas connecté :(", ctx.message)
+        await ctx.send("Désolé, le bot n'est pas connecté :(")
+    finally:
+        ctx.delete()
 
 
 @play.error
 async def play_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
-        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
+        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.")
 
 
-@bot.command(name='stop', help='Arrête la musique')
+@bot.command()
 @commands.has_permissions(administrator=True)
-async def _stop(ctx):
+async def stop(ctx):
     "Demande au bot de stopper la musique"
     voice_client = ctx.message.guild.voice_client
     if voice_client.is_playing():
         await voice_client.stop()
     else:
-        await send_texte("Le bot ne joue rien actuellement.", ctx.message)
+        await ctx.send("Le bot ne joue rien actuellement.")
+    ctx.delete()
 
 
-@_stop.error
+@stop.error
 async def stop_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
-        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
+        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.")
 
 
-@bot.command(name='fetch', help='Pré-télécharge une musique')
+@bot.command()
 @commands.has_permissions(administrator=True)
-async def _fetch(ctx, url):
+async def fetch(ctx, url):
     "Demande au bot de pré-télécharger une musique"
-    await delete_command(ctx.message)
     async with ctx.typing():
         _ = await YTDLSource.from_url(url, loop=bot.loop)  # type: ignore
-        await send_texte(f'**Téléchargé avec succès :** {url}', ctx.message)
+        await ctx.send(f'**Téléchargé avec succès :** {url}')
+    ctx.delete()
 
 
-@_fetch.error
+@fetch.error
 async def fetch_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
-        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
+        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.")
 
 
-# @commands.has_permissions(administrator=True)
 @bot.command()
+@commands.has_permissions(administrator=True)
 async def join(ctx):
     "Demande au bot de rejoindre le vocal"
     print("Detecting join!")
-    # await delete_command(ctx.message)
     if not ctx.message.author.voice:
         await ctx.send("Désolé, tu n'es pas dans un chan vocal :(")
         return
     else:
         channel = ctx.message.author.voice.channel
         await channel.connect()
+    ctx.delete()
 
 
 @join.error
 async def join_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
-        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
+        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.")
 
 
-@bot.command(name='leave', help='Demander à Patounes de quitter un vocal')
+@bot.command()
 @commands.has_permissions(administrator=True)
-async def _leave(ctx):
+async def leave(ctx):
     "Demande au bot de quitter le vocal"
-    await delete_command(ctx.message)
     voice_client = ctx.message.guild.voice_client
     if voice_client.is_connected():
         await voice_client.disconnect()
     else:
-        await send_texte("Désolé, le bot est déjà déconnecté :(", ctx.message)
+        await ctx.send("Désolé, le bot est déjà déconnecté :(")
+    ctx.delete()
 
 
-@_leave.error
+@leave.error
 async def leave_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
-        await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
+        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.")
 
 
 @bot.event
