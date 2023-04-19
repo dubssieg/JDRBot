@@ -102,7 +102,7 @@ async def test3(ctx):
 async def play(ctx, url: str) -> None:
     "Télécharge et joue une musique via un vocal discord"
     print("Detecting play!")
-    await delete_command(ctx.message)
+    # await delete_command(ctx.message)
     try:
         server = ctx.message.guild
         voice_channel = server.voice_client
@@ -162,13 +162,13 @@ async def fetch_error(ctx, error):
 async def join(ctx):
     "Demande au bot de rejoindre le vocal"
     print("Detecting join!")
-    await delete_command(ctx.message)
+    # await delete_command(ctx.message)
     if not ctx.message.author.voice:
-        await send_texte("Désolé, tu n'es pas dans un chan vocal :(", ctx.message)
+        await ctx.send("Désolé, tu n'es pas dans un chan vocal :(")
         return
     else:
         channel = ctx.message.author.voice.channel
-    await channel.connect()
+        await channel.connect()
 
 
 @join.error
