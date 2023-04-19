@@ -97,10 +97,11 @@ async def test3(ctx):
     await ctx.send("Reacting to test3!")
 
 
-@bot.command(name='play', help='Envoyer de la bonne zik via Patounes')
-@commands.has_permissions(administrator=True)
-async def _play(ctx, url: str) -> None:
+# @commands.has_permissions(administrator=True)
+@bot.command()
+async def play(ctx, url: str) -> None:
     "Télécharge et joue une musique via un vocal discord"
+    print("Detecting play!")
     await delete_command(ctx.message)
     try:
         server = ctx.message.guild
@@ -117,7 +118,7 @@ async def _play(ctx, url: str) -> None:
         await send_texte("Désolé, le bot n'est pas connecté :(", ctx.message)
 
 
-@_play.error
+@play.error
 async def play_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
         await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
@@ -157,10 +158,10 @@ async def fetch_error(ctx, error):
 
 
 # @commands.has_permissions(administrator=True)
-@bot.command(name='join', help='Demander à Patounes de rejoindre un vocal')
-@commands.has_permissions(administrator=True)
-async def _join(ctx):
+@bot.command()
+async def join(ctx):
     "Demande au bot de rejoindre le vocal"
+    print("Detecting join!")
     await delete_command(ctx.message)
     if not ctx.message.author.voice:
         await send_texte("Désolé, tu n'es pas dans un chan vocal :(", ctx.message)
@@ -170,7 +171,7 @@ async def _join(ctx):
     await channel.connect()
 
 
-@_join.error
+@join.error
 async def join_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
         await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
