@@ -73,8 +73,6 @@ async def play(ctx, url: str) -> None:
                 executable="ffmpeg", source=filename))
             await ctx.send(f'**Joue :** <{url}>')
     except ClientException as exc:
-        print("Error on play.")
-        print(exc)
         await ctx.send("Désolé, le bot n'est pas connecté :(")
     finally:
         await ctx.delete()
@@ -124,7 +122,6 @@ async def fetch_error(ctx, error):
 @commands.has_permissions(administrator=True)
 async def join(ctx):
     "Demande au bot de rejoindre le vocal"
-    print("Detecting join!")
     if not ctx.message.author.voice:
         await ctx.send("Désolé, tu n'es pas dans un chan vocal :(")
         return

@@ -28,7 +28,7 @@ async def obs_invoke(f, *args) -> None:
     "appel avec unpacking via l'étoile"
 
     try:
-        ws = obsws(args[0], args[1], args[2])
+        ws = obsws(args[0], args[1], args[2], timeout=10)
         ws.connect()
         await f(ws, *args[3:])  # exécution de la fonction
         ws.disconnect()
