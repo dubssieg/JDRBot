@@ -82,19 +82,19 @@ async def on_ready() -> None:
 @bot.command()
 async def test1(ctx):
     print("Detecting test1!")
-    ctx.send("Reacting to test1!")
+    await ctx.send("Reacting to test1!")
 
 
 @bot.command(name='test2')
 async def _test2(ctx):
     print("Detecting test2!")
-    ctx.send("Reacting to test2!")
+    await ctx.send("Reacting to test2!")
 
 
 @bot.command(name='test3')
 async def test3(ctx):
     print("Detecting test3!")
-    ctx.send("Reacting to test3!")
+    await ctx.send("Reacting to test3!")
 
 
 @bot.command(name='play', help='Envoyer de la bonne zik via Patounes')
@@ -156,6 +156,7 @@ async def fetch_error(ctx, error):
         await send_texte("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.", ctx.message)
 
 
+# @commands.has_permissions(administrator=True)
 @bot.command(name='join', help='Demander à Patounes de rejoindre un vocal')
 @commands.has_permissions(administrator=True)
 async def _join(ctx):
