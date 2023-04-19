@@ -42,11 +42,6 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 ############################## DEF BOT ##################################
 
 
-# messages = await message.channel.history(limit=1).flatten()
-# for each_message in messages:
-#    await each_message.delete()
-
-
 @bot.event
 async def on_ready() -> None:
     "Lorsque le bot se connecte, effectue des actions d'initialisation"
@@ -68,7 +63,6 @@ async def on_ready() -> None:
 @commands.has_permissions(administrator=True)
 async def play(ctx, url: str) -> None:
     "Télécharge et joue une musique via un vocal discord"
-    print("Detecting play!")
     try:
         server = ctx.message.guild
         voice_channel = server.voice_client
@@ -83,7 +77,7 @@ async def play(ctx, url: str) -> None:
         print(exc)
         await ctx.send("Désolé, le bot n'est pas connecté :(")
     finally:
-        ctx.delete()
+        await ctx.delete()
 
 
 @play.error
@@ -101,7 +95,7 @@ async def stop(ctx):
         await voice_client.stop()
     else:
         await ctx.send("Le bot ne joue rien actuellement.")
-    ctx.delete()
+    await ctx.delete()
 
 
 @stop.error
@@ -117,7 +111,7 @@ async def fetch(ctx, url):
     async with ctx.typing():
         _ = await YTDLSource.from_url(url, loop=bot.loop)  # type: ignore
         await ctx.send(f'**Téléchargé avec succès :** {url}')
-    ctx.delete()
+    await ctx.delete()
 
 
 @fetch.error
@@ -155,7 +149,7 @@ async def leave(ctx):
         await voice_client.disconnect()
     else:
         await ctx.send("Désolé, le bot est déjà déconnecté :(")
-    ctx.delete()
+    await ctx.delete()
 
 
 @leave.error
