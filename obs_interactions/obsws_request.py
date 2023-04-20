@@ -31,6 +31,7 @@ async def obs_invoke(f, *args) -> None:
     try:
         ws.connect()
     except:
+        print("OBS connexion failure.")
         return
     await f(ws, *args[3:])  # exécution de la fonction
     ws.disconnect()
