@@ -69,13 +69,20 @@ async def play(ctx, url: str) -> None:
         async with ctx.typing():
             filename = await YTDLSource.from_url(  # type: ignore
                 url, loop=bot.loop)
-            voice_channel.play(FFmpegPCMAudio(
-                executable="ffmpeg", source=filename))
+            bot.loop.create_task(play_source(voice_channel, filename))
             await ctx.send(f'**Joue :** <{url}>')
     except ClientException as exc:
         await ctx.send("Désolé, le bot n'est pas connecté :(")
     finally:
         await ctx.delete()
+
+
+async def play_source(voice_client, filename: str):
+    "Play in loop a sound"
+    source: FFmpegPCMAudio = FFmpegPCMAudio(
+        executable="ffmpeg", source=filename)
+    voice_client.play(source, after=lambda e: print(
+        e) if e else bot.loop.create_task(play_source(voice_client, filename)))
 
 
 @play.error
