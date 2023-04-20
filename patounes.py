@@ -54,7 +54,7 @@ async def on_ready() -> None:
                 toggle_filter, host, port, password, f"Cam_{tag}", [
                     'AFK_SAT', 'AFK_BLUR'], True
             )
-        except ConnectionError as exc:
+        except Exception as exc:
             print(exc)
     output_msg("PATOUNES EST PRET !")
 
@@ -185,7 +185,7 @@ async def on_voice_state_update(member, _, after):
             await obs_invoke(toggle_filter, host, port, password, f"Cam_{tag_name}",
                              ['AFK_SAT', 'AFK_BLUR'],
                              infos['chan'] != name_tags['MJ']['chan'] or infos['mute'])
-        except ConnectionError as exc:
+        except Exception as exc:
             print(exc)
 
 
