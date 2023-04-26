@@ -49,13 +49,10 @@ async def on_ready() -> None:
         name="des pôtichats", url="https://www.twitch.tv/TharosTV"
     ))
     for tag in name_tags:
-        try:
-            await obs_invoke(
-                toggle_filter, host, port, password, f"Cam_{tag}", [
-                    'AFK_SAT', 'AFK_BLUR'], True
-            )
-        except ConnectionError as exc:
-            print(exc)
+        await obs_invoke(
+            toggle_filter, host, port, password, f"Cam_{tag}", [
+                'AFK_SAT', 'AFK_BLUR'], True
+        )
     output_msg("PATOUNES EST PRET !")
 
 
@@ -181,12 +178,9 @@ async def on_voice_state_update(member, _, after):
                 values['chan'] = None
             values['mute'] = after.self_mute
     for tag_name, infos in name_tags.items():
-        try:
-            await obs_invoke(toggle_filter, host, port, password, f"Cam_{tag_name}",
-                             ['AFK_SAT', 'AFK_BLUR'],
-                             infos['chan'] != name_tags['MJ']['chan'] or infos['mute'])
-        except ConnectionError as exc:
-            print(exc)
+        await obs_invoke(toggle_filter, host, port, password, f"Cam_{tag_name}",
+                         ['AFK_SAT', 'AFK_BLUR'],
+                         infos['chan'] != name_tags['MJ']['chan'] or infos['mute'])
 
 
 def main() -> NoReturn:

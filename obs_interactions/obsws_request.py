@@ -27,13 +27,14 @@ def timeout(seconds_before_timeout):
 async def obs_invoke(f, *args) -> None:
     "appel avec unpacking via l'étoile"
 
+    ws = obsws(args[0], args[1], args[2], timeout=10)
     try:
-        ws = obsws(args[0], args[1], args[2], timeout=10)
         ws.connect()
-        await f(ws, *args[3:])  # exécution de la fonction
-        ws.disconnect()
-    except Exception as exc:
-        print(exc)
+    except:
+        print("OBS connexion failure.")
+        return
+    await f(ws, *args[3:])  # exécution de la fonction
+    ws.disconnect()
 
 
 async def toggle_anim(ws, name) -> None:
