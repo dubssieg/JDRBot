@@ -4,8 +4,7 @@ from typing import NoReturn
 from time import sleep
 from json import load
 from datetime import datetime, timedelta
-from interactions import Embed, Client, Status, Activity, ActivityType, Modal, SlashContext, ShortText, ParagraphText, slash_command, ModalContext
-from interactions.models.discord.emoji import CustomEmoji
+from interactions import Embed, Client, Status, Activity, ActivityType, Modal, SlashContext, ShortText, ParagraphText, slash_command, ModalContext, SlashCommandOption, OptionType
 
 
 #############################
@@ -24,7 +23,8 @@ bot = Client(
     status=Status.ONLINE,
     activity=Activity(
         name="des pôtichats",
-        type=ActivityType.PLAYING,
+        type=ActivityType.STREAMING,
+        url="https://www.twitch.tv/TharosTV",
     )
 )
 
@@ -82,6 +82,23 @@ list_days: list = [
 
 
 @slash_command(
+    name="slash_test",
+    description="Génère les caractéristiques d'un personnage aléatoire !",
+    options=[
+        SlashCommandOption(
+            name="test",
+            description="Valeur de test",
+            type=OptionType.STRING,
+            required=True,
+        ),
+    ],
+)
+async def slash_test(ctx: SlashContext, test: str):
+    "Teste une commande"
+    await ctx.send(f"La valeur de test est {test} !")
+
+
+@slash_command(
     name="calendrier",
     description="Crée un sondage de disponibilités"
 )
@@ -94,14 +111,54 @@ async def calendrier(ctx: SlashContext) -> None:
         offset (int, optional): Décalage en jours. Defaults to 0.
         description (str, optional): Un titre pour le sondage. Defaults to "Date pour la prochaine séance !".
     """
-    ############################
+    calendar_modal: Modal = Modal(
+        ShortText(
+            label="Choisis le titre du calendrier",
+            custom_id="titre",
+            placeholder="Calendrier pour la prochaine séance !"
+        ),
+        ParagraphText(
+            label="Ajoute une description au calendrier",
+            custom_id="description",
+            required=False
+        ),
+        ShortText(
+            label="Choisis la durée en jours du calendrier",
+            custom_id="temps",
+            placeholder="7"
+        ),
+        ShortText(
+            label="Nombre de jours avant le début",
+            custom_id="delai",
+            placeholder="0"
+        ),
+        title="Créer un sondage",
+    )
+    await ctx.send_modal(
+        modal=calendar_modal
+    )
 
-    duree: int = 7
-    delai: int = 0
-    titre: str = "Date pour la prochaine séance !"
-    mentions: str | None = None
-
-    ############################
+    try:
+        # Parsing de la modal
+        return_modal: ModalContext = await bot.wait_for_modal(
+            modal=calendar_modal,
+            author=ctx.author.id,
+            timeout=120)
+    except asyncio.TimeoutError:
+        # Trop long temps de réponse
+        return await ctx.send("Tu as pris plus de deux minutes pour répondre !", ephemeral=True)
+    titre: str | None = return_modal.responses.get('titre')
+    mentions: str | None = return_modal.responses.get('description')
+    duree = return_modal.responses.get('temps')
+    if duree is None or not duree.isdigit():
+        duree = 7
+    else:
+        duree = int(duree)
+    delai = return_modal.responses.get('delai')
+    if delai is None or not delai.isdigit():
+        delai = 0
+    else:
+        delai = int(delai)
 
     nb_jours: int = duree if duree <= 12 and duree > 0 else 7
     decalage: int = delai if delai >= 0 else 0
@@ -182,7 +239,7 @@ async def poll(ctx: SlashContext):
             timeout=120)
     except asyncio.TimeoutError:
         # Trop long temps de réponse
-        return await ctx.send("Tu as pris plus d'une minute pour répondre !", ephemeral=True)
+        return await ctx.send("Tu as pris plus de deux minutes pour répondre !", ephemeral=True)
     titre: str | None = return_modal.responses.get('titre')
     mentions: str | None = return_modal.responses.get('description')
 
