@@ -41,40 +41,43 @@ def run(self) -> None:
             except Exception as ex:
                 pass
 
+
 def process_chunk(self, raw_audio: RawInputAudio) -> None:
-        """
-        TODO : estimer si l'utilisateur est en train de parler ou non.
-        Si ce n'est pas le cas, ajouter un poids de 0 à son array ; autrement, ajouter un poids positif.
-        """
-        if raw_audio.user_id is None:
-            return
+    """
+    TODO : estimer si l'utilisateur est en train de parler ou non.
+    Si ce n'est pas le cas, ajouter un poids de 0 à son array ; autrement, ajouter un poids positif.
+    """
+    if raw_audio.user_id is None:
+        return
 
-        if self.recording_whitelist and raw_audio.user_id not in self.recording_whitelist:
-            return
+    if self.recording_whitelist and raw_audio.user_id not in self.recording_whitelist:
+        return
 
-        decoder = self.get_decoder(raw_audio.ssrc)
+    decoder = self.get_decoder(raw_audio.ssrc)
 
-        if raw_audio.ssrc not in self.user_timestamps:
-            if last_timestamp := self.audio.last_timestamps.get(raw_audio.user_id, None):
-                diff = raw_audio.timestamp - last_timestamp
-                silence = int(diff * decoder.sample_rate)
+    if raw_audio.ssrc not in self.user_timestamps:
+        if last_timestamp := self.audio.last_timestamps.get(raw_audio.user_id, None):
+            diff = raw_audio.timestamp - last_timestamp
+            silence = int(diff * decoder.sample_rate)
 
-            else:
-                silence = 0
-
-            self.user_timestamps.update({raw_audio.ssrc: raw_audio.timestamp})
         else:
-            silence = raw_audio.timestamp - self.user_timestamps[raw_audio.ssrc]
-            if silence < 0.1:
-                silence = 0
-            self.user_timestamps[raw_audio.ssrc] = raw_audio.timestamp
+            silence = 0
 
-        raw_audio.pcm = pack("<h", 0) * int(silence * decoder.sample_rate) * 2 + raw_audio.decoded
+        self.user_timestamps.update({raw_audio.ssrc: raw_audio.timestamp})
+    else:
+        silence = raw_audio.timestamp - self.user_timestamps[raw_audio.ssrc]
+        if silence < 0.1:
+            silence = 0
+        self.user_timestamps[raw_audio.ssrc] = raw_audio.timestamp
 
-        # on ne cherche pas à write l'audio mais uniquement à l'analyser => le stocker dans un array global
-        self.audio.write(raw_audio, raw_audio.user_id)
+    raw_audio.pcm = pack("<h", 0) * int(silence *
+                                        decoder.sample_rate) * 2 + raw_audio.decoded
 
-def select_speaker(buffer:dict[str,deque]) -> str:
+    # on ne cherche pas à write l'audio mais uniquement à l'analyser => le stocker dans un array global
+    self.audio.write(raw_audio, raw_audio.user_id)
+
+
+def select_speaker(buffer: dict[str, deque]) -> str:
     """
     Etant donné un dictionnaire contenant le nom des personnes sur le vocal
     ainsi que le level sonore au cours des n derniers intervalles de temps
@@ -83,15 +86,15 @@ def select_speaker(buffer:dict[str,deque]) -> str:
     il faudra pop un des bouts (début) et rajouter à l'autre (fin).
     """
     return list(
-            buffer.keys()
-        )[
-            (
-                scores := [
-                        sum(
-                            [score*i for i,score in enumerate(bf)]
-                        ) for bf in list(buffer.values())
-                        ]
-                    ).index(
-                max(scores)
-            )
-        ]
+        buffer.keys()
+    )[
+        (
+            scores := [
+                sum(
+                    [score*i for i, score in enumerate(bf)]
+                ) for bf in list(buffer.values())
+            ]
+        ).index(
+            max(scores)
+        )
+    ]
