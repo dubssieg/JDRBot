@@ -43,10 +43,10 @@ bot = interactions.Client(
                 url="https://www.twitch.tv/TharosTV",
                 emoji=patounes_love,
                 type=interactions.PresenceActivityType.STREAMING
-                )
+            )
         ]
     )
-    )
+)
 
 # tokens GSheets
 gc = authorize(service_file='env/connect_sheets.json')
@@ -65,9 +65,8 @@ listStates = [key for key in dict_stress.keys()]
 listEffects = [value for value in dict_stress.values()]
 
 # liste des scènes disponibles au switch
-list_of_scenes: list = get_scene_list(tokens_obsws)[:20]
-abbrev_scenes: list = [sc[:20] if len(
-    sc) > 20 else sc for sc in list_of_scenes]
+# list_of_scenes: list = get_scene_list(tokens_obsws)[:20]
+# abbrev_scenes: list = [sc[:20] if len(sc) > 20 else sc for sc in list_of_scenes]
 
 # listes utiles à déclarer en amont
 list_letters: list = ["\U0001F1E6", "\U0001F1E7", "\U0001F1E8", "\U0001F1E9", "\U0001F1EA", "\U0001F1EB", "\U0001F1EC", "\U0001F1ED",
@@ -90,38 +89,9 @@ stats_choices: list = [interactions.Choice(
 char_choices: list = [interactions.Choice(
     name=val, value=key) for key, val in get_personnas().items()]
 # scene_choices: list = [interactions.Choice(name=abbrev, value=str(i)) for i, abbrev in enumerate(abbrev_scenes)]
-scene_choices: list = [interactions.Choice(
-    name=name_scene, value=name_scene) for name_scene in list_of_scenes]
+# scene_choices: list = [interactions.Choice(name=name_scene, value=name_scene) for name_scene in list_of_scenes]
 manuel_choices: list = [interactions.Choice(
     name=name_manual, value=name_manual) for name_manual in manuels]
-
-######################## Autorégie ########################
-
-
-@ bot.command(
-    name="scene_switch",
-    description="Change la scène actuelle",
-    scope=guild_id,
-    options=[
-        interactions.Option(
-            name="scene",
-            description="Scène vers laquelle switch",
-            type=interactions.OptionType.STRING,
-            choices=scene_choices,
-            required=True,
-        )
-    ],
-)
-async def scene_switch(ctx: interactions.CommandContext, scene: str):
-    """_summary_
-
-    Args:
-        ctx (interactions.CommandContext): _description_
-        scene (str): _description_
-    """
-    await ctx.defer()
-    switch(tokens_obsws, scene)
-    await ctx.send(f"La scène a été changée pour {scene}", ephemeral=True)
 
 
 #################### Obtenir une fiche de règles ##################

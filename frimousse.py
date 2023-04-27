@@ -4,7 +4,7 @@ from typing import NoReturn
 from time import sleep
 from json import load
 from datetime import datetime, timedelta
-from interactions import Embed, Client, Status, Activity, ActivityType, Modal, SlashContext, ShortText, ParagraphText, slash_command, ModalContext, SlashCommandOption, OptionType
+from interactions import Embed, Client, Status, Activity, ActivityType, Modal, SlashContext, ShortText, ParagraphText, slash_command, ModalContext
 from obs_interactions import obs_invoke, toggle_filter
 
 #############################
