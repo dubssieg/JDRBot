@@ -1,7 +1,7 @@
 "Script to invoke anims in OBS Studio"
 import signal
 import asyncio
-from obswebsocket import obsws, requests
+from obswebsocket import obsws, requests, exceptions
 
 
 def timeout(seconds_before_timeout):
@@ -30,8 +30,14 @@ async def obs_invoke(f, *args) -> None:
     ws = obsws(args[0], args[1], args[2], timeout=10)
     try:
         ws.connect()
-    except:
+    except exceptions.ConnectionFailure:
         print("OBS connexion failure.")
+        return
+    except exceptions.MessageTimeout:
+        print("Timed out!")
+        return
+    except exceptions.ObjectError:
+        print("OBS object error")
         return
     await f(ws, *args[3:])  # exécution de la fonction
     ws.disconnect()
