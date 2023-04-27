@@ -2,19 +2,7 @@
 from typing import Callable
 from asyncio import sleep as async_sleep
 from obswebsocket import obsws, requests, exceptions
-from platform import system as exploitation_os
-from websocket import WebSocket
-
-
-def host_up(host: str) -> bool:
-    "Checks if OBS Websocket is available"
-    try:
-        toy_websocket: WebSocket = WebSocket()
-        toy_websocket.connect(host)
-        toy_websocket.close()
-    except Exception:
-        return False
-    return True
+from websockets import connect, exceptions
 
 
 async def obs_invoke(func: Callable, *args) -> None:
@@ -24,23 +12,31 @@ async def obs_invoke(func: Callable, *args) -> None:
     Args:
         f (Callable): a function to execute, followed by its args
     """
-    if host_up(f"ws://{args[0]}:{args[1]}"):
-        websocket: obsws = obsws(args[0], args[1], args[2], timeout=5)
-        try:
-            websocket.connect()
-            await func(websocket, *args[3:])  # exécution de la fonction
-            websocket.disconnect()
-        except exceptions.ConnectionFailure:
-            print("OBS connexion failure.")
-            return
-        except exceptions.MessageTimeout:
-            print("Timed out!")
-            return
-        except exceptions.ObjectError:
-            print("OBS object error")
-            return
-    else:
-        print("Impossible to connect, OBS Studio is not up.")
+    try:
+        async with connect(uri=f"ws://{args[0]}:{args[1]}") as ws:
+            await ws.send('ping')
+            await ws.recv()
+
+            websocket: obsws = obsws(args[0], args[1], args[2], timeout=5)
+            try:
+                websocket.connect()
+                await func(websocket, *args[3:])  # exécution de la fonction
+                websocket.disconnect()
+            except exceptions.ConnectionFailure:
+                print("OBS connexion failure.")
+                return
+            except exceptions.MessageTimeout:
+                print("Timed out!")
+                return
+            except exceptions.ObjectError:
+                print("OBS object error")
+                return
+
+    except (RuntimeError, exceptions.ConnectionClosed) as e:
+        print('Echec de la connexion au socket:', e.args)
+        return
+    except (exceptions.InvalidStatusCode, ConnectionResetError, exceptions.InvalidMessage, ConnectionRefusedError) as e:
+        print('Echec de la connexion au socket:', e)
         return
 
 
