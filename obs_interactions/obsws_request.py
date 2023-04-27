@@ -2,19 +2,18 @@
 from typing import Callable
 from asyncio import sleep as async_sleep
 from obswebsocket import obsws, requests, exceptions
-from subprocess import check_output
 from platform import system as exploitation_os
+from websocket import WebSocket
 
 
 def host_up(host: str) -> bool:
     "Checks if OBS Websocket is available"
     try:
-        check_output(
-            "ping -{} 1 {}".format("n" if exploitation_os().lower() == "windows" else "c", host), shell=True
-        )
+        toy_websocket: WebSocket = WebSocket()
+        toy_websocket.connect(host)
+        toy_websocket.close()
     except Exception:
         return False
-
     return True
 
 
