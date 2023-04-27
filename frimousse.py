@@ -5,7 +5,7 @@ from time import sleep
 from json import load
 from datetime import datetime, timedelta
 from interactions import Embed, Client, Status, Activity, ActivityType, Modal, SlashContext, ShortText, ParagraphText, slash_command, ModalContext, SlashCommandOption, OptionType
-
+from obs_interactions import obs_invoke, toggle_filter
 
 #############################
 ### Chargement des tokens ###
@@ -83,19 +83,25 @@ list_days: list = [
 
 @slash_command(
     name="slash_test",
-    description="Génère les caractéristiques d'un personnage aléatoire !",
-    options=[
-        SlashCommandOption(
-            name="test",
-            description="Valeur de test",
-            type=OptionType.STRING,
-            required=True,
-        ),
-    ],
+    description="Fonction de test !",
 )
-async def slash_test(ctx: SlashContext, test: str):
+async def slash_test(ctx: SlashContext):
     "Teste une commande"
-    await ctx.send(f"La valeur de test est {test} !")
+    await ctx.defer()
+    name_tags: dict = {
+        'MJ': {'chan': None, 'mute': False},
+        'Joueur1':  {'chan': None, 'mute': False},
+        'Joueur2':  {'chan': None, 'mute': False},
+        'Joueur3':  {'chan': None, 'mute': False},
+        'Joueur4':  {'chan': None, 'mute': False},
+        'Joueur5':  {'chan': None, 'mute': False}
+    }
+    for tag in name_tags:
+        await obs_invoke(
+            toggle_filter, 'localhost', '4444', 'coucou', f"Cam_{tag}", [
+                'AFK_SAT', 'AFK_BLUR'], True
+        )
+    await ctx.send(f"FRIMOUSSE EST PRET !")
 
 
 @slash_command(

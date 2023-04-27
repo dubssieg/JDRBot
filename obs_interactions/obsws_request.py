@@ -1,65 +1,85 @@
-"Script to invoke anims in OBS Studio"
-import signal
-import asyncio
+"Script to invoke animations in OBS Studio"
+from typing import Callable
+from asyncio import sleep as async_sleep
 from obswebsocket import obsws, requests, exceptions
+from subprocess import check_output
+from platform import system as exploitation_os
 
 
-def timeout(seconds_before_timeout):
-    def decorate(f):
-        def handler(signum, frame):
-            raise TimeoutError(f"Error at {signum} for {frame} !")
-
-        def new_f(*args, **kwargs):
-            old = signal.signal(signal.SIGALRM, handler)
-            signal.alarm(seconds_before_timeout)
-            try:
-                result = f(*args, **kwargs)
-            finally:
-                signal.signal(signal.SIGALRM, old)
-            signal.alarm(0)
-            return result
-        new_f.__name__ = f.__name__
-        return new_f
-    return decorate
-
-
-# @timeout(8)
-async def obs_invoke(f, *args) -> None:
-    "appel avec unpacking via l'étoile"
-
-    ws = obsws(args[0], args[1], args[2], timeout=10)
+def host_up(host: str) -> bool:
+    "Checks if OBS Websocket is available"
     try:
-        ws.connect()
-    except exceptions.ConnectionFailure:
-        print("OBS connexion failure.")
+        check_output(
+            "ping -{} 1 {}".format("n" if exploitation_os().lower() == "windows" else "c", host), shell=True
+        )
+    except Exception:
+        return False
+
+    return True
+
+
+async def obs_invoke(func: Callable, *args) -> None:
+    """Calls a function to interact with socket
+    Aims to check if connexion is possible
+
+    Args:
+        f (Callable): a function to execute, followed by its args
+    """
+    if host_up(f"ws://{args[0]}:{args[1]}"):
+        websocket: obsws = obsws(args[0], args[1], args[2], timeout=5)
+        try:
+            websocket.connect()
+            await func(websocket, *args[3:])  # exécution de la fonction
+            websocket.disconnect()
+        except exceptions.ConnectionFailure:
+            print("OBS connexion failure.")
+            return
+        except exceptions.MessageTimeout:
+            print("Timed out!")
+            return
+        except exceptions.ObjectError:
+            print("OBS object error")
+            return
+    else:
+        print("Impossible to connect, OBS Studio is not up.")
         return
-    except exceptions.MessageTimeout:
-        print("Timed out!")
-        return
-    except exceptions.ObjectError:
-        print("OBS object error")
-        return
-    await f(ws, *args[3:])  # exécution de la fonction
-    ws.disconnect()
 
 
-async def toggle_anim(ws, name) -> None:
-    "toggle anim on, plays it, and toggles it off."
-    try:
-        ws.call(requests.SetSceneItemProperties(
-            scene_name="Animations", item=name, visible=True))
-        await asyncio.sleep(5)
-        ws.call(requests.SetSceneItemProperties(
-            scene_name="Animations", item=name, visible=False))
-    except Exception as exc:
-        print(exc)
+async def toggle_anim(
+        websocket: obsws,
+        name: str,
+        scene: str = "Animations",
+        delay: int = 5
+) -> None:
+    """Toggle anim on, plays it, and toggles it off after a delay.
+
+    Args:
+        ws (obsws): A connected websocket
+        name (str): Name of source
+        scene (str, optional): A scene where the source is. Defaults to "Animations".
+        delay (int, optional): Delay after which source should be toggled off. Defaults to 5.
+    """
+    websocket.call(requests.SetSceneItemProperties(
+        scene_name=scene, item=name, visible=True))
+    await async_sleep(delay)
+    websocket.call(requests.SetSceneItemProperties(
+        scene_name=scene, item=name, visible=False))
 
 
-async def toggle_filter(ws, name, filter_name, visibility) -> None:
-    "toggle filter on or off."
-    try:
-        for elt in filter_name:
-            ws.call(requests.SetSourceFilterVisibility(
-                sourceName=name, filterEnabled=visibility, filterName=elt))
-    except Exception as exc:
-        print(exc)
+async def toggle_filter(
+        websocket: obsws,
+        name: str,
+        filter_name: list[str],
+        visibility: bool
+) -> None:
+    """Toggle filter on or off.
+
+    Args:
+        ws (obsws): A connected websocket
+        name (str): Name of source to apply filter
+        filter_name (list[str]): The list of filters to toggle
+        visibility (bool): If should be visible or not
+    """
+    for elt in filter_name:
+        websocket.call(requests.SetSourceFilterVisibility(
+            sourceName=name, filterEnabled=visibility, filterName=elt))
