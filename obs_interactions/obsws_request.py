@@ -1,6 +1,6 @@
 "Script to invoke animations in OBS Studio"
 from typing import Callable
-from asyncio import sleep as async_sleep
+from asyncio import sleep as async_sleep, exceptions as async_exc
 from obswebsocket import obsws, requests, exceptions
 from websockets import connect, exceptions
 
@@ -35,7 +35,7 @@ async def obs_invoke(func: Callable, *args) -> None:
     except (RuntimeError, exceptions.ConnectionClosed) as e:
         print('Echec de la connexion au socket:', e.args)
         return
-    except (exceptions.InvalidStatusCode, ConnectionResetError, exceptions.InvalidMessage, ConnectionRefusedError) as e:
+    except (exceptions.InvalidStatusCode, ConnectionResetError, exceptions.InvalidMessage, ConnectionRefusedError, async_exc.CancelledError, async_exc.TimeoutError) as e:
         print('Echec de la connexion au socket:', e)
         return
 
