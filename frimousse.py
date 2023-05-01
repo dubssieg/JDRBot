@@ -28,22 +28,22 @@ bot = Client(
     )
 )
 
-patounes_love = bot.get_custom_emoji(
-    guild_id=313976437818523650,
+patounes_love = bot.fetch_custom_emoji(
+    guild_id=guild,
     emoji_id=979510606216462416
 )
 
-patounes_tongue = bot.get_custom_emoji(
-    guild_id=313976437818523650,
+patounes_tongue = bot.fetch_custom_emoji(
+    guild_id=guild,
     emoji_id=979488514561421332
 )
-emoji_deny = bot.get_custom_emoji(
-    guild_id=313976437818523650,
+emoji_deny = bot.fetch_custom_emoji(
+    guild_id=guild,
     emoji_id=979517886961967165
 )
 
-emoji_validation = bot.get_custom_emoji(
-    guild_id=313976437818523650,
+emoji_validation = bot.fetch_custom_emoji(
+    guild_id=guild,
     emoji_id=979516938231361646
 )
 
