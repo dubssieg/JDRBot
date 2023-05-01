@@ -258,7 +258,7 @@ async def poll(ctx: SlashContext):
 
     information: str = f"Merci de répondre au plus vite ! {patounes_tongue}"
 
-    message = await ctx.send(
+    message = await return_modal.send(
         information,
         embeds=embed
     )
