@@ -28,24 +28,11 @@ bot = Client(
     )
 )
 
-patounes_love = bot.fetch_custom_emoji(
-    guild_id=guild,
-    emoji_id=979510606216462416
-)
+patounes_love: str = "<:patounes_heart:979510606216462416>"
+patounes_tongue: str = "<:patounes_tongue:979488514561421332>"
+emoji_validation: str = "<:patounes_yes:979516938231361646>"
+emoji_deny: str = "<:patounes_no:979517886961967165>"
 
-patounes_tongue = bot.fetch_custom_emoji(
-    guild_id=guild,
-    emoji_id=979488514561421332
-)
-emoji_deny = bot.fetch_custom_emoji(
-    guild_id=guild,
-    emoji_id=979517886961967165
-)
-
-emoji_validation = bot.fetch_custom_emoji(
-    guild_id=guild,
-    emoji_id=979516938231361646
-)
 
 # listes utiles à déclarer en amont
 list_letters: list = [
