@@ -54,11 +54,11 @@ async def toggle_anim(
         scene (str, optional): A scene where the source is. Defaults to "Animations".
         delay (int, optional): Delay after which source should be toggled off. Defaults to 5.
     """
-    websocket.call(requests.SetSceneItemProperties(
-        scene_name=scene, item=name, visible=True))
+    print(websocket.call(requests.SetSceneItemProperties(
+        scene_name=scene, item=name, visible=True)))
     await async_sleep(delay)
-    websocket.call(requests.SetSceneItemProperties(
-        scene_name=scene, item=name, visible=False))
+    print(websocket.call(requests.SetSceneItemProperties(
+        scene_name=scene, item=name, visible=False)))
 
 
 async def toggle_filter(
@@ -76,5 +76,5 @@ async def toggle_filter(
         visibility (bool): If should be visible or not
     """
     for elt in filter_name:
-        websocket.call(requests.SetSourceFilterVisibility(
-            sourceName=name, filterEnabled=visibility, filterName=elt))
+        print(websocket.call(requests.SetSourceFilterVisibility(
+            sourceName=name, filterEnabled=visibility, filterName=elt)))

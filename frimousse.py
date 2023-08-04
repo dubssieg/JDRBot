@@ -276,6 +276,7 @@ def main() -> NoReturn:
             print(KeyboardInterrupt("Keyboard interrupt, terminating Frimousse"))
             exit(0)
         except Exception as exc:
+            
             print(exc)
             sleep(10)
 
