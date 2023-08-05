@@ -25,7 +25,7 @@ token: str = tokens_connexion['cle_de_connexion']
 admin: str = tokens_connexion['administrator']
 
 name_tags: dict = {
-    'MJ': {'chan': None, 'mute': False},
+    'Admin': {'chan': None, 'mute': False},
     'Joueur1':  {'chan': None, 'mute': False},
     'Joueur2':  {'chan': None, 'mute': False},
     'Joueur3':  {'chan': None, 'mute': False},
@@ -180,7 +180,7 @@ async def on_voice_state_update(member, _, after):
     for tag_name, infos in name_tags.items():
         await obs_invoke(toggle_filter, host, port, password, f"Cam_{tag_name}",
                          ['AFK_SAT', 'AFK_BLUR'],
-                         infos['chan'] != name_tags['MJ']['chan'] or infos['mute'])
+                         infos['chan'] != name_tags['Admin']['chan'] or infos['mute'])
 
 
 def main() -> NoReturn:

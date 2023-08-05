@@ -22,14 +22,8 @@ async def obs_invoke(func: Callable, *args) -> None:
                 websocket.connect()
                 await func(websocket, *args[3:])  # exécution de la fonction
                 websocket.disconnect()
-            except exceptions.ConnectionFailure:
-                print("OBS connexion failure.")
-                return
-            except exceptions.MessageTimeout:
-                print("Timed out!")
-                return
-            except exceptions.ObjectError:
-                print("OBS object error")
+            except Exception as e:
+                print(e)
                 return
 
     except (RuntimeError, exceptions.ConnectionClosed) as e:
@@ -54,11 +48,16 @@ async def toggle_anim(
         scene (str, optional): A scene where the source is. Defaults to "Animations".
         delay (int, optional): Delay after which source should be toggled off. Defaults to 5.
     """
-    print(websocket.call(requests.SetSceneItemProperties(
-        scene_name=scene, item=name, visible=True)))
+    # Getting ID of item inside scene
+    item_id: int = websocket.call(requests.GetSceneItemId(
+        sceneName=scene, sourceName=name)).getsceneItemId()
+    print(item_id)
+    # Toggle item in scene
+    websocket.call(requests.SetSceneItemEnabled(
+        sceneName=scene, sceneItemId=item_id, sceneItemEnabled=True))
     await async_sleep(delay)
-    print(websocket.call(requests.SetSceneItemProperties(
-        scene_name=scene, item=name, visible=False)))
+    websocket.call(requests.SetSceneItemEnabled(
+        sceneName=scene, sceneItemId=item_id, sceneItemEnabled=False))
 
 
 async def toggle_filter(
@@ -76,5 +75,5 @@ async def toggle_filter(
         visibility (bool): If should be visible or not
     """
     for elt in filter_name:
-        print(websocket.call(requests.SetSourceFilterVisibility(
-            sourceName=name, filterEnabled=visibility, filterName=elt)))
+        websocket.call(requests.SetSourceFilterEnabled(
+            sourceName=name, filterEnabled=visibility, filterName=elt))
