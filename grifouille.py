@@ -171,11 +171,12 @@ async def modal_response(ctx, response: str):
 ################ Pour lancer un dé #################
 
 
-def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int = 0, hero_point: bool = False, stat_testee: str = "") -> tuple:
+def roll_the_dice(message, dices, faces, modificateur: int = 0, valeur_difficulte: int = 0, hero_point: bool = False, stat_testee: str = "") -> tuple:
     """Lance un dé dans la stat testée et renvoie le résultat.
 
     Args:
         message (_type_): _description_
+        dices : number of dices to roll
         faces (_type_): _description_
         modificateur (int, optional): _description_. Defaults to 0.
         valeur_difficulte (int, optional): _description_. Defaults to 0.
@@ -185,25 +186,31 @@ def roll_the_dice(message, faces, modificateur: int = 0, valeur_difficulte: int 
     Returns:
         tuple: chaîne décrivant le résultat et nom de l'anim à envoyer
     """
-    res = randrange(1, faces)  # jet de dé
+    all_rolls: list = [randrange(1, faces) for _ in range(dices)]
+    res = max(all_rolls)  # jet de dé
     value = res + modificateur  # valeur globale du jet
     if stat_testee != "":
-        stat_testee = f"({stat_testee})"
+        if modificateur == 0:
+            stat_testee = f"({stat_testee}, {dices}D{faces})"
+        elif modificateur > 0:
+            stat_testee = f"({stat_testee}, {dices}D{faces}+{modificateur})"
+        else:
+            stat_testee = f"({stat_testee}, {dices}D{faces}-{-modificateur})"
         if hero_point_update(message.author.mention, dict_links, gc, hero_point):
             value += modificateur
     if valeur_difficulte > 0:
         if res == faces:
             anim = "R_CRIT.avi"
-            str_resultat = f"{message.author.mention} > **REUSSITE CRITIQUE** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['REUSSITE CRITIQUE'])}*"
+            str_resultat = f"{message.author.mention} > **REUSSITE CRITIQUE** {stat_testee}\n> Lancers de dés : {', '.join([str(roll)+'/'+str(faces) for roll in all_rolls])}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['REUSSITE CRITIQUE'])}*"
         elif res == 1:
             anim = "E_CRIT.avi"
-            str_resultat = f"{message.author.mention} > **ECHEC CRITIQUE** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['ECHEC CRITIQUE'])}*"
+            str_resultat = f"{message.author.mention} > **ECHEC CRITIQUE** {stat_testee}\n> Lancers de dés : {', '.join([str(roll)+'/'+str(faces) for roll in all_rolls])}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['ECHEC CRITIQUE'])}*"
         elif value >= valeur_difficulte:
             anim = "R_STD.avi"
-            str_resultat = f"{message.author.mention} > **REUSSITE** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['REUSSITE'])}*"
+            str_resultat = f"{message.author.mention} > **REUSSITE** {stat_testee}\n> Lancers de dés : {', '.join([str(roll)+'/'+str(faces) for roll in all_rolls])}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['REUSSITE'])}*"
         else:
             anim = "E_STD.avi"
-            str_resultat = f"{message.author.mention} > **ECHEC** {stat_testee}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['ECHEC'])}*"
+            str_resultat = f"{message.author.mention} > **ECHEC** {stat_testee}\n> Lancers de dés : {', '.join([str(roll)+'/'+str(faces) for roll in all_rolls])}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['ECHEC'])}*"
     else:
         anim = "INCONNU.avi"
         str_resultat = f"{message.author.mention} > **INCONNU** {stat_testee}\n> Le résultat du dé est **{value}** ({res}/{faces}+{modificateur}) !\n> *{choice(quotes['INCONNU'])}*"
@@ -347,12 +354,6 @@ async def display(ctx: interactions.CommandContext):
             type=interactions.OptionType.INTEGER,
             required=False,
         ),
-        interactions.Option(
-            name="point_heroisme",
-            description="Point rendant le jet automatiquement réussi",
-            type=interactions.OptionType.BOOLEAN,
-            required=False,
-        ),
     ],
 )
 async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte: int = -1, point_heroisme: bool = False):
@@ -367,9 +368,11 @@ async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte:
     await ctx.defer()
     message = ""
     try:
-        values = stat_from_player(ctx.author.mention, dict_links, gc, charac)[
-            2:].split('+')
-        message, anim = roll_the_dice(ctx, int(float(values[0].replace(',', '.'))), int(
+        stats_of_player = stat_from_player(
+            ctx.author.mention, dict_links, gc, charac)
+        dices, remain = stats_of_player.split('D')
+        values = remain.split('+')
+        message, anim = roll_the_dice(ctx, int(dices), int(float(values[0].replace(',', '.'))), int(
             values[1]), valeur_difficulte, hero_point=point_heroisme, stat_testee=charac)
         await obs_invoke(toggle_anim, host, port, password, anim)
     except ConnectionError:
@@ -458,6 +461,12 @@ async def stress(ctx: interactions.CommandContext):
     scope=guild_id,
     options=[
         interactions.Option(
+            name="dices",
+            description="Nombre de dés à lancer",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
+        interactions.Option(
             name="faces",
             description="Nombre de faces du dé à lancer",
             type=interactions.OptionType.INTEGER,
@@ -483,10 +492,10 @@ async def stress(ctx: interactions.CommandContext):
         ),
     ],
 )
-async def dice(ctx: interactions.CommandContext, faces: int = 20, modificateur: int = 0, valeur_difficulte: int = -1, point_heroisme: bool = False):
+async def dice(ctx: interactions.CommandContext, dices: int = 1, faces: int = 20, modificateur: int = 0, valeur_difficulte: int = -1, point_heroisme: bool = False):
     await ctx.defer()
     message, anim = roll_the_dice(
-        ctx, faces, modificateur, valeur_difficulte, point_heroisme)
+        ctx, dices, faces, modificateur, valeur_difficulte, point_heroisme)
     await ctx.send(message)
     await obs_invoke(toggle_anim, host, port, password, anim)
 
