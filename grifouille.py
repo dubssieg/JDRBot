@@ -82,6 +82,8 @@ competence_choices: list = [interactions.Choice(
     name=val, value=val) for val in ["Constitution", "Intelligence", "Force", "Conscience", "Agilité", "Social"]]
 competence_pos: dict = {"Constitution": "F3", "Intelligence": "F4",
                         "Force": "F5", "Conscience": "F6", "Agilité": "F7", "Social": "F8"}
+dice_type: list = [interactions.Choice(
+    name=key, value=val) for key, val in {"Nombre de dés": "nb_dice", "Valeur de difficulté": "val_stat"}.items()]
 
 
 stats_choices: list = [interactions.Choice(
@@ -171,11 +173,12 @@ async def modal_response(ctx, response: str):
 ################ Pour lancer un dé #################
 
 
-def roll_the_dice(message, dices, faces, modificateur: int = 0, valeur_difficulte: int = 0, hero_point: bool = False, stat_testee: str = "") -> tuple:
+def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, modificateur: int = 0, valeur_difficulte: int = 0, stat_testee: str = "") -> tuple:
     """Lance un dé dans la stat testée et renvoie le résultat.
 
     Args:
         message (_type_): _description_
+        mode : the type of dice condition to check
         dices : number of dices to roll
         faces (_type_): _description_
         modificateur (int, optional): _description_. Defaults to 0.
@@ -186,9 +189,14 @@ def roll_the_dice(message, dices, faces, modificateur: int = 0, valeur_difficult
     Returns:
         tuple: chaîne décrivant le résultat et nom de l'anim à envoyer
     """
+    # all_rolls contient tous les jets de dés
     all_rolls: list = [randrange(1, faces) for _ in range(dices)]
-    res = max(all_rolls)  # jet de dé
-    value = res + modificateur  # valeur globale du jet
+    # res contient tous les jets de dés à prendre en compte
+    filtered_rolls: list = sorted(all_rolls)[-result_number_of_dices:]
+    # values correspond aux jets de dés avec bonus/malus ajoutés
+    filtered_rolls_with_modifier: list = [
+        val + modificateur for val in filtered_rolls]
+    # stat_testee donne une chaîne pour décrire le jet
     if stat_testee != "":
         if modificateur == 0:
             stat_testee = f"({stat_testee}, {dices}D{faces})"
@@ -196,24 +204,52 @@ def roll_the_dice(message, dices, faces, modificateur: int = 0, valeur_difficult
             stat_testee = f"({stat_testee}, {dices}D{faces}+{modificateur})"
         else:
             stat_testee = f"({stat_testee}, {dices}D{faces}-{-modificateur})"
-        if hero_point_update(message.author.mention, dict_links, gc, hero_point):
-            value += modificateur
+    # on calcule si le jet est valide ou non
     if valeur_difficulte > 0:
-        if res == faces:
+        # si tous les dés sont maximaux, c'est une réussite critique
+        if all([val == faces for val in filtered_rolls]):
             anim = "R_CRIT.avi"
-            str_resultat = f"{message.author.mention} > **REUSSITE CRITIQUE** {stat_testee}\n> Lancers de dés : {', '.join([str(roll)+'/'+str(faces) for roll in all_rolls])}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['REUSSITE CRITIQUE'])}*"
-        elif res == 1:
+            str_resultat = f"""
+                {message.author.mention} > **REUSSITE CRITIQUE** {stat_testee}
+                \n> Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
+                \n> Difficulté : **{result_number_of_dices}D>{valeur_difficulte-1}**
+                \n> *{choice(quotes['REUSSITE CRITIQUE'])}*
+                """
+        # si tous les dés sont minimaux, c'est un échec critique
+        elif all([val == 1 for val in filtered_rolls]):
             anim = "E_CRIT.avi"
-            str_resultat = f"{message.author.mention} > **ECHEC CRITIQUE** {stat_testee}\n> Lancers de dés : {', '.join([str(roll)+'/'+str(faces) for roll in all_rolls])}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['ECHEC CRITIQUE'])}*"
-        elif value >= valeur_difficulte:
+            str_resultat = f"""
+                {message.author.mention} > **ECHEC CRITIQUE** {stat_testee}
+                \n> Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
+                \n> Difficulté : **{result_number_of_dices}D>{valeur_difficulte-1}**
+                \n> *{choice(quotes['ECHEC CRITIQUE'])}*
+                """
+        # si tous les dés avec bonus/malus sont au-dessus de la valeur de difficulté, c'est une réussite
+        elif all([val >= valeur_difficulte for val in filtered_rolls_with_modifier]):
             anim = "R_STD.avi"
-            str_resultat = f"{message.author.mention} > **REUSSITE** {stat_testee}\n> Lancers de dés : {', '.join([str(roll)+'/'+str(faces) for roll in all_rolls])}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['REUSSITE'])}*"
+            str_resultat = f"""
+                {message.author.mention} > **REUSSITE** {stat_testee}
+                \n> Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
+                \n> Difficulté : **{result_number_of_dices}D>{valeur_difficulte-1}**
+                \n> *{choice(quotes['REUSSITE'])}*
+                """
+        # si tous les dés avec bonus/malus sont en-dessous de la valeur de difficulté, c'est un échec
         else:
             anim = "E_STD.avi"
-            str_resultat = f"{message.author.mention} > **ECHEC** {stat_testee}\n> Lancers de dés : {', '.join([str(roll)+'/'+str(faces) for roll in all_rolls])}\n> {res}/{faces} (dé) + {modificateur} (bonus) = **{value}** pour une difficulté de **{valeur_difficulte}**\n> *{choice(quotes['ECHEC'])}*"
+            str_resultat = f"""
+                {message.author.mention} > **ECHEC** {stat_testee}
+                \n> Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
+                \n> Difficulté : **{result_number_of_dices}D>{valeur_difficulte-1}**
+                \n> *{choice(quotes['ECHEC'])}*
+                """
+    # si on a pas de valeur de difficulté, on ne dit rien
     else:
         anim = "INCONNU.avi"
-        str_resultat = f"{message.author.mention} > **INCONNU** {stat_testee}\n> Le résultat du dé est **{value}** ({res}/{faces}+{modificateur}) !\n> *{choice(quotes['INCONNU'])}*"
+        str_resultat = f"""
+            {message.author.mention} > **INCONNU** {stat_testee}
+            \n> Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
+            \n> *{choice(quotes['INCONNU'])}*
+            """
     return (str_resultat, anim)
 
 
@@ -354,9 +390,15 @@ async def display(ctx: interactions.CommandContext):
             type=interactions.OptionType.INTEGER,
             required=False,
         ),
+        interactions.Option(
+            name="number_dice",
+            description="Nombre de dés devant atteindre la valeur de difficulté",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
     ],
 )
-async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte: int = -1, point_heroisme: bool = False):
+async def stat(ctx: interactions.CommandContext, charac: str, number_dice: int = 1, valeur_difficulte: int = -1, point_heroisme: bool = False):
     """Lance un dé d'une statistique associée à une fiche google sheets
 
     Args:
@@ -372,8 +414,14 @@ async def stat(ctx: interactions.CommandContext, charac: str, valeur_difficulte:
             ctx.author.mention, dict_links, gc, charac)
         dices, remain = stats_of_player.split('D')
         values = remain.split('+')
-        message, anim = roll_the_dice(ctx, int(dices), int(float(values[0].replace(',', '.'))), int(
-            values[1]), valeur_difficulte, hero_point=point_heroisme, stat_testee=charac)
+        message, anim = roll_the_dice(
+            message=ctx,
+            result_number_of_dices=number_dice,
+            dices=int(dices),
+            faces=int(float(values[0].replace(',', '.'))),
+            modificateur=int(values[1]),
+            valeur_difficulte=valeur_difficulte,
+            stat_testee=charac)
         await obs_invoke(toggle_anim, host, port, password, anim)
     except ConnectionError:
         message = ConnectionError(
@@ -485,17 +533,23 @@ async def stress(ctx: interactions.CommandContext):
             required=False,
         ),
         interactions.Option(
-            name="point_heroisme",
-            description="Point rendant le jet automatiquement réussi",
-            type=interactions.OptionType.BOOLEAN,
+            name="number_dice",
+            description="Nombre de dés devant atteindre la valeur de difficulté",
+            type=interactions.OptionType.INTEGER,
             required=False,
         ),
     ],
 )
-async def dice(ctx: interactions.CommandContext, dices: int = 1, faces: int = 20, modificateur: int = 0, valeur_difficulte: int = -1, point_heroisme: bool = False):
+async def dice(ctx: interactions.CommandContext, dices: int = 1, faces: int = 20, modificateur: int = 0, valeur_difficulte: int = -1, number_dice: int = 1):
     await ctx.defer()
     message, anim = roll_the_dice(
-        ctx, dices, faces, modificateur, valeur_difficulte, point_heroisme)
+        message=ctx,
+        result_number_of_dices=number_dice,
+        dices=dices,
+        faces=faces,
+        modificateur=modificateur,
+        valeur_difficulte=valeur_difficulte
+    )
     await ctx.send(message)
     await obs_invoke(toggle_anim, host, port, password, anim)
 
