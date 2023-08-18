@@ -199,11 +199,11 @@ def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, 
     # stat_testee donne une chaîne pour décrire le jet
     if stat_testee != "":
         if modificateur == 0:
-            stat_testee = f"({stat_testee}, {dices}D{faces})"
+            stat_testee = f"({stat_testee}, {dices}d{faces})"
         elif modificateur > 0:
-            stat_testee = f"({stat_testee}, {dices}D{faces}+{modificateur})"
+            stat_testee = f"({stat_testee}, {dices}d{faces}+{modificateur})"
         else:
-            stat_testee = f"({stat_testee}, {dices}D{faces}-{-modificateur})"
+            stat_testee = f"({stat_testee}, {dices}d{faces}-{-modificateur})"
     # on calcule si le jet est valide ou non
     if valeur_difficulte > 0:
         # si tous les dés sont maximaux, c'est une réussite critique
@@ -211,44 +211,44 @@ def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, 
             anim = "R_CRIT.avi"
             str_resultat = f"""
                 {message.author.mention} > **REUSSITE CRITIQUE** {stat_testee}
-                \n> Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
-                \n> Difficulté : **{result_number_of_dices}D>{valeur_difficulte-1}**
-                \n> *{choice(quotes['REUSSITE CRITIQUE'])}*
+                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
+                > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
+                > *{choice(quotes['REUSSITE CRITIQUE'])}*
                 """
         # si tous les dés sont minimaux, c'est un échec critique
         elif all([val == 1 for val in filtered_rolls]):
             anim = "E_CRIT.avi"
             str_resultat = f"""
                 {message.author.mention} > **ECHEC CRITIQUE** {stat_testee}
-                \n> Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
-                \n> Difficulté : **{result_number_of_dices}D>{valeur_difficulte-1}**
-                \n> *{choice(quotes['ECHEC CRITIQUE'])}*
+                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
+                > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
+                > *{choice(quotes['ECHEC CRITIQUE'])}*
                 """
         # si tous les dés avec bonus/malus sont au-dessus de la valeur de difficulté, c'est une réussite
         elif all([val >= valeur_difficulte for val in filtered_rolls_with_modifier]):
             anim = "R_STD.avi"
             str_resultat = f"""
                 {message.author.mention} > **REUSSITE** {stat_testee}
-                \n> Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
-                \n> Difficulté : **{result_number_of_dices}D>{valeur_difficulte-1}**
-                \n> *{choice(quotes['REUSSITE'])}*
+                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
+                > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
+                > *{choice(quotes['REUSSITE'])}*
                 """
         # si tous les dés avec bonus/malus sont en-dessous de la valeur de difficulté, c'est un échec
         else:
             anim = "E_STD.avi"
             str_resultat = f"""
                 {message.author.mention} > **ECHEC** {stat_testee}
-                \n> Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
-                \n> Difficulté : **{result_number_of_dices}D>{valeur_difficulte-1}**
-                \n> *{choice(quotes['ECHEC'])}*
+                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
+                > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
+                > *{choice(quotes['ECHEC'])}*
                 """
     # si on a pas de valeur de difficulté, on ne dit rien
     else:
         anim = "INCONNU.avi"
         str_resultat = f"""
             {message.author.mention} > **INCONNU** {stat_testee}
-            \n> Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
-            \n> *{choice(quotes['INCONNU'])}*
+            > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
+            > *{choice(quotes['INCONNU'])}*
             """
     return (str_resultat, anim)
 
