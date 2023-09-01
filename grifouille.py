@@ -55,6 +55,7 @@ gc = authorize(service_file='env/connect_sheets.json')
 dict_stats: dict = load_json("stats")
 dict_pos: dict = load_json("pos")
 dict_links: dict = load_json("links")
+dict_bonuses: dict = load_json("bonus")
 dict_stress: dict = load_json("stress")
 embed_projets: dict = load_json("embed_projets")
 embed_jdr: dict = load_json("embed_jdr")
@@ -189,57 +190,74 @@ def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, 
     Returns:
         tuple: chaîne décrivant le résultat et nom de l'anim à envoyer
     """
+    # modificateur de résilience
+    resilience = dict_bonuses[str(message.author.mention)] if str(
+        message.author.mention) in dict_bonuses else 0
     # all_rolls contient tous les jets de dés
     all_rolls: list = [randrange(1, faces) for _ in range(dices)]
     # res contient tous les jets de dés à prendre en compte
     filtered_rolls: list = sorted(all_rolls)[-result_number_of_dices:]
     # values correspond aux jets de dés avec bonus/malus ajoutés
     filtered_rolls_with_modifier: list = [
-        val + modificateur for val in filtered_rolls]
+        val + modificateur + resilience for val in filtered_rolls]
     # stat_testee donne une chaîne pour décrire le jet
     if stat_testee != "":
         if modificateur == 0:
-            stat_testee = f"({stat_testee}, {dices}d{faces})"
+            stat_testee = f"({stat_testee}, {dices}d{faces}, résilience +{resilience})"
         elif modificateur > 0:
-            stat_testee = f"({stat_testee}, {dices}d{faces}+{modificateur})"
+            stat_testee = f"({stat_testee}, {dices}d{faces}+{modificateur}, résilience +{resilience})"
         else:
-            stat_testee = f"({stat_testee}, {dices}d{faces}-{-modificateur})"
+            stat_testee = f"({stat_testee}, {dices}d{faces}-{-modificateur}, résilience +{resilience})"
     # on calcule si le jet est valide ou non
     if valeur_difficulte > 0:
         # si tous les dés sont maximaux, c'est une réussite critique
         if all([val == faces for val in filtered_rolls]):
+            dict_bonuses[str(message.author.mention)] = 0
             anim = "R_CRIT.avi"
             str_resultat = f"""
                 {message.author.mention} > **REUSSITE CRITIQUE** {stat_testee}
-                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
+                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+resilience+')' for roll in all_rolls])}
                 > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
+                > Vos points de résilience sont ramenés à zéro.
                 > *{choice(quotes['REUSSITE CRITIQUE'])}*
                 """
         # si tous les dés sont minimaux, c'est un échec critique
         elif all([val == 1 for val in filtered_rolls]):
+            # On donne un point permanent au joueur
+            if stat_testee != "":
+                increase_on_crit(str(message.author.mention),
+                                 dict_links, gc, stat_testee, dict_pos,  1)
             anim = "E_CRIT.avi"
             str_resultat = f"""
                 {message.author.mention} > **ECHEC CRITIQUE** {stat_testee}
-                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
+                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+resilience+')' for roll in all_rolls])}
                 > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
+                > La compétence {stat_testee} gagne un point !
                 > *{choice(quotes['ECHEC CRITIQUE'])}*
                 """
         # si tous les dés avec bonus/malus sont au-dessus de la valeur de difficulté, c'est une réussite
         elif all([val >= valeur_difficulte for val in filtered_rolls_with_modifier]):
             anim = "R_STD.avi"
+            dict_bonuses[str(message.author.mention)] = 0
             str_resultat = f"""
                 {message.author.mention} > **REUSSITE** {stat_testee}
-                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
+                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+resilience+')' for roll in all_rolls])}
                 > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
+                > Vos points de résilience sont ramenés à zéro.
                 > *{choice(quotes['REUSSITE'])}*
                 """
         # si tous les dés avec bonus/malus sont en-dessous de la valeur de difficulté, c'est un échec
         else:
             anim = "E_STD.avi"
+            if str(message.author.mention) in dict_bonuses and dict_bonuses[str(message.author.mention)] < 5:
+                dict_bonuses[str(message.author.mention)] += 1
+            else:
+                dict_bonuses[str(message.author.mention)] = 1
             str_resultat = f"""
                 {message.author.mention} > **ECHEC** {stat_testee}
-                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
+                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+resilience+')' for roll in all_rolls])}
                 > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
+                > Vous gagnez un point de résilience.
                 > *{choice(quotes['ECHEC'])}*
                 """
     # si on a pas de valeur de difficulté, on ne dit rien
@@ -250,6 +268,7 @@ def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, 
             > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+')' for roll in all_rolls])}
             > *{choice(quotes['INCONNU'])}*
             """
+    save_json('bonus', dict_bonuses)
     return (str_resultat, anim)
 
 
