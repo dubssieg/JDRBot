@@ -216,7 +216,7 @@ def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, 
             anim = "R_CRIT.avi"
             str_resultat = f"""
                 {message.author.mention} > **REUSSITE CRITIQUE** {stat_testee}
-                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+resilience+')' for roll in all_rolls])}
+                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+str(resilience)+')' for roll in all_rolls])}
                 > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
                 > Vos points de résilience sont ramenés à zéro.
                 > *{choice(quotes['REUSSITE CRITIQUE'])}*
@@ -230,7 +230,7 @@ def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, 
             anim = "E_CRIT.avi"
             str_resultat = f"""
                 {message.author.mention} > **ECHEC CRITIQUE** {stat_testee}
-                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+resilience+')' for roll in all_rolls])}
+                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+str(resilience)+')' for roll in all_rolls])}
                 > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
                 > La compétence {stat_testee} gagne un point !
                 > *{choice(quotes['ECHEC CRITIQUE'])}*
@@ -241,7 +241,7 @@ def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, 
             dict_bonuses[str(message.author.mention)] = 0
             str_resultat = f"""
                 {message.author.mention} > **REUSSITE** {stat_testee}
-                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+resilience+')' for roll in all_rolls])}
+                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+str(resilience)+')' for roll in all_rolls])}
                 > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
                 > Vos points de résilience sont ramenés à zéro.
                 > *{choice(quotes['REUSSITE'])}*
@@ -255,7 +255,7 @@ def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, 
                 dict_bonuses[str(message.author.mention)] = 1
             str_resultat = f"""
                 {message.author.mention} > **ECHEC** {stat_testee}
-                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+resilience+')' for roll in all_rolls])}
+                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+str(resilience)+')' for roll in all_rolls])}
                 > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
                 > Vous gagnez un point de résilience.
                 > *{choice(quotes['ECHEC'])}*
