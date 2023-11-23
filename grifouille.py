@@ -637,14 +637,13 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
     list_letters: list = ["\U0001F1E6", "\U0001F1E7", "\U0001F1E8", "\U0001F1E9", "\U0001F1EA", "\U0001F1EB", "\U0001F1EC", "\U0001F1ED",
                           "\U0001F1EE", "\U0001F1EF", "\U0001F1F0", "\U0001F1F1", "\U0001F1F2", "\U0001F1F3", "\U0001F1F4", "\U0001F1F5", "\U0001F1F6", "\U0001F1F7"]
     liste_jours: list = list()
-    step: int = 0
 
     # on itère à travers les jours
-    for day in range(1, nb_jours+1, 1):
+    for step, day in enumerate(range(1, nb_jours+1, 1)):
         future = datetime.today().replace(hour=20, minute=45, second=0,
                                           microsecond=0) + timedelta(days=day+decalage)
         liste_jours.append(
-            f"{list_letters[step]} - {list_days[future.weekday()]} {future.day}.{future.month} (20:45)")
+            f"{list_letters[step]}  {list_days[future.weekday()]} {future.day}.{future.month} (20:45)")
 
     emoji_deny = interactions.Emoji(
         name="patounes_no",
@@ -659,7 +658,7 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
     list_emoji: list = [list_letters[i]
                         for i in range(step)] + [emoji_validation] + [emoji_deny]
 
-    information: str = f"Merci de répondre au plus vite !\nAprès avoir voté, cliquez sur {emoji_validation}\nSi aucune date ne vous convient, cliquez sur {emoji_deny}"
+    information: str = f"*Merci de répondre au plus vite !*\n*Après avoir voté, cliquez sur *{emoji_validation}\n*Aucune date ne convient ? Cliquez sur *{emoji_deny}"
 
     if description:
         embed = interactions.Embed(
