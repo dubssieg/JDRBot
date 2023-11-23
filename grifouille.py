@@ -669,7 +669,7 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
             title=titre, footer=information, color=0xC2E9AA)
 
     for key in liste_jours:
-        embed.add_field(name=f"{key}", inline=False)
+        embed.add_field(name=f"{key}", value="", inline=False)
 
     if mentions:
         message = await ctx.send(mentions, embeds=embed)
