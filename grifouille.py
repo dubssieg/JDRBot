@@ -608,14 +608,20 @@ async def toss(ctx: interactions.CommandContext) -> None:
             required=False,
         ),
         interactions.Option(
+            name="description",
+            description="Texte de description pour donner des détails.",
+            type=interactions.OptionType.STRING,
+            required=False,
+        ),
+        interactions.Option(
             name="mentions",
-            description="Petit texte en-dessous pour mentionner des rôles, ou donner des détails.",
+            description="Texte afin de mentionner des rôles.",
             type=interactions.OptionType.STRING,
             required=False,
         ),
     ],
 )
-async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int = 0, titre: str = "Date pour la prochaine séance !", mentions: str | None = None) -> None:
+async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int = 0, titre: str = "Date pour la prochaine séance !", description: str | None = None, mentions: str | None = None) -> None:
     """Crée un calendrier sous forme d'embed, pour faire un sondage sur les jours suivants
 
     Args:
@@ -630,22 +636,17 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
                        "Jeudi", "Vendredi", "Samedi", "Dimanche"]
     list_letters: list = ["\U0001F1E6", "\U0001F1E7", "\U0001F1E8", "\U0001F1E9", "\U0001F1EA", "\U0001F1EB", "\U0001F1EC", "\U0001F1ED",
                           "\U0001F1EE", "\U0001F1EF", "\U0001F1F0", "\U0001F1F1", "\U0001F1F2", "\U0001F1F3", "\U0001F1F4", "\U0001F1F5", "\U0001F1F6", "\U0001F1F7"]
-    liste_lettres = list(ascii_uppercase)
-    liste_jours: dict = dict()
+    liste_jours: list = list()
     step: int = 0
 
     # on itère à travers les jours
     for day in range(1, nb_jours+1, 1):
         future = datetime.today() + timedelta(days=day+decalage)
-        horaire: str | list = ["Rassemblement **9h45**, début 10h !", "Rassemblement **13h45**, début 14h !", "Rassemblement **20h45**, début 21h !"] if future.weekday(
-        ) >= 5 else "Rassemblement **20h45**, début 21h !"
-        if isinstance(horaire, list):
-            for h in horaire:
-                liste_jours[f"{list_letters[step]} - {list_days[future.weekday()]} {future.day}.{future.month}"] = h
-                step += 1
-        else:
-            liste_jours[f"{list_letters[step]} - {list_days[future.weekday()]} {future.day}.{future.month}"] = horaire
-            step += 1
+        future.minute = 45
+        future.hour = 20
+        future.second = 00
+        liste_jours.append(
+            f"{list_letters[step]} - {list_days[future.weekday()]} {future.day}.{future.month} (20:45)")
 
     emoji_deny = interactions.Emoji(
         name="patounes_no",
@@ -660,20 +661,22 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
     list_emoji: list = [list_letters[i]
                         for i in range(step)] + [emoji_validation] + [emoji_deny]
 
-    # role = await interactions.get(bot, interactions.Role, object_id=ROLE_ID, parent_id=GUILD_ID) ajouter à embed.description les rôles à tag , avec champ de liste ?
-    if mentions is not None:
-        embed = interactions.Embed(
-            title=titre, description=mentions, color=0xC2E9AA)
-    else:
-        embed = interactions.Embed(
-            title=titre, color=0xC2E9AA)
-
-    for key, value in liste_jours.items():
-        embed.add_field(name=f"{key}", value=f"{value}", inline=False)
-
     information: str = f"Merci de répondre au plus vite !\nAprès avoir voté, cliquez sur {emoji_validation}\nSi aucune date ne vous convient, cliquez sur {emoji_deny}"
 
-    message = await ctx.send(information, embeds=embed)
+    if description:
+        embed = interactions.Embed(
+            title=titre, description=description, footer=information, color=0xC2E9AA)
+    else:
+        embed = interactions.Embed(
+            title=titre, footer=information, color=0xC2E9AA)
+
+    for key in liste_jours:
+        embed.add_field(name=f"{key}", inline=False)
+
+    if mentions:
+        message = await ctx.send(mentions, embeds=embed)
+    else:
+        message = await ctx.send(embeds=embed)
     # affiche les réactions pour le sondage
     for emoji in list_emoji:
         await message.create_reaction(emoji)
