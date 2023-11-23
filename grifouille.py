@@ -656,7 +656,7 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
     )
     # on définit une lise d'emoji de la longueur du nombre de réponses possibles
     list_emoji: list = [list_letters[i]
-                        for i in range(step)] + [emoji_validation] + [emoji_deny]
+                        for i in range(step+1)] + [emoji_validation] + [emoji_deny]
 
     information: str = f"*Merci de répondre au plus vite !*\n*Après avoir voté, cliquez sur *{emoji_validation}\n*Aucune date ne convient ? Cliquez sur *{emoji_deny}"
 
