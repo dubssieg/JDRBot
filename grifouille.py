@@ -663,7 +663,7 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
 
     if description:
         embed = interactions.Embed(
-            title=titre, description=description, footer=information, color=0xC2E9AA)
+            title=titre, description=f"{description}\n\n{information}", color=0xC2E9AA)
     else:
         embed = interactions.Embed(
             title=titre, footer=information, color=0xC2E9AA)
