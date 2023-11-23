@@ -641,10 +641,8 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
 
     # on itère à travers les jours
     for day in range(1, nb_jours+1, 1):
-        future = datetime.today() + timedelta(days=day+decalage)
-        future.minute = 45
-        future.hour = 20
-        future.second = 00
+        future = datetime.today().replace(hour=20, minute=45, second=0,
+                                          microsecond=0) + timedelta(days=day+decalage)
         liste_jours.append(
             f"{list_letters[step]} - {list_days[future.weekday()]} {future.day}.{future.month} (20:45)")
 
