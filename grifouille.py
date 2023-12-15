@@ -3,12 +3,11 @@ from typing import NoReturn
 import interactions
 from interactions.ext.files import command_send
 from random import randrange, random, choice
-from lib import load_json, save_json, create_char, get_personnas, get_scene_list, switch, create_stats, display_stats, count_crit_values
+from library import load_json, save_json, get_personnas, display_stats, count_crit_values
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim
-from gsheets_interactions import values_from_player, stat_from_player, hero_point_update, increase_on_crit, get_stress, update_char, get_url
+from gsheets_interactions import values_from_player, stat_from_player, increase_on_crit, get_stress, update_char, get_url
 from time import sleep
-from string import ascii_uppercase
 from datetime import datetime, timedelta
 
 #############################
@@ -82,6 +81,35 @@ char_choices: list = [interactions.Choice(
     name=val, value=key) for key, val in get_personnas().items()]
 manuel_choices: list = [interactions.Choice(
     name=name_manual, value=name_manual) for name_manual in manuels]
+
+################ Pour les anniversaires #################
+
+
+@bot.command(
+    name="birthday",
+    description="Donnez votre date d'anniversaire pour que le bot vous le souhaite !",
+    scope=guild_id,
+    options=[
+        interactions.Option(
+            name="jour",
+            description="Jour (1-31) de l'anniversaire",
+            type=interactions.OptionType.INTEGER,
+            required=True,
+        ),
+        interactions.Option(
+            name="mois",
+            description="Mois (1-12) de l'anniversaire",
+            type=interactions.OptionType.INTEGER,
+            required=True,
+        ),
+    ],
+)
+async def birthday(ctx: interactions.CommandContext, jour: int, mois: int):
+    await ctx.defer()
+    save_json("birthdays", {**load_json('birthdays'),
+              str(ctx.author.mention): f"{jour}.{mois}"})
+    await ctx.send(f"Votre anniversaire a été fixé au {jour}.{mois} !", ephemeral=True)
+
 
 ################ Pour demander la fiche #################
 
