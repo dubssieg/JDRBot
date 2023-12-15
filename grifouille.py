@@ -52,90 +52,36 @@ bot = interactions.Client(
 gc = authorize(service_file='env/connect_sheets.json')
 
 # datas d'environnement
-dict_stats: dict = load_json("stats")
-dict_pos: dict = load_json("pos")
-dict_links: dict = load_json("links")
-dict_bonuses: dict = load_json("bonus")
-dict_stress: dict = load_json("stress")
-embed_projets: dict = load_json("embed_projets")
-embed_jdr: dict = load_json("embed_jdr")
-quotes: dict = load_json("quotes")
+dict_pos: dict = load_json("pos")  # mapping statistique : position (case)
+dict_links: dict = load_json("links")  # liens vers les fiches de persos
+dict_bonuses: dict = load_json("bonus")  # stats de résilience
+dict_stress: dict = load_json("stress")  # états de stress
+quotes: dict = load_json("quotes")  # phrases pour les jets de dés
 
 # préparation du dico de stress
-listStates = [key for key in dict_stress.keys()]
-listEffects = [value for value in dict_stress.values()]
-
-# liste des scènes disponibles au switch
-# list_of_scenes: list = get_scene_list(tokens_obsws)[:20]
-# abbrev_scenes: list = [sc[:20] if len(sc) > 20 else sc for sc in list_of_scenes]
+listStates = list(dict_stress.keys())
+listEffects = list(dict_stress.values())
 
 # listes utiles à déclarer en amont
 list_letters: list = ["\U0001F1E6", "\U0001F1E7", "\U0001F1E8", "\U0001F1E9", "\U0001F1EA", "\U0001F1EB", "\U0001F1EC", "\U0001F1ED",
                       "\U0001F1EE", "\U0001F1EF", "\U0001F1F0", "\U0001F1F1", "\U0001F1F2", "\U0001F1F3", "\U0001F1F4", "\U0001F1F5", "\U0001F1F6", "\U0001F1F7"]
-descs_jdr: list = ["Liens utiles aux JdR", "Retrouvez ici tous les liens pouvant vous servir durant les séances, n'oubliez pas non plus d'ouvrir votre petite fiche de personnage !",
-                   "En espérant que cela vous ait été utile !"]
-descs_projets: list = ["Liens vers mes projets", "Retrouvez tous les liens vers les projets ici ; tout n'est pas directement en lien avec le JdR mais parfois plus largement avec mes projets !",
-                       "Merci pour tous vos partages et vos retours, c'est adorable !"]
 list_days: list = ["Lundi", "Mardi", "Mercredi",
                    "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 manuels: list = ["one_shot"]
 competence_choices: list = [interactions.Choice(
-    name=val, value=val) for val in ["Constitution", "Intelligence", "Force", "Conscience", "Agilité", "Social"]]
+    name=val, value=val) for val in ["Constitution", "Intelligence", "Survie", "Conscience", "Agilité", "Social"]]
 competence_pos: dict = {"Constitution": "F3", "Intelligence": "F4",
-                        "Force": "F5", "Conscience": "F6", "Agilité": "F7", "Social": "F8"}
+                        "Survie": "F5", "Conscience": "F6", "Agilité": "F7", "Social": "F8"}
 dice_type: list = [interactions.Choice(
     name=key, value=val) for key, val in {"Nombre de dés": "nb_dice", "Valeur de difficulté": "val_stat"}.items()]
 
 
 stats_choices: list = [interactions.Choice(
-    name=val, value=val) for val in dict_stats.values()]
+    name=val, value=val) for val in dict_pos.keys()]
 char_choices: list = [interactions.Choice(
     name=val, value=key) for key, val in get_personnas().items()]
-# scene_choices: list = [interactions.Choice(name=abbrev, value=str(i)) for i, abbrev in enumerate(abbrev_scenes)]
-# scene_choices: list = [interactions.Choice(name=name_scene, value=name_scene) for name_scene in list_of_scenes]
 manuel_choices: list = [interactions.Choice(
     name=name_manual, value=name_manual) for name_manual in manuels]
-
-
-#################### Obtenir une fiche de règles ##################
-
-@ bot.command(
-    name="get_manual",
-    description="Renvoie un résumé de règles du système demandé",
-    scope=guild_id,
-    options=[
-        interactions.Option(
-            name="manuel",
-            description="Manuel à afficher",
-            type=interactions.OptionType.STRING,
-            choices=manuel_choices,
-            required=True,
-        )
-    ],
-)
-async def get_manual(ctx: interactions.CommandContext, manuel: str):
-    await command_send(ctx, "Voici le manuel demandé !", files=interactions.File(filename=f"img/{manuel}.png"))
-
-#################### Créer un personnage ##################
-
-
-@ bot.command(
-    name="create_char",
-    description="Génère les caractéristiques d'un personnage aléatoire !",
-    scope=guild_id,
-    options=[
-        interactions.Option(
-            name="type",
-            description="Type de personnage à générer",
-            type=interactions.OptionType.STRING,
-            choices=char_choices,
-            required=True,
-        )
-    ],
-)
-async def generate_char(ctx: interactions.CommandContext, type: str):
-    await command_send(ctx, '\n'.join([f"*{k}*  -->  **{v}**" for k, v in create_char(type).items()]), files=interactions.File(filename=create_stats()))
-
 
 ################ Pour demander la fiche #################
 
@@ -227,14 +173,18 @@ def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, 
             if stat_testee != "":
                 increase_on_crit(str(message.author.mention),
                                  dict_links, gc, stat_testee, dict_pos,  1)
-            anim = "E_CRIT.avi"
-            str_resultat = f"""
-                {message.author.mention} > **ECHEC CRITIQUE** {stat_testee}
-                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+str(resilience)+')' for roll in all_rolls])}
-                > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
-                > La compétence {stat_testee} gagne un point !
-                > *{choice(quotes['ECHEC CRITIQUE'])}*
-                """
+            if stat_testee != "Sang-froid":
+                anim = "E_CRIT.avi"
+                str_resultat = f"""
+                    {message.author.mention} > **ECHEC CRITIQUE** {stat_testee}
+                    > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+str(resilience)+')' for roll in all_rolls])}
+                    > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
+                    > La compétence {stat_testee} gagne un point !
+                    > *{choice(quotes['ECHEC CRITIQUE'])}*
+                    """
+            else:
+                str_resultat, anim = roll_the_stress(
+                    message, get_stress(message.author.mention, dict_links, gc))
         # si tous les dés avec bonus/malus sont au-dessus de la valeur de difficulté, c'est une réussite
         elif all([val >= valeur_difficulte for val in filtered_rolls_with_modifier]):
             anim = "R_STD.avi"
@@ -248,18 +198,22 @@ def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, 
                 """
         # si tous les dés avec bonus/malus sont en-dessous de la valeur de difficulté, c'est un échec
         else:
-            anim = "E_STD.avi"
             if str(message.author.mention) in dict_bonuses and dict_bonuses[str(message.author.mention)] < 5:
                 dict_bonuses[str(message.author.mention)] += 1
             else:
                 dict_bonuses[str(message.author.mention)] = 1
-            str_resultat = f"""
-                {message.author.mention} > **ECHEC** {stat_testee}
-                > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+str(resilience)+')' for roll in all_rolls])}
-                > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
-                > Vous gagnez un point de résilience.
-                > *{choice(quotes['ECHEC'])}*
-                """
+            if stat_testee != "Sang-froid":
+                anim = "E_STD.avi"
+                str_resultat = f"""
+                    {message.author.mention} > **ECHEC** {stat_testee}
+                    > Lancers de dés : {', '.join(['**'+str(roll)+'/'+str(faces)+'+'+str(modificateur)+'** ('+str(roll+modificateur)+'+'+str(resilience)+')' for roll in all_rolls])}
+                    > Difficulté : **{result_number_of_dices}d > {valeur_difficulte-1}**
+                    > Vous gagnez un point de résilience.
+                    > *{choice(quotes['ECHEC'])}*
+                    """
+            else:
+                str_resultat, anim = roll_the_stress(
+                    message, get_stress(message.author.mention, dict_links, gc))
     # si on a pas de valeur de difficulté, on ne dit rien
     else:
         anim = "INCONNU.avi"
@@ -583,6 +537,8 @@ async def toss(ctx: interactions.CommandContext) -> None:
     res = "**PILE**" if (random() > 0.5) else "**FACE**"
     await ctx.send(f"{ctx.author.mention} > La pièce est tombée sur {res} !\n> *Un lancer de pièce, pour remettre son sort au destin...*")
 
+################ Pour effectuer des sondages #################
+
 
 @bot.command(
     name="calendar",
@@ -737,9 +693,9 @@ async def poll(ctx: interactions.CommandContext, titre: str, mentions: str | Non
 
 def main() -> NoReturn:
     "Main loop for Grifouille"
-    bot.load('interactions.ext.files')
     while (True):
         try:
+            bot.load('interactions.ext.files')
             bot.start()
         except KeyboardInterrupt:
             print(KeyboardInterrupt("Keyboard interrupt, terminating Grifouille"))
