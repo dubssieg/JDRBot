@@ -2,11 +2,12 @@
 from sys import path
 from time import sleep
 from typing import NoReturn
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord import Streaming, FFmpegPCMAudio, Intents, ClientException
 from pygsheets import authorize
-from lib import output_msg, load_json, YTDLSource
+from library import output_msg, load_json, YTDLSource
 from obs_interactions import toggle_filter, obs_invoke
+from datetime import date, datetime
 
 ##################### TOKENS DE CONNEXION ##########################
 
@@ -53,7 +54,20 @@ async def on_ready() -> None:
             toggle_filter, host, port, password, f"Cam_{tag}", [
                 'AFK_SAT', 'AFK_BLUR'], True
         )
+    birthday.start()
     output_msg("PATOUNES EST PRET !")
+
+
+@tasks.loop(minutes=60)
+async def birthday():
+    for people, date_birthday in load_json('birthdays').items():
+        day, month = date_birthday.split('.')
+        if date.today().day == day and date.today().month == month and datetime.now().hour == 9:
+            for guild in bot.guilds:
+                if str(guild.id) == "313976437818523650":
+                    for channel in guild.channels:
+                        if str(channel.id) == "313977728242155520":
+                            await channel.send(f"Hey, c'est l'anniversaire de {people} ! <:patounes_heart:979510606216462416>")
 
 
 @bot.command()
@@ -69,7 +83,7 @@ async def play(ctx, url: str) -> None:
             bot.loop.create_task(play_source(voice_channel, filename))
             await ctx.send(f'**Joue :** <{url}>')
     except ClientException as exc:
-        await ctx.send("Désolé, le bot n'est pas connecté :(")
+        await ctx.send("Désolé, le bot n'est pas connecté <:patounes_sad:979501604552212490>")
     finally:
         await ctx.delete()
 
@@ -85,7 +99,7 @@ async def play_source(voice_client, filename: str):
 @play.error
 async def play_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
-        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.")
+        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande <:patounes_sad:979501604552212490>")
 
 
 @bot.command()
@@ -96,14 +110,14 @@ async def stop(ctx):
     if voice_client.is_playing():
         await voice_client.stop()
     else:
-        await ctx.send("Le bot ne joue rien actuellement.")
+        await ctx.send("Le bot ne joue rien actuellement <:patounes_sad:979501604552212490>")
     await ctx.delete()
 
 
 @stop.error
 async def stop_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
-        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.")
+        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande <:patounes_sad:979501604552212490>")
 
 
 @bot.command()
@@ -119,7 +133,7 @@ async def fetch(ctx, url):
 @fetch.error
 async def fetch_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
-        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.")
+        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande <:patounes_sad:979501604552212490>")
 
 
 @bot.command()
@@ -127,7 +141,7 @@ async def fetch_error(ctx, error):
 async def join(ctx):
     "Demande au bot de rejoindre le vocal"
     if not ctx.message.author.voice:
-        await ctx.send("Désolé, tu n'es pas dans un chan vocal :(")
+        await ctx.send("Désolé, tu n'es pas dans un chan vocal <:patounes_sad:979501604552212490>")
         return
     else:
         channel = ctx.message.author.voice.channel
@@ -138,7 +152,7 @@ async def join(ctx):
 @join.error
 async def join_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
-        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.")
+        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande <:patounes_sad:979501604552212490>")
 
 
 @bot.command()
@@ -149,14 +163,14 @@ async def leave(ctx):
     if voice_client.is_connected():
         await voice_client.disconnect()
     else:
-        await ctx.send("Désolé, le bot est déjà déconnecté :(")
+        await ctx.send("Désolé, le bot est déjà déconnecté <:patounes_sad:979501604552212490>")
     await ctx.delete()
 
 
 @leave.error
 async def leave_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
-        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande.")
+        await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande <:patounes_sad:979501604552212490>")
 
 
 @bot.event
