@@ -24,6 +24,7 @@ password: str = tokens_obsws["password"]
 tokens_connexion: dict = load_json("token")
 token_grifouille: str = tokens_connexion['token']
 guild_id: int = tokens_connexion['guild_id']
+guild_roles: str = tokens_connexion['guild_roles']
 
 patounes_love = interactions.Emoji(
     name="patounes_heart",
@@ -669,12 +670,11 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
     if mentions:
         message = await ctx.send(mentions, embeds=embed)
         mp_text: str = f"""
-Bonjour ! Tu as été notifié(e) sur le serveur **{ctx.guild.name}** pour un sondage. Merci d'y répondre quand tu pourras !
-
+Bonjour ! Tu as été notifié(e) sur le serveur **Tharos** pour un sondage. Merci d'y répondre quand tu pourras !
 ## {titre} ({message.url})
 > {description}
 
-*Ce message est automatique, vous pouvez mettre à jour votre profil sur le serveur pour désactiver.* 
+*Ce message est automatique, vous pouvez [mettre à jour votre profil](<{guild_roles}>) sur le serveur pour désactiver.* 
     """
         for member_to_mp in concerned_members:
             if not 1190085551504760882 in member_to_mp.roles:
