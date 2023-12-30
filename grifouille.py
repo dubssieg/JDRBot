@@ -614,6 +614,17 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
         offset (int, optional): Décalage en jours. Defaults to 0.
         description (str, optional): Un titre pour le sondage. Defaults to "Date pour la prochaine séance !".
     """
+    await ctx.defer()
+    if mentions:
+        concerned_members: list = list()
+        for member in await ctx.guild.get_all_members():
+            if str(member.id) in mentions:
+                concerned_members.append(member)
+        for role in await ctx.guild.get_all_roles():
+            if str(role.id) in mentions:
+                for member in await ctx.guild.get_all_members():
+                    if int(role.id) in member.roles:
+                        concerned_members.append(member)
     nb_jours: int = duree if duree <= 12 and duree > 0 else 7
     decalage: int = delai if delai >= 0 else 0
     list_days: list = ["Lundi", "Mardi", "Mercredi",
@@ -656,8 +667,23 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
 
     if mentions:
         message = await ctx.send(mentions, embeds=embed)
+        mp_text: str = f"""
+Bonjour ! Tu as été notifié(e) sur le serveur **{ctx.guild.name}** pour un sondage. Merci d'y répondre quand tu pourras !
+
+## {titre} ({message.url})
+> {description}
+
+*Ce message est automatique, vous pouvez mettre à jour votre profil sur le serveur pour désactiver.* 
+    """
+        for member_to_mp in concerned_members:
+            if not 1190085551504760882 in member_to_mp.roles:
+                try:
+                    await member_to_mp.send(mp_text)
+                except:
+                    pass
     else:
         message = await ctx.send(embeds=embed)
+
     # affiche les réactions pour le sondage
     for emoji in list_emoji:
         await message.create_reaction(emoji)
