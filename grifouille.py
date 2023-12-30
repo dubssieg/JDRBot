@@ -34,6 +34,7 @@ patounes_love = interactions.Emoji(
 # déclaration du client
 bot = interactions.Client(
     token=token_grifouille,
+    intents=interactions.Intents.GUILD_MEMBERS,
     presence=interactions.ClientPresence(
         status=interactions.StatusType.ONLINE,
         activities=[
