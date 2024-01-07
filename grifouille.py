@@ -710,6 +710,17 @@ Bonjour ! Tu as été notifié(e) sur le serveur **Tharos** pour un sondage. Mer
     ],
 )
 async def poll(ctx: interactions.CommandContext, titre: str, mentions: str | None = None) -> None:
+    await ctx.defer()
+    if mentions:
+        concerned_members: list = list()
+        for member in await ctx.guild.get_all_members():
+            if str(member.id) in mentions:
+                concerned_members.append(member)
+        for role in await ctx.guild.get_all_roles():
+            if str(role.id) in mentions:
+                for member in await ctx.guild.get_all_members():
+                    if int(role.id) in member.roles:
+                        concerned_members.append(member)
     patounes_tongue = interactions.Emoji(
         name="patounes_tongue",
         id=979488514561421332
@@ -732,8 +743,8 @@ async def poll(ctx: interactions.CommandContext, titre: str, mentions: str | Non
         embed = interactions.Embed(
             title=titre, color=0xC2E9AA)
 
-    poll_embed = {f'{emoji_validation} - Je suis intéressé.e !': "La date sera déterminée ultérieurement",
-                  f'{emoji_deny} - Je ne souhaite pas participer': "Merci de cliquer pour montrer que vous avez lu"}
+    poll_embed = {f'{emoji_validation} - La proposition me convient !': "Si elle ne vous convient qu'avec des réserves, sentez-vous libres de les exprimer en réponse.",
+                  f'{emoji_deny} - La proposition ne me convient pas': "Merci de valider que vous avez lu, et, le cas échéant, préciser votre pensée"}
 
     for key, value in poll_embed.items():
         embed.add_field(name=f"{key}", value=f"{value}", inline=False)
@@ -741,6 +752,20 @@ async def poll(ctx: interactions.CommandContext, titre: str, mentions: str | Non
     information: str = f"Merci de répondre au plus vite ! {patounes_tongue}"
 
     message = await ctx.send(information, embeds=embed)
+    if mentions:
+        mp_text: str = f"""
+Bonjour ! Tu as été notifié(e) sur le serveur **Tharos** pour un sondage. Merci d'y répondre quand tu pourras !
+## {titre} ({message.url})
+> {mentions}
+
+*Ce message est automatique, vous pouvez [mettre à jour votre profil](<{guild_roles}>) sur le serveur pour désactiver.* 
+    """
+        for member_to_mp in concerned_members:
+            if not 1190085551504760882 in member_to_mp.roles:
+                try:
+                    await member_to_mp.send(mp_text)
+                except:
+                    pass
     # affiche les réactions pour le sondage
     for emoji in list_emoji:
         await message.create_reaction(emoji)
