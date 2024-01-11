@@ -38,7 +38,7 @@ async def toggle_anim(
         websocket: obsws,
         name: str,
         scene: str = "Animations",
-        delay: int = 5
+        delay: float = .005
 ) -> None:
     """Toggle anim on, plays it, and toggles it off after a delay.
 
@@ -54,10 +54,10 @@ async def toggle_anim(
     print(item_id)
     # Toggle item in scene
     websocket.call(requests.SetSceneItemEnabled(
-        sceneName=scene, sceneItemId=item_id, sceneItemEnabled=True))
+        sceneName=scene, sceneItemId=item_id, sceneItemEnabled=False))
     await async_sleep(delay)
     websocket.call(requests.SetSceneItemEnabled(
-        sceneName=scene, sceneItemId=item_id, sceneItemEnabled=False))
+        sceneName=scene, sceneItemId=item_id, sceneItemEnabled=True))
 
 
 async def toggle_filter(
