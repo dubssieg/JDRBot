@@ -203,7 +203,7 @@ def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, 
             if stat_testee != "":
                 increase_on_crit(str(message.author.mention),
                                  dict_links, gc, stat_testee, dict_pos,  1)
-            if stat_testee != "Sang-froid":
+            if "Sang-froid" in stat_testee:
                 anim = "E_CRIT.avi"
                 str_resultat = f"""
                     {message.author.mention} > **ECHEC CRITIQUE** {stat_testee}
@@ -230,9 +230,9 @@ def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, 
         else:
             if str(message.author.mention) in dict_bonuses and dict_bonuses[str(message.author.mention)] < 5:
                 dict_bonuses[str(message.author.mention)] += 1
-            else:
+            elif str(message.author.mention) not in dict_bonuses:
                 dict_bonuses[str(message.author.mention)] = 1
-            if stat_testee != "Sang-froid":
+            if "Sang-froid" in stat_testee:
                 anim = "E_STD.avi"
                 str_resultat = f"""
                     {message.author.mention} > **ECHEC** {stat_testee}
