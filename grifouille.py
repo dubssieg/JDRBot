@@ -70,8 +70,8 @@ list_days: list = ["Lundi", "Mardi", "Mercredi",
                    "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 manuels: list = ["one_shot"]
 competence_choices: list = [interactions.Choice(
-    name=val, value=val) for val in ["Constitution", "Intelligence", "Survie", "Conscience", "Agilité", "Social"]]
-competence_pos: dict = {"Constitution": "F3", "Intelligence": "F4",
+    name=val, value=val) for val in ["Constitution", "Intellect", "Survie", "Conscience", "Agilité", "Social"]]
+competence_pos: dict = {"Constitution": "F3", "Intellect": "F4",
                         "Survie": "F5", "Conscience": "F6", "Agilité": "F7", "Social": "F8"}
 dice_type: list = [interactions.Choice(
     name=key, value=val) for key, val in {"Nombre de dés": "nb_dice", "Valeur de difficulté": "val_stat"}.items()]
