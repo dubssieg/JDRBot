@@ -5,7 +5,7 @@ from interactions.ext.files import command_send
 from random import randrange, random, choice
 from library import load_json, save_json, get_personnas, display_stats, count_crit_values
 from pygsheets import authorize
-from obs_interactions import obs_invoke, toggle_anim
+from obs_interactions import obs_invoke, toggle_anim, activate_anim, deactivate_anim
 from gsheets_interactions import values_from_player, stat_from_player, increase_on_crit, get_stress, update_char, get_url
 from time import sleep
 from datetime import datetime, timedelta
@@ -425,7 +425,7 @@ async def stat(ctx: interactions.CommandContext, charac: str, number_dice: int =
             modificateur=int(values[1]),
             valeur_difficulte=valeur_difficulte,
             stat_testee=charac)
-        await obs_invoke(toggle_anim, host, port, password, anim)
+        await obs_invoke(deactivate_anim, host, port, password, anim)
     except ConnectionError:
         message = ConnectionError(
             f"Impossible d'atteindre la valeur de {charac} pour {ctx.author.mention}.")
@@ -434,6 +434,10 @@ async def stat(ctx: interactions.CommandContext, charac: str, number_dice: int =
             f"Désolé {ctx.author.mention}, tu ne sembles pas avoir de fiche liée dans ma base de données.")
     finally:
         await ctx.send(str(message))
+        try:
+            await obs_invoke(activate_anim, host, port, password, anim)
+        except:
+            pass
 
 
 def roll_the_stress(message, val_stress, player_has_file: bool = True):

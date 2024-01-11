@@ -38,7 +38,7 @@ async def toggle_anim(
         websocket: obsws,
         name: str,
         scene: str = "Animations",
-        delay: float = .005
+        delay: int = 5
 ) -> None:
     """Toggle anim on, plays it, and toggles it off after a delay.
 
@@ -51,13 +51,36 @@ async def toggle_anim(
     # Getting ID of item inside scene
     item_id: int = websocket.call(requests.GetSceneItemId(
         sceneName=scene, sourceName=name)).getsceneItemId()
-    print(item_id)
     # Toggle item in scene
     websocket.call(requests.SetSceneItemEnabled(
-        sceneName=scene, sceneItemId=item_id, sceneItemEnabled=False))
+        sceneName=scene, sceneItemId=item_id, sceneItemEnabled=True))
     await async_sleep(delay)
     websocket.call(requests.SetSceneItemEnabled(
+        sceneName=scene, sceneItemId=item_id, sceneItemEnabled=False))
+
+
+async def activate_anim(
+        websocket: obsws,
+        name: str,
+        scene: str = "Animations",
+) -> None:
+    # Getting ID of item inside scene
+    item_id: int = websocket.call(requests.GetSceneItemId(
+        sceneName=scene, sourceName=name)).getsceneItemId()
+    websocket.call(requests.SetSceneItemEnabled(
         sceneName=scene, sceneItemId=item_id, sceneItemEnabled=True))
+
+
+async def deactivate_anim(
+        websocket: obsws,
+        name: str,
+        scene: str = "Animations",
+) -> None:
+    # Getting ID of item inside scene
+    item_id: int = websocket.call(requests.GetSceneItemId(
+        sceneName=scene, sourceName=name)).getsceneItemId()
+    websocket.call(requests.SetSceneItemEnabled(
+        sceneName=scene, sceneItemId=item_id, sceneItemEnabled=False))
 
 
 async def toggle_filter(
