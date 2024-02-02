@@ -25,7 +25,9 @@ async def obs_invoke(func: Callable, *args) -> None:
             except Exception as e:
                 print(e)
                 return
-
+    except OSError as e:
+        print("Echec de la connexion à l'ordnaiteur distant:", e.args)
+        return
     except (RuntimeError, exceptions.ConnectionClosed) as e:
         print('Echec de la connexion au socket:', e.args)
         return
