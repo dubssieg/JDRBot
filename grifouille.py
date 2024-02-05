@@ -685,6 +685,14 @@ Bonjour ! Tu as été notifié(e) sur le serveur **Tharos** pour un sondage. Mer
                 try:
                     await member_to_mp.send(mp_text)
                 except:
+                    try:
+                        await ctx.author.send(f"Erreur lors de l'envoi de la notification à l'utilisateur {member_to_mp.name} !")
+                    except:
+                        pass
+            else:
+                try:
+                    await ctx.author.send(f"L'utilisateur {member_to_mp.name} a ses notifications désactivées.")
+                except:
                     pass
     else:
         message = await ctx.send(embeds=embed)
@@ -768,6 +776,14 @@ Bonjour ! Tu as été notifié(e) sur le serveur **Tharos** pour un sondage. Mer
             if not 1190085551504760882 in member_to_mp.roles:
                 try:
                     await member_to_mp.send(mp_text)
+                except:
+                    try:
+                        await ctx.author.send(f"Erreur lors de l'envoi de la notification à l'utilisateur {member_to_mp.name} !")
+                    except:
+                        pass
+            else:
+                try:
+                    await ctx.author.send(f"L'utilisateur {member_to_mp.name} a ses notifications désactivées.")
                 except:
                     pass
     # affiche les réactions pour le sondage
