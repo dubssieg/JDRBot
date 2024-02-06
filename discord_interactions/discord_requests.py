@@ -1,5 +1,6 @@
 import json
 import aiohttp
+from library import load_json
 
 
 class ScheduledEvents:
@@ -11,9 +12,8 @@ class ScheduledEvents:
     VOICE = 2
     EXTERNAL = 3
 
-    # load_dotenv()
-    # TOKEN:str = os.getenv("TOKEN")
-    TOKEN: str = "MTE3NjgzODkzMTgxNjM5MDcyNw.Gz2bEs.c5m9RvysF6Meu8fbQta8uVU2JiBHQp84MNONIo"
+    tokens_connexion: dict = load_json("token")
+    TOKEN: str = tokens_connexion['token']
     BOT_AUTH_HEADER: str = ""
     API_URL: str = "https://discord.com/api/v10"
 
