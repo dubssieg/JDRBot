@@ -7,8 +7,11 @@ from library import load_json, save_json, get_personnas, display_stats, count_cr
 from pygsheets import authorize
 from obs_interactions import obs_invoke, toggle_anim, activate_anim, deactivate_anim
 from gsheets_interactions import values_from_player, stat_from_player, increase_on_crit, get_stress, update_char, get_url
+from discord_interactions import ScheduledEvents
 from time import sleep
 from datetime import datetime, timedelta
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
 
 #############################
 ### Chargement des tokens ###
@@ -30,6 +33,8 @@ patounes_love = interactions.Emoji(
     name="patounes_heart",
     id=979510606216462416
 )
+
+SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 
 # déclaration du client
@@ -111,6 +116,127 @@ async def birthday(ctx: interactions.CommandContext, jour: int, mois: int):
     save_json("birthdays", {**load_json('birthdays'),
               str(ctx.author.mention): f"{jour}.{mois}"})
     await ctx.send(f"Votre anniversaire a été fixé au {jour}.{mois} !", ephemeral=True)
+
+
+################### Ajout d'un évènement ################
+
+@bot.command(
+    name="date",
+    description="Ajoute une date dans le calendrier",
+    options=[
+        interactions.Option(
+            name="name",
+            description="Nom de l'évènement",
+            type=interactions.OptionType.STRING,
+            required=True,
+        ),
+        interactions.Option(
+            name="start",
+            description="Temps écrit dans le format DD/MM/YYYY HH:MM",
+            type=interactions.OptionType.STRING,
+            required=True,
+        ),
+        interactions.Option(
+            name="end",
+            description="Temps écrit dans le format DD/MM/YYYY HH:MM",
+            type=interactions.OptionType.STRING,
+            required=True,
+        ),
+        interactions.Option(
+            name="long_description",
+            description="Longue description textuelle pour définir l'évènement",
+            type=interactions.OptionType.STRING,
+            required=False,
+        ),
+        interactions.Option(
+            name="mentions",
+            description="Courte description contenant les personnes à mentionner",
+            type=interactions.OptionType.STRING,
+            required=False,
+        ),
+    ],
+)
+async def date(ctx: interactions.CommandContext, name: str, start: str, end: str, long_description: str = '', mentions: str = ''):
+    await ctx.defer()
+    if mentions:
+        concerned_members: list = list()
+        for member in await ctx.guild.get_all_members():
+            if str(member.id) in mentions:
+                concerned_members.append(member)
+        for role in await ctx.guild.get_all_roles():
+            if str(role.id) in mentions:
+                for member in await ctx.guild.get_all_members():
+                    if int(role.id) in member.roles:
+                        concerned_members.append(member)
+    # Loading creditentials to communicate with Google Calendar
+    creds = Credentials.from_authorized_user_file(
+        "env/token_calendar.json", SCOPES)
+    service = build("calendar", "v3", credentials=creds)
+
+    # Converting dates to desired format
+    start_date = datetime.strptime(start, '%d/%m/%y %H:%M').isoformat() + "Z"
+    end_date = datetime.strptime(end, '%d/%m/%y %H:%M').isoformat() + "Z"
+
+    event = {
+        'summary': name,
+        'location': 'En ligne',
+        'description': long_description,
+        'start': {
+            'dateTime': start_date,
+            'timeZone': 'Europe/Paris',
+        },
+        'end': {
+            'dateTime': end_date,
+            'timeZone': 'Europe/Paris',
+        },
+        'recurrence': [
+        ],
+        'attendees': [
+        ],
+        'reminders': {
+            'useDefault': False,
+            'overrides': [
+                {'method': 'email', 'minutes': 24 * 60},
+                {'method': 'popup', 'minutes': 10},
+            ],
+        },
+    }
+
+    event = service.events().insert(calendarId='primary', body=event).execute()
+
+    await ScheduledEvents.create_guild_event(
+        guild_id="874430800802754620",
+        event_name=name,
+        event_description=long_description,
+        event_start_time=start_date,
+        event_end_time=end_date,
+        event_metadata={},
+        channel_id="901609934679081010",
+    )
+    if mentions:
+        mp_text: str = f"""
+Bonjour ! Tu as été notifié(e) sur le serveur **Tharos**. pour un évènement.
+# **{name}** ({datetime.strptime(start, '%d/%m/%y %H:%M').date()})
+Merci de prévenir au plus vite en cas d'indisponibilité !
+> {long_description}
+
+*Ce message est automatique, vous pouvez [mettre à jour votre profil](<{guild_roles}>) sur le serveur pour désactiver.* 
+    """
+        for member_to_mp in concerned_members:
+            if not 1190085551504760882 in member_to_mp.roles:
+                try:
+                    await member_to_mp.send(mp_text)
+                except:
+                    try:
+                        await ctx.author.send(f"Erreur lors de l'envoi de la notification à l'utilisateur {member_to_mp.name} !")
+                    except:
+                        pass
+            else:
+                try:
+                    await ctx.author.send(f"L'utilisateur {member_to_mp.name} a ses notifications désactivées.")
+                except:
+                    pass
+    await ctx.send(f"Evènement {name} créé (<{event.get('htmlLink')}>)! {patounes_love}")
 
 
 ################ Pour demander la fiche #################
