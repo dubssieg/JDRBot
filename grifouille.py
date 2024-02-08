@@ -180,7 +180,7 @@ async def date(ctx: interactions.CommandContext, name: str, start: str, end: str
         event_start_time=start_date,
         event_end_time=end_date,
         event_metadata={},
-        channel_id=str(ctx.channel_id),
+        channel_id="1136245395459145879",
     )
     if mentions:
         mp_text: str = f"""
