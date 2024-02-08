@@ -170,8 +170,10 @@ async def date(ctx: interactions.CommandContext, name: str, start: str, end: str
                         concerned_members.append(member)
 
     # Converting dates to desired format
-    start_date = datetime.strptime(start, '%d/%m/%yT%H:%M')
-    end_date = datetime.strptime(end, '%d/%m/%yT%H:%M')
+    start_date = datetime.strptime(
+        start, '%d/%m/%y %H:%M').strftime("%Y-%m-%dT%H:%M:%S")
+    end_date = datetime.strptime(
+        end, '%d/%m/%y %H:%M').strftime("%Y-%m-%dT%H:%M:%S")
 
     await ScheduledEvents.create_guild_event(
         guild_id=str(ctx.guild_id),
