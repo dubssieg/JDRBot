@@ -168,50 +168,20 @@ async def date(ctx: interactions.CommandContext, name: str, start: str, end: str
                 for member in await ctx.guild.get_all_members():
                     if int(role.id) in member.roles:
                         concerned_members.append(member)
-    # Loading creditentials to communicate with Google Calendar
-    creds = Credentials.from_authorized_user_file(
-        "env/token_calendar.json", SCOPES)
-    service = build("calendar", "v3", credentials=creds)
 
     # Converting dates to desired format
     start_date = datetime.strptime(start, '%d/%m/%y %H:%M').isoformat() + "Z"
     end_date = datetime.strptime(end, '%d/%m/%y %H:%M').isoformat() + "Z"
 
-    event = {
-        'summary': name,
-        'location': 'En ligne',
-        'description': long_description,
-        'start': {
-            'dateTime': start_date,
-            'timeZone': 'Europe/Paris',
-        },
-        'end': {
-            'dateTime': end_date,
-            'timeZone': 'Europe/Paris',
-        },
-        'recurrence': [
-        ],
-        'attendees': [
-        ],
-        'reminders': {
-            'useDefault': False,
-            'overrides': [
-                {'method': 'email', 'minutes': 24 * 60},
-                {'method': 'popup', 'minutes': 10},
-            ],
-        },
-    }
-
-    event = service.events().insert(calendarId='primary', body=event).execute()
 
     await ScheduledEvents.create_guild_event(
-        guild_id="874430800802754620",
+        guild_id=ctx.guild_id,
         event_name=name,
         event_description=long_description,
         event_start_time=start_date,
         event_end_time=end_date,
         event_metadata={},
-        channel_id="901609934679081010",
+        channel_id=ctx.channel_id,
     )
     if mentions:
         mp_text: str = f"""
@@ -236,7 +206,8 @@ Merci de prévenir au plus vite en cas d'indisponibilité !
                     await ctx.author.send(f"L'utilisateur {member_to_mp.name} a ses notifications désactivées.")
                 except:
                     pass
-    await ctx.send(f"Evènement {name} créé (<{event.get('htmlLink')}>)! {patounes_love}")
+    #await ctx.send(f"Evènement {name} créé (<{event.get('htmlLink')}>)! {patounes_love}")
+    await ctx.send(f"Evènement {name} créé! {patounes_love}")
 
 
 ################ Pour demander la fiche #################
