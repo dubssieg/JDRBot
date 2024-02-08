@@ -184,7 +184,7 @@ async def date(ctx: interactions.CommandContext, name: str, start: str, end: str
         event_metadata={'location': 'TharosTV'},
     )
     if mentions:
-        event_id: str = f"https://discord.gg/KK2BJaxZPE?event={await ScheduledEvents.find_guild_event(name, 313976437818523650)}>"
+        event_id: str = f"https://discord.gg/KK2BJaxZPE?event={await ScheduledEvents.find_guild_event(name, 313976437818523650)}"
         mp_text: str = f"""
 Bonjour ! Tu as été notifié(e) sur le serveur **Tharos** [pour un évènement](<{event_id}>).
 # **{name}** ({datetime.strptime(start, '%d/%m/%y %H:%M').date()})
@@ -208,7 +208,7 @@ Merci de **prévenir au plus vite** en cas d'indisponibilité !
                 except:
                     pass
     # await ctx.send(f"Evènement {name} créé (<{event.get('htmlLink')}>)! {patounes_love}")
-    await ctx.send(f"Evènement [**{name}**](<{event_id}>) créé! {patounes_love}")
+    await ctx.send(f"Evènement [**{name}**]({event_id}) créé! {patounes_love}")
 
 
 ################ Pour demander la fiche #################
