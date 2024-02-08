@@ -187,7 +187,9 @@ async def date(ctx: interactions.CommandContext, name: str, start: str, end: str
         event_id: str = await ScheduledEvents.find_guild_event(name, 313976437818523650)
         mp_text: str = f"""
 Bonjour ! Tu as été notifié(e) sur le serveur **Tharos** pour un évènement.
-Merci de **prévenir au plus vite** en cas d'indisponibilité ![](https://discord.com/api/v10/guilds/313976437818523650/{event_id})
+Merci de **prévenir au plus vite** en cas d'indisponibilité !
+
+https://discord.com/api/v10/guilds/313976437818523650/{event_id}
 
 *Ce message est automatique, vous pouvez [mettre à jour votre profil](<{guild_roles}>) sur le serveur pour désactiver.* 
     """
