@@ -170,8 +170,8 @@ async def date(ctx: interactions.CommandContext, name: str, start: str, end: str
                         concerned_members.append(member)
 
     # Converting dates to desired format
-    start_date = datetime.strptime(start, '%d/%m/%y %H:%M').isoformat() + "Z"
-    end_date = datetime.strptime(end, '%d/%m/%y %H:%M').isoformat() + "Z"
+    start_date = datetime.strptime(start, '%d/%m/%yT%H:%M')
+    end_date = datetime.strptime(end, '%d/%m/%yT%H:%M')
 
     await ScheduledEvents.create_guild_event(
         guild_id=str(ctx.guild_id),
@@ -179,8 +179,7 @@ async def date(ctx: interactions.CommandContext, name: str, start: str, end: str
         event_description=long_description,
         event_start_time=start_date,
         event_end_time=end_date,
-        event_metadata={},
-        channel_id="1136245395459145879",
+        event_metadata={'location': 'TharosTV'},
     )
     if mentions:
         mp_text: str = f"""
