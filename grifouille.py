@@ -132,13 +132,13 @@ async def birthday(ctx: interactions.CommandContext, jour: int, mois: int):
         ),
         interactions.Option(
             name="start",
-            description="Temps écrit dans le format DD/MM/YYYY HH:MM",
+            description="Temps écrit dans le format DD/MM/YY HH:MM",
             type=interactions.OptionType.STRING,
             required=True,
         ),
         interactions.Option(
             name="end",
-            description="Temps écrit dans le format DD/MM/YYYY HH:MM",
+            description="Temps écrit dans le format DD/MM/YY HH:MM",
             type=interactions.OptionType.STRING,
             required=True,
         ),
@@ -173,15 +173,14 @@ async def date(ctx: interactions.CommandContext, name: str, start: str, end: str
     start_date = datetime.strptime(start, '%d/%m/%y %H:%M').isoformat() + "Z"
     end_date = datetime.strptime(end, '%d/%m/%y %H:%M').isoformat() + "Z"
 
-
     await ScheduledEvents.create_guild_event(
-        guild_id=ctx.guild_id,
+        guild_id=str(ctx.guild_id),
         event_name=name,
         event_description=long_description,
         event_start_time=start_date,
         event_end_time=end_date,
         event_metadata={},
-        channel_id=ctx.channel_id,
+        channel_id=str(ctx.channel_id),
     )
     if mentions:
         mp_text: str = f"""
@@ -206,7 +205,7 @@ Merci de prévenir au plus vite en cas d'indisponibilité !
                     await ctx.author.send(f"L'utilisateur {member_to_mp.name} a ses notifications désactivées.")
                 except:
                     pass
-    #await ctx.send(f"Evènement {name} créé (<{event.get('htmlLink')}>)! {patounes_love}")
+    # await ctx.send(f"Evènement {name} créé (<{event.get('htmlLink')}>)! {patounes_love}")
     await ctx.send(f"Evènement {name} créé! {patounes_love}")
 
 
