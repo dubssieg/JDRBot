@@ -185,7 +185,7 @@ async def date(ctx: interactions.CommandContext, name: str, start: str, end: str
     )
     if mentions:
         mp_text: str = f"""
-Bonjour ! Tu as été notifié(e) sur le serveur **Tharos**. pour un évènement.
+Bonjour ! Tu as été notifié(e) sur le serveur **Tharos** [pour un évènement](<https://discord.com/api/v10/guilds/313976437818523650/{ScheduledEvents.find_guild_event(name,313976437818523650)}>).
 # **{name}** ({datetime.strptime(start, '%d/%m/%y %H:%M').date()})
 Merci de prévenir au plus vite en cas d'indisponibilité !
 > {long_description}
