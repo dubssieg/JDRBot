@@ -17,6 +17,8 @@ from googleapiclient.discovery import build
 ### Chargement des tokens ###
 #############################
 
+from env.constants import CAL_ID, NO_PINGS_ROLE, PATOUNES_LOVE, PATOUNES_TONGUE, SCOPES, EMOJI_DENY, EMOJI_VALIDATION, URL, DICE_FIELDS, COMPETENCE_POS, COMPETENCES
+
 # tokens OBS-WS
 tokens_obsws: dict = load_json("obs_ws")
 host: str = tokens_obsws["host"]
@@ -29,13 +31,6 @@ token_grifouille: str = tokens_connexion['token']
 guild_id: int = tokens_connexion['guild_id']
 guild_roles: str = tokens_connexion['guild_roles']
 
-patounes_love = interactions.Emoji(
-    name="patounes_heart",
-    id=979510606216462416
-)
-
-SCOPES = ["https://www.googleapis.com/auth/calendar"]
-
 
 # déclaration du client
 bot = interactions.Client(
@@ -46,8 +41,8 @@ bot = interactions.Client(
         activities=[
             interactions.PresenceActivity(
                 name='des pôtichats',
-                url="https://www.twitch.tv/TharosTV",
-                emoji=patounes_love,
+                url=URL,
+                emoji=PATOUNES_LOVE,
                 type=interactions.PresenceActivityType.STREAMING
             )
         ]
@@ -68,26 +63,13 @@ quotes: dict = load_json("quotes")  # phrases pour les jets de dés
 listStates = list(dict_stress.keys())
 listEffects = list(dict_stress.values())
 
-# listes utiles à déclarer en amont
-list_letters: list = ["\U0001F1E6", "\U0001F1E7", "\U0001F1E8", "\U0001F1E9", "\U0001F1EA", "\U0001F1EB", "\U0001F1EC", "\U0001F1ED",
-                      "\U0001F1EE", "\U0001F1EF", "\U0001F1F0", "\U0001F1F1", "\U0001F1F2", "\U0001F1F3", "\U0001F1F4", "\U0001F1F5", "\U0001F1F6", "\U0001F1F7"]
-list_days: list = ["Lundi", "Mardi", "Mercredi",
-                   "Jeudi", "Vendredi", "Samedi", "Dimanche"]
-manuels: list = ["one_shot"]
-competence_choices: list = [interactions.Choice(
-    name=val, value=val) for val in ["Constitution", "Intellect", "Survie", "Conscience", "Agilité", "Social"]]
-competence_pos: dict = {"Constitution": "F3", "Intellect": "F4",
-                        "Survie": "F5", "Conscience": "F6", "Agilité": "F7", "Social": "F8"}
-dice_type: list = [interactions.Choice(
-    name=key, value=val) for key, val in {"Nombre de dés": "nb_dice", "Valeur de difficulté": "val_stat"}.items()]
-
-
 stats_choices: list = [interactions.Choice(
     name=val, value=val) for val in dict_pos.keys()]
-char_choices: list = [interactions.Choice(
-    name=val, value=key) for key, val in get_personnas().items()]
-manuel_choices: list = [interactions.Choice(
-    name=name_manual, value=name_manual) for name_manual in manuels]
+
+dice_type: list = [interactions.Choice(
+    name=key, value=val) for key, val in DICE_FIELDS.items()]
+competence_choices: list = [interactions.Choice(
+    name=val, value=val) for val in COMPETENCES]
 
 ################ Pour les anniversaires #################
 
@@ -192,7 +174,7 @@ Merci de **prévenir au plus vite** en cas d'indisponibilité !
 *Ce message est automatique, vous pouvez [mettre à jour votre profil](<{guild_roles}>) sur le serveur pour désactiver.* 
     """
         for member_to_mp in concerned_members:
-            if not 1190085551504760882 in member_to_mp.roles:
+            if not NO_PINGS_ROLE in member_to_mp.roles:
                 try:
                     await member_to_mp.send(mp_text)
                 except:
@@ -206,7 +188,38 @@ Merci de **prévenir au plus vite** en cas d'indisponibilité !
                 except:
                     pass
     # await ctx.send(f"Evènement {name} créé (<{event.get('htmlLink')}>)! {patounes_love}")
-    await ctx.send(f"Evènement [**{name}**]({event_id}) créé! {patounes_love}")
+    creds = Credentials.from_authorized_user_file("env/token_google_calendar.json", SCOPES)
+    service = build("calendar", "v3", credentials=creds)
+
+    event = {
+    'summary': name,
+    'location': 'TharosTV',
+    'description': long_description,
+    'start': {
+        'dateTime': start_date,
+        'timeZone': 'Europe/Paris',
+    },
+    'end': {
+        'dateTime': end_date,
+        'timeZone': 'Europe/Paris',
+    },
+    'recurrence': [
+    ],
+    'attendees': [
+    ],
+    'reminders': {
+        'useDefault': False,
+        'overrides': [
+        {'method': 'email', 'minutes': 24 * 60},
+        {'method': 'popup', 'minutes': 10},
+        ],
+    },
+    }
+
+    event = service.events().insert(calendarId=CAL_ID, body=event).execute()
+    print('Event created: ' + event.get('htmlLink'))
+
+    await ctx.send(f"Evènement [**{name}**]({event_id}) créé! {PATOUNES_LOVE}")
 
 
 ################ Pour demander la fiche #################
@@ -411,7 +424,7 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
         if soustraire is not None:
             future_value = max(future_value-soustraire, 0)
 
-        update_char(ctx.author.mention, dict_links, gc, competence_pos, competence,
+        update_char(ctx.author.mention, dict_links, gc, COMPETENCE_POS, competence,
                     future_value)
 
         values = values_from_player(ctx.author.mention, dict_links, gc)
@@ -438,7 +451,7 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
 async def link(ctx: interactions.CommandContext):
     await ctx.defer()
     try:
-        await ctx.send(f"Voici l'URL de ta fiche personnage liée ! {patounes_love}\n{get_url(ctx.author.mention, dict_links, gc)}", ephemeral=True)
+        await ctx.send(f"Voici l'URL de ta fiche personnage liée ! {PATOUNES_LOVE}\n{get_url(ctx.author.mention, dict_links, gc)}", ephemeral=True)
     except Exception:
         await ctx.send("Désolé, tu ne semble pas avoir de fiche liée. N'hésite pas à en lier une avec **/save_file** !", ephemeral=True)
 
@@ -741,21 +754,11 @@ async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int 
                                           microsecond=0) + timedelta(days=day+decalage)
         liste_jours.append(
             f"{list_letters[step]}  {list_days[future.weekday()]} {future.day}.{future.month} (20:45)")
-
-    emoji_deny = interactions.Emoji(
-        name="patounes_no",
-        id=979517886961967165
-    )
-
-    emoji_validation = interactions.Emoji(
-        name="patounes_yes",
-        id=979516938231361646
-    )
     # on définit une lise d'emoji de la longueur du nombre de réponses possibles
     list_emoji: list = [list_letters[i]
-                        for i in range(step+1)] + [emoji_validation] + [emoji_deny]
+                        for i in range(step+1)] + [EMOJI_VALIDATION] + [EMOJI_DENY]
 
-    information: str = f"*Merci de répondre au plus vite !*\n*Après avoir voté, cliquez sur *{emoji_validation}\n*Aucune date ne convient ? Cliquez sur *{emoji_deny}"
+    information: str = f"*Merci de répondre au plus vite !*\n*Après avoir voté, cliquez sur *{EMOJI_VALIDATION}\n*Aucune date ne convient ? Cliquez sur *{EMOJI_DENY}"
 
     if description:
         embed = interactions.Embed(
@@ -777,7 +780,7 @@ Bonjour ! Tu as été notifié(e) sur le serveur **Tharos** pour un sondage. Mer
 *Ce message est automatique, vous pouvez [mettre à jour votre profil](<{guild_roles}>) sur le serveur pour désactiver.* 
     """
         for member_to_mp in concerned_members:
-            if not 1190085551504760882 in member_to_mp.roles:
+            if not NO_PINGS_ROLE in member_to_mp.roles:
                 try:
                     await member_to_mp.send(mp_text)
                 except:
@@ -829,20 +832,8 @@ async def poll(ctx: interactions.CommandContext, titre: str, mentions: str | Non
                 for member in await ctx.guild.get_all_members():
                     if int(role.id) in member.roles:
                         concerned_members.append(member)
-    patounes_tongue = interactions.Emoji(
-        name="patounes_tongue",
-        id=979488514561421332
-    )
-    emoji_deny = interactions.Emoji(
-        name="patounes_no",
-        id=979517886961967165
-    )
 
-    emoji_validation = interactions.Emoji(
-        name="patounes_yes",
-        id=979516938231361646
-    )
-    list_emoji: list = [emoji_validation, emoji_deny]
+    list_emoji: list = [EMOJI_VALIDATION, EMOJI_DENY]
 
     if mentions is not None:
         embed = interactions.Embed(
@@ -851,13 +842,15 @@ async def poll(ctx: interactions.CommandContext, titre: str, mentions: str | Non
         embed = interactions.Embed(
             title=titre, color=0xC2E9AA)
 
-    poll_embed = {f'{emoji_validation} - La proposition me convient !': "Si elle ne vous convient qu'avec des réserves, sentez-vous libres de les exprimer en réponse.",
-                  f'{emoji_deny} - La proposition ne me convient pas': "Merci de valider que vous avez lu, et, le cas échéant, préciser votre pensée"}
+    poll_embed = {
+        f'{EMOJI_VALIDATION} - La proposition me convient !': "Si elle ne vous convient qu'avec des réserves, sentez-vous libres de les exprimer en réponse.",
+        f'{EMOJI_DENY} - La proposition ne me convient pas': "Merci de valider que vous avez lu, et, le cas échéant, préciser votre pensée"
+    }
 
     for key, value in poll_embed.items():
         embed.add_field(name=f"{key}", value=f"{value}", inline=False)
 
-    information: str = f"Merci de répondre au plus vite ! {patounes_tongue}"
+    information: str = f"Merci de répondre au plus vite ! {PATOUNES_TONGUE}"
 
     message = await ctx.send(information, embeds=embed)
     if mentions:
@@ -869,7 +862,7 @@ Bonjour ! Tu as été notifié(e) sur le serveur **Tharos** pour un sondage. Mer
 *Ce message est automatique, vous pouvez [mettre à jour votre profil](<{guild_roles}>) sur le serveur pour désactiver.* 
     """
         for member_to_mp in concerned_members:
-            if not 1190085551504760882 in member_to_mp.roles:
+            if not NO_PINGS_ROLE in member_to_mp.roles:
                 try:
                     await member_to_mp.send(mp_text)
                 except:
@@ -895,7 +888,7 @@ def main() -> NoReturn:
             bot.start()
         except KeyboardInterrupt:
             print(KeyboardInterrupt("Keyboard interrupt, terminating Grifouille"))
-            exit(0)
+            break
         except Exception as exc:
             print(exc)
             sleep(10)
