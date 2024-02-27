@@ -187,7 +187,6 @@ Merci de **prévenir au plus vite** en cas d'indisponibilité !
                     await ctx.author.send(f"L'utilisateur {member_to_mp.name} a ses notifications désactivées.")
                 except:
                     pass
-    # await ctx.send(f"Evènement {name} créé (<{event.get('htmlLink')}>)! {patounes_love}")
     creds = Credentials.from_authorized_user_file("env/token_google_calendar.json", SCOPES)
     service = build("calendar", "v3", credentials=creds)
 
@@ -892,6 +891,7 @@ def main() -> NoReturn:
         except Exception as exc:
             print(exc)
             sleep(10)
+            raise KeyboardInterrupt
 
 
 if __name__ == "__main__":
