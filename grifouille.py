@@ -694,7 +694,7 @@ async def toss(ctx: interactions.CommandContext) -> None:
         if id_role in ctx.author.roles:
             answer = link
     if answer:
-        await ctx.send(f"Voici le lien vers ton [slot caméra]({link}) !",ephemeral=True)
+        await ctx.send(f"Voici le lien vers ton [slot caméra](<{answer}>) !",ephemeral=True)
     else:
         await ctx.send(f"Tu n'as pas de caméra assignée, contacte un admin !",ephemeral=True)
 
