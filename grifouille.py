@@ -682,7 +682,7 @@ async def toss(ctx: interactions.CommandContext) -> None:
 ################ Pour récupérer le lien de caméra #################
 
 @bot.command(
-    name="share",
+    name="camera",
     description="Renvoie le lien permanent qui vous est assigné pour les caméras.",
     scope=guild_id,
 )
@@ -694,9 +694,9 @@ async def toss(ctx: interactions.CommandContext) -> None:
         if id_role in ctx.author.roles:
             answer = link
     if answer:
-        await ctx.send(f"Voici le lien vers ton [slot caméra](<{answer}>) !",ephemeral=True)
+        await ctx.send(f"{ctx.author.mention} > Voici le lien vers ton [slot caméra](<{answer}>) !",ephemeral=True)
     else:
-        await ctx.send(f"Tu n'as pas de caméra assignée, contacte un admin !",ephemeral=True)
+        await ctx.send(f"{ctx.author.mention} > Tu n'as pas de caméra assignée, contacte un admin !",ephemeral=True)
 
 
 ################ Pour effectuer des sondages #################
