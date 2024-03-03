@@ -17,7 +17,7 @@ from googleapiclient.discovery import build
 ### Chargement des tokens ###
 #############################
 
-from env.constants import CAL_ID, NO_PINGS_ROLE, PATOUNES_LOVE, PATOUNES_TONGUE, SCOPES, EMOJI_DENY, EMOJI_VALIDATION, URL, DICE_FIELDS, COMPETENCE_POS, COMPETENCES
+from env.constants import CAL_ID, NO_PINGS_ROLE, PATOUNES_LOVE, PATOUNES_TONGUE, SCOPES, EMOJI_DENY, EMOJI_VALIDATION, URL, DICE_FIELDS, COMPETENCE_POS, COMPETENCES, PERMA_LINKS
 
 # tokens OBS-WS
 tokens_obsws: dict = load_json("obs_ws")
@@ -678,6 +678,26 @@ async def toss(ctx: interactions.CommandContext) -> None:
     await ctx.defer()
     res = "**PILE**" if (random() > 0.5) else "**FACE**"
     await ctx.send(f"{ctx.author.mention} > La pièce est tombée sur {res} !\n> *Un lancer de pièce, pour remettre son sort au destin...*")
+
+################ Pour récupérer le lien de caméra #################
+
+@bot.command(
+    name="share",
+    description="Renvoie le lien permanent qui vous est assigné pour les caméras.",
+    scope=guild_id,
+)
+async def toss(ctx: interactions.CommandContext) -> None:
+    await ctx.defer()
+
+    answer:str|None = None
+    for id_role,link in PERMA_LINKS.items():
+        if id_role in ctx.author.roles:
+            answer = link
+    if answer:
+        await ctx.send(f"Voici le lien vers ton [slot caméra]({link}) !",ephemeral=True)
+    else:
+        await ctx.send(f"Tu n'as pas de caméra assignée, contacte un admin !",ephemeral=True)
+
 
 ################ Pour effectuer des sondages #################
 
