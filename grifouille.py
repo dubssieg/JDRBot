@@ -12,6 +12,9 @@ from time import sleep
 from datetime import datetime, timedelta
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+import os.path
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 #############################
 ### Chargement des tokens ###
@@ -70,6 +73,25 @@ dice_type: list = [interactions.Choice(
     name=key, value=val) for key, val in DICE_FIELDS.items()]
 competence_choices: list = [interactions.Choice(
     name=val, value=val) for val in COMPETENCES]
+
+def init_creditentials_calendar() -> None:
+    creds = None
+    if os.path.exists("env/token_google_calendar.json"):
+        creds = Credentials.from_authorized_user_file("env/token_google_calendar.json", ["https://www.googleapis.com/auth/calendar"])
+
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                "env/token_google_calendar.json", ["https://www.googleapis.com/auth/calendar"]
+            )
+        creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open("env/token_google_calendar.json", "w") as token:
+            token.write(creds.to_json())
+    print("Calendar token sucessfuly reset")
+
 
 ################ Pour les anniversaires #################
 
@@ -902,6 +924,7 @@ Bonjour ! Tu as été notifié(e) sur le serveur **Tharos** pour un sondage. Mer
 def main() -> NoReturn:
     "Main loop for Grifouille"
     while (True):
+        init_creditentials_calendar()
         try:
             bot.load('interactions.ext.files')
             bot.start()
