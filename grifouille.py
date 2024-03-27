@@ -171,10 +171,10 @@ async def date(ctx: interactions.CommandContext, name: str, start: str, end: str
                         concerned_members.append(member)
 
     # Converting dates to desired format
-    start_date = datetime.strptime(
-        start, '%d/%m/%y %H:%M').strftime("%Y-%m-%dT%H:%M:%S")
-    end_date = datetime.strptime(
-        end, '%d/%m/%y %H:%M').strftime("%Y-%m-%dT%H:%M:%S")
+    start_date = (datetime.strptime(
+        start, '%d/%m/%y %H:%M') - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%S")
+    end_date = (datetime.strptime(
+        end, '%d/%m/%y %H:%M') - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%S")
 
     await ScheduledEvents.create_guild_event(
         guild_id=str(ctx.guild_id),
@@ -209,6 +209,12 @@ Merci de **prévenir au plus vite** en cas d'indisponibilité !
     creds = Credentials.from_authorized_user_file("env/token_google_calendar.json", SCOPES)
     service = build("calendar", "v3", credentials=creds)
 
+    # Converting dates to desired format
+    start_date = datetime.strptime(
+        start, '%d/%m/%y %H:%M').strftime("%Y-%m-%dT%H:%M:%S")
+    end_date = datetime.strptime(
+        end, '%d/%m/%y %H:%M').strftime("%Y-%m-%dT%H:%M:%S")
+    
     event = {
     'summary': name,
     'location': 'TharosTV',
