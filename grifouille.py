@@ -157,7 +157,7 @@ async def birthday(ctx: interactions.CommandContext, jour: int, mois: int):
         ),
     ],
 )
-async def date(ctx: interactions.CommandContext, name: str, start: str, end: str, long_description: str = '', mentions: str = ''):
+async def date(ctx: interactions.CommandContext, name: str, start: str, end: str, long_description: str = 'Un sublime évènement', mentions: str = 'Avec de soyeuses personnes'):
     await ctx.defer()
     if mentions:
         concerned_members: list = list()
@@ -758,7 +758,7 @@ async def toss(ctx: interactions.CommandContext) -> None:
         ),
     ],
 )
-async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int = 0, titre: str = "Date pour la prochaine séance !", description: str | None = None, mentions: str | None = None) -> None:
+async def calendar(ctx: interactions.CommandContext, duree: int = 7, delai: int = 0, titre: str = "Date pour la prochaine séance !", description: str = 'Un sublime calendrier', mentions: str = 'Avec de sublimes personnes') -> None:
     """Crée un calendrier sous forme d'embed, pour faire un sondage sur les jours suivants
 
     Args:
