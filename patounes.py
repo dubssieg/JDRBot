@@ -63,7 +63,7 @@ async def birthday():
     for people, date_birthday in load_json('birthdays').items():
         day, month = date_birthday.split('.')
         print(date_birthday)
-        if date.today().day == day and date.today().month == month and datetime.now().hour == 23:
+        if date.today().day == int(day) and date.today().month == int(month) and datetime.now().hour == 23:
             print("BIRTHDAY!")
             for guild in bot.guilds:
                 if str(guild.id) == "313976437818523650":
