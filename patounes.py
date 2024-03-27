@@ -49,12 +49,12 @@ async def on_ready() -> None:
     await bot.change_presence(activity=Streaming(
         name="des pôtichats", url="https://www.twitch.tv/TharosTV"
     ))
+    birthday.start()
     for tag in name_tags:
         await obs_invoke(
             toggle_filter, host, port, password, f"Cam_{tag}", [
                 'AFK_SAT', 'AFK_BLUR'], True
         )
-    birthday.start()
     output_msg("PATOUNES EST PRET !")
 
 
@@ -62,11 +62,13 @@ async def on_ready() -> None:
 async def birthday():
     for people, date_birthday in load_json('birthdays').items():
         day, month = date_birthday.split('.')
-        if date.today().day == day and date.today().month == month and datetime.now().hour == 9:
+        print(date_birthday)
+        if date.today().day == day and date.today().month == month and datetime.now().hour == 23:
+            print("BIRTHDAY!")
             for guild in bot.guilds:
                 if str(guild.id) == "313976437818523650":
                     for channel in guild.channels:
-                        if str(channel.id) == "313977728242155520":
+                        if str(channel.id) == "970284717624668200":
                             await channel.send(f"Hey, c'est l'anniversaire de {people} ! <:patounes_heart:979510606216462416>")
 
 
