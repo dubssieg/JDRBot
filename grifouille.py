@@ -80,13 +80,10 @@ def init_creditentials_calendar() -> None:
         creds = Credentials.from_authorized_user_file("env/token_google_calendar.json", ["https://www.googleapis.com/auth/calendar"])
 
     if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                "env/credentials_calendar.json", ["https://www.googleapis.com/auth/calendar"]
-            )
-            creds = flow.run_local_server(port=0)
+        flow = InstalledAppFlow.from_client_secrets_file(
+            "env/credentials_calendar.json", ["https://www.googleapis.com/auth/calendar"]
+        )
+        creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open("env/token_google_calendar.json", "w") as token:
             token.write(creds.to_json())
