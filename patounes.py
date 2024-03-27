@@ -63,12 +63,12 @@ async def birthday():
     for people, date_birthday in load_json('birthdays').items():
         day, month = date_birthday.split('.')
         print(date_birthday)
-        if date.today().day == int(day) and date.today().month == int(month) and datetime.now().hour == 23:
+        if date.today().day == int(day) and date.today().month == int(month) and datetime.now().hour == 9:
             print("BIRTHDAY!")
             for guild in bot.guilds:
                 if str(guild.id) == "313976437818523650":
                     for channel in guild.channels:
-                        if str(channel.id) == "970284717624668200":
+                        if str(channel.id) == "313977728242155520":
                             await channel.send(f"Hey, c'est l'anniversaire de {people} ! <:patounes_heart:979510606216462416>")
 
 
