@@ -84,7 +84,7 @@ def init_creditentials_calendar() -> None:
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                "env/token_google_calendar.json", ["https://www.googleapis.com/auth/calendar"]
+                "env/credentials_calendar.json", ["https://www.googleapis.com/auth/calendar"]
             )
         creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
