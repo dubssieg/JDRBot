@@ -473,7 +473,7 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
     scope=guild_id,
 )
 async def link(ctx: interactions.CommandContext):
-    await ctx.send(f"Voici le lien du [salon pour la musique]({W2G_LINK}) ! {PATOUNES_LOVE}", ephemeral=True)
+    await ctx.send(f"Voici le lien du [**salon pour la musique**](<{W2G_LINK}>) ! {PATOUNES_LOVE}", ephemeral=True)
 
 
 @bot.command(
@@ -484,7 +484,7 @@ async def link(ctx: interactions.CommandContext):
 async def link(ctx: interactions.CommandContext):
     await ctx.defer()
     try:
-        await ctx.send(f"Voici le lien de [ta fiche personnage liée]({get_url(ctx.author.mention, dict_links, gc)}) ! {PATOUNES_LOVE}", ephemeral=True)
+        await ctx.send(f"Voici le lien de [**ta fiche personnage liée**](<{get_url(ctx.author.mention, dict_links, gc)}>) ! {PATOUNES_LOVE}", ephemeral=True)
     except Exception:
         await ctx.send("Désolé, tu ne semble pas avoir de fiche liée. N'hésite pas à en lier une avec **/save_file** !", ephemeral=True)
 
@@ -721,16 +721,14 @@ async def toss(ctx: interactions.CommandContext) -> None:
     scope=guild_id,
 )
 async def toss(ctx: interactions.CommandContext) -> None:
-    await ctx.defer()
-
     answer:str|None = None
     for id_role,link in PERMA_LINKS.items():
         if id_role in ctx.author.roles:
             answer = link
     if answer:
-        await ctx.send(f"{ctx.author.mention} > Voici le lien vers ton [slot caméra](<{answer}>) !",ephemeral=True)
+        await ctx.send(f"{ctx.author.mention} > Voici le lien vers ton [**slot caméra**](<{answer}>) !", ephemeral=True)
     else:
-        await ctx.send(f"{ctx.author.mention} > Tu n'as pas de caméra assignée, contacte un admin !",ephemeral=True)
+        await ctx.send(f"{ctx.author.mention} > Tu n'as pas de caméra assignée, contacte un admin !", ephemeral=True)
 
 
 ################ Pour effectuer des sondages #################
