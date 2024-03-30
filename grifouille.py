@@ -20,7 +20,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 ### Chargement des tokens ###
 #############################
 
-from env.constants import CAL_ID, NO_PINGS_ROLE, PATOUNES_LOVE, PATOUNES_TONGUE, SCOPES, EMOJI_DENY, EMOJI_VALIDATION, URL, DICE_FIELDS, COMPETENCE_POS, COMPETENCES, PERMA_LINKS
+from env.constants import CAL_ID, NO_PINGS_ROLE, PATOUNES_LOVE, PATOUNES_TONGUE, SCOPES, EMOJI_DENY, EMOJI_VALIDATION, URL, DICE_FIELDS, COMPETENCE_POS, COMPETENCES, PERMA_LINKS, W2G_LINK
 
 # tokens OBS-WS
 tokens_obsws: dict = load_json("obs_ws")
@@ -468,6 +468,15 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
 
 
 @bot.command(
+    name="music",
+    description="Renvoie le lien du salon Watc2Gether pour les parties de jeu de rôle.",
+    scope=guild_id,
+)
+async def link(ctx: interactions.CommandContext):
+    await ctx.send(f"Voici le lien du [salon pour la musique]({W2G_LINK}) ! {PATOUNES_LOVE}", ephemeral=True)
+
+
+@bot.command(
     name="link",
     description="Renvoie le lien vers la fiche personnage liée, ou un message si aucune fiche n'est liée.",
     scope=guild_id,
@@ -475,7 +484,7 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
 async def link(ctx: interactions.CommandContext):
     await ctx.defer()
     try:
-        await ctx.send(f"Voici l'URL de ta fiche personnage liée ! {PATOUNES_LOVE}\n{get_url(ctx.author.mention, dict_links, gc)}", ephemeral=True)
+        await ctx.send(f"Voici le lien de [ta fiche personnage liée]({get_url(ctx.author.mention, dict_links, gc)}) ! {PATOUNES_LOVE}", ephemeral=True)
     except Exception:
         await ctx.send("Désolé, tu ne semble pas avoir de fiche liée. N'hésite pas à en lier une avec **/save_file** !", ephemeral=True)
 
