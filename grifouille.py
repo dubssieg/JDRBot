@@ -482,7 +482,6 @@ async def link(ctx: interactions.CommandContext):
     scope=guild_id,
 )
 async def link(ctx: interactions.CommandContext):
-    await ctx.defer()
     try:
         await ctx.send(f"Voici le lien de [**ta fiche personnage liée**](<{get_url(ctx.author.mention, dict_links, gc)}>) ! {PATOUNES_LOVE}", ephemeral=True)
     except Exception:
