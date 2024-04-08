@@ -6,7 +6,6 @@ from discord.ext import commands, tasks
 from discord import Streaming, FFmpegPCMAudio, Intents, ClientException
 from pygsheets import authorize
 from library import output_msg, load_json, YTDLSource
-from obs_interactions import toggle_filter, obs_invoke
 from datetime import date, datetime
 
 ##################### TOKENS DE CONNEXION ##########################
@@ -25,15 +24,6 @@ tokens_connexion: dict = load_json("connect_discord")
 token: str = tokens_connexion['cle_de_connexion']
 admin: str = tokens_connexion['administrator']
 
-name_tags: dict = {
-    'Admin': {'chan': None, 'mute': False},
-    'Joueur1':  {'chan': None, 'mute': False},
-    'Joueur2':  {'chan': None, 'mute': False},
-    'Joueur3':  {'chan': None, 'mute': False},
-    'Joueur4':  {'chan': None, 'mute': False},
-    'Joueur5':  {'chan': None, 'mute': False}
-}
-
 ############################## DEF BOT ##################################
 
 intents = Intents.default()
@@ -50,11 +40,6 @@ async def on_ready() -> None:
         name="des pôtichats", url="https://www.twitch.tv/TharosTV"
     ))
     birthday.start()
-    for tag in name_tags:
-        await obs_invoke(
-            toggle_filter, host, port, password, f"Cam_{tag}", [
-                'AFK_SAT', 'AFK_BLUR'], True
-        )
     output_msg("PATOUNES EST PRET !")
 
 
@@ -171,30 +156,6 @@ async def leave(ctx):
 async def leave_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
         await ctx.send("Désolé, tu ne disposes pas des privilèges pour exécuter cette commande <:patounes_sad:979501604552212490>")
-
-
-@bot.event
-async def on_voice_state_update(member, _, after):
-    """Regarde ce que l'utilisateur fait du vocal ; si il est mute,
-    ou dans un chan différent du MJ, met un effet sur sa caméra !
-
-    Args:
-        member : le membre qui vient d'effectuer une action sur le vocal
-        before : état du vocal avant changement
-        after : état du vocal après changement
-    """
-    roles = [str(role.name) for role in member.roles]
-    for tag, values in name_tags.items():
-        if tag in roles:
-            try:
-                values['chan'] = after.channel.id
-            except AttributeError:
-                values['chan'] = None
-            values['mute'] = after.self_mute
-    for tag_name, infos in name_tags.items():
-        await obs_invoke(toggle_filter, host, port, password, f"Cam_{tag_name}",
-                         ['AFK_SAT', 'AFK_BLUR'],
-                         infos['chan'] != name_tags['Admin']['chan'] or infos['mute'])
 
 
 def main() -> NoReturn:
