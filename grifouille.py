@@ -113,7 +113,6 @@ def init_creditentials_calendar() -> None:
     ],
 )
 async def birthday(ctx: interactions.CommandContext, jour: int, mois: int):
-    await ctx.defer()
     save_json("birthdays", {**load_json('birthdays'),
               str(ctx.author.mention): f"{jour}.{mois}"})
     await ctx.send(f"Votre anniversaire a été fixé au {jour}.{mois} !", ephemeral=True)

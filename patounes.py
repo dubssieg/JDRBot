@@ -4,20 +4,10 @@ from time import sleep
 from typing import NoReturn
 from discord.ext import commands, tasks
 from discord import Streaming, FFmpegPCMAudio, Intents, ClientException
-from pygsheets import authorize
 from library import output_msg, load_json, YTDLSource
 from datetime import date, datetime
 
 ##################### TOKENS DE CONNEXION ##########################
-
-# tokens OBS-WS
-tokens_obsws: dict = load_json("obs_ws")
-host: str = tokens_obsws["host"]
-port: int = tokens_obsws["port"]
-password: str = tokens_obsws["password"]
-
-# tokens GSheets
-gc = authorize(service_file='env/connect_sheets.json')
 
 # tokens discord
 tokens_connexion: dict = load_json("connect_discord")
