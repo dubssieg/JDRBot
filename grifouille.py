@@ -297,26 +297,6 @@ async def modal_response(ctx, response: str):
     await ctx.send(f"La fiche nommée {response} vous a été liée !", ephemeral=True)
 
 
-@interactions.Task(interactions.IntervalTrigger(hours=1))
-async def event_notification():
-    events_dates: dict = load_json('events')
-    if today := (datetime.now() + timedelta(days=1)).strftime("%d-%m-%y") in events_dates:
-        for event in events_dates[today]:
-            for user_id in event['people']:
-                people: interactions.User = interactions.User(user_id)
-                if not NO_PINGS_ROLE in people.roles:
-                    try:
-                        await people.send(f"Tu as un évènement **{event['title']}** sur le serveur Tharos prévu à {event['time']} demain !")
-                    except:
-                        print(
-                            f"Erreur lors de l'envoi de la notification à l'utilisateur {people.name} !")
-                else:
-                    print(
-                        f"L'utilisateur {people.name} a ses notifications désactivées.")
-    del events_dates[today]
-    save_json('events', events_dates)
-
-
 ################ Pour lancer un dé #################
 
 
