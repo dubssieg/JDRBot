@@ -1,7 +1,6 @@
 "GRIFOUILLE !!!"
 from typing import NoReturn
 import interactions
-from interactions.ext.files import command_send
 from random import randrange, random, choice
 from library import load_json, save_json, get_personnas, display_stats, count_crit_values
 from pygsheets import authorize
@@ -74,14 +73,17 @@ dice_type: list = [interactions.Choice(
 competence_choices: list = [interactions.Choice(
     name=val, value=val) for val in COMPETENCES]
 
+
 def init_creditentials_calendar() -> None:
     creds = None
     if os.path.exists("env/token_google_calendar.json"):
-        creds = Credentials.from_authorized_user_file("env/token_google_calendar.json", ["https://www.googleapis.com/auth/calendar"])
+        creds = Credentials.from_authorized_user_file(
+            "env/token_google_calendar.json", ["https://www.googleapis.com/auth/calendar"])
 
     if not creds or not creds.valid:
         flow = InstalledAppFlow.from_client_secrets_file(
-            "env/credentials_calendar.json", ["https://www.googleapis.com/auth/calendar"]
+            "env/credentials_calendar.json", [
+                "https://www.googleapis.com/auth/calendar"]
         )
         creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
@@ -156,7 +158,14 @@ async def birthday(ctx: interactions.CommandContext, jour: int, mois: int):
         ),
     ],
 )
-async def date(ctx: interactions.CommandContext, name: str, start: str, end: str, long_description: str = 'Un sublime évènement', mentions: str = 'Avec de soyeuses personnes'):
+async def date(
+    ctx: interactions.CommandContext,
+    name: str,
+    start: str,
+    end: str,
+    long_description: str = 'Un sublime évènement',
+    mentions: str = 'Avec de soyeuses personnes'
+):
     await ctx.defer()
     if mentions:
         concerned_members: list = list()
@@ -205,7 +214,8 @@ Merci de **prévenir au plus vite** en cas d'indisponibilité !
                     await ctx.author.send(f"L'utilisateur {member_to_mp.name} a ses notifications désactivées.")
                 except:
                     pass
-    creds = Credentials.from_authorized_user_file("env/token_google_calendar.json", SCOPES)
+    creds = Credentials.from_authorized_user_file(
+        "env/token_google_calendar.json", SCOPES)
     service = build("calendar", "v3", credentials=creds)
 
     # Converting dates to desired format
@@ -213,31 +223,39 @@ Merci de **prévenir au plus vite** en cas d'indisponibilité !
         start, '%d/%m/%y %H:%M').strftime("%Y-%m-%dT%H:%M:%S")
     end_date = datetime.strptime(
         end, '%d/%m/%y %H:%M').strftime("%Y-%m-%dT%H:%M:%S")
-    
+
     event = {
-    'summary': name,
-    'location': 'TharosTV',
-    'description': long_description,
-    'start': {
-        'dateTime': start_date,
-        'timeZone': 'Europe/Paris',
-    },
-    'end': {
-        'dateTime': end_date,
-        'timeZone': 'Europe/Paris',
-    },
-    'recurrence': [
-    ],
-    'attendees': [
-    ],
-    'reminders': {
-        'useDefault': False,
-        'overrides': [
-        {'method': 'email', 'minutes': 24 * 60},
-        {'method': 'popup', 'minutes': 10},
+        'summary': name,
+        'location': 'TharosTV',
+        'description': long_description,
+        'start': {
+            'dateTime': start_date,
+            'timeZone': 'Europe/Paris',
+        },
+        'end': {
+            'dateTime': end_date,
+            'timeZone': 'Europe/Paris',
+        },
+        'recurrence': [
         ],
-    },
+        'attendees': [
+        ],
+        'reminders': {
+            'useDefault': False,
+            'overrides': [
+                {'method': 'email', 'minutes': 24 * 60},
+                {'method': 'popup', 'minutes': 10},
+            ],
+        },
     }
+    events_dates: dict = load_json('events')
+    events_dates[datetime.strptime(start, '%d/%m/%y %H:%M').strftime("%d-%m-%y")] = events_dates.get(datetime.strptime(start, '%d/%m/%y %H:%M').strftime("%d-%m-%y"), list()) + [
+        {
+            "title": name,
+            "time": datetime.strptime(start, '%d/%m/%y %H:%M').strftime("%H:%M"),
+            "people": concerned_members,
+        }
+    ]
 
     event = service.events().insert(calendarId=CAL_ID, body=event).execute()
     print('Event created: ' + event.get('htmlLink'))
@@ -271,12 +289,32 @@ async def save_file(ctx):
     await ctx.popup(modal2)
 
 
-@ bot.modal("mod_app_form")
+@bot.modal("mod_app_form")
 async def modal_response(ctx, response: str):
     await ctx.defer()
     dict_links[f"{ctx.author.mention}"] = f"{response}"
     save_json('links', dict_links)
     await ctx.send(f"La fiche nommée {response} vous a été liée !", ephemeral=True)
+
+
+@interactions.Task(interactions.IntervalTrigger(hours=1))
+async def event_notification():
+    events_dates: dict = load_json('events')
+    if today := (datetime.now() + timedelta(days=1)).strftime("%d-%m-%y") in events_dates:
+        for event in events_dates[today]:
+            for user_id in event['people']:
+                people: interactions.User = interactions.User(user_id)
+                if not NO_PINGS_ROLE in people.roles:
+                    try:
+                        await people.send(f"Tu as un évènement **{event['title']}** sur le serveur Tharos prévu à {event['time']} demain !")
+                    except:
+                        print(
+                            f"Erreur lors de l'envoi de la notification à l'utilisateur {people.name} !")
+                else:
+                    print(
+                        f"L'utilisateur {people.name} a ses notifications désactivées.")
+    del events_dates[today]
+    save_json('events', events_dates)
 
 
 ################ Pour lancer un dé #################
@@ -333,8 +371,14 @@ def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, 
         elif all([val == 1 for val in filtered_rolls]):
             # On donne un point permanent au joueur
             if stat_testee != "":
-                increase_on_crit(str(message.author.mention),
-                                 dict_links, gc, stat_testee, dict_pos,  1)
+                increase_on_crit(
+                    str(message.author.mention),
+                    dict_links,
+                    gc,
+                    stat_testee,
+                    dict_pos,
+                    1
+                )
             if "Sang-froid" not in stat_testee:
                 anim = "E_CRIT.avi"
                 str_resultat = f"""
@@ -505,7 +549,7 @@ async def display(ctx: interactions.CommandContext):
         path: str = display_stats(
             labels, valeurs_actuelle, valeurs_max, valeurs_critique)
         crit, zero = count_crit_values(valeurs_actuelle, valeurs_critique)
-        await command_send(ctx, f"Voici les stats actuelles de {ctx.author.mention}.\nTu as {crit} valeurs en dessous du seuil critique, dont {zero} valeurs à zéro.", files=interactions.File(filename=path))
+        await interactions.ext.files.command_send(ctx, f"Voici les stats actuelles de {ctx.author.mention}.\nTu as {crit} valeurs en dessous du seuil critique, dont {zero} valeurs à zéro.", files=interactions.File(filename=path))
 
     except ConnectionError:
         message = ConnectionError(
@@ -713,14 +757,15 @@ async def toss(ctx: interactions.CommandContext) -> None:
 
 ################ Pour récupérer le lien de caméra #################
 
+
 @bot.command(
     name="camera",
     description="Renvoie le lien permanent qui vous est assigné pour les caméras.",
     scope=guild_id,
 )
 async def toss(ctx: interactions.CommandContext) -> None:
-    answer:str|None = None
-    for id_role,link in PERMA_LINKS.items():
+    answer: str | None = None
+    for id_role, link in PERMA_LINKS.items():
         if id_role in ctx.author.roles:
             answer = link
     if answer:
@@ -931,8 +976,8 @@ Bonjour ! Tu as été notifié(e) sur le serveur **Tharos** pour un sondage. Mer
 
 def main() -> NoReturn:
     "Main loop for Grifouille"
+    init_creditentials_calendar()
     while (True):
-        init_creditentials_calendar()
         try:
             bot.load('interactions.ext.files')
             bot.start()
@@ -942,7 +987,6 @@ def main() -> NoReturn:
         except Exception as exc:
             print(exc)
             sleep(10)
-            raise KeyboardInterrupt
 
 
 if __name__ == "__main__":
