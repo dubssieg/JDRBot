@@ -4,7 +4,7 @@ from time import sleep
 from typing import NoReturn
 from discord.ext import commands, tasks
 from discord import Streaming, FFmpegPCMAudio, Intents, ClientException
-from library import output_msg, load_json, YTDLSource
+from library import output_msg, load_json, YTDLSource, save_json
 from datetime import date, datetime
 from obs_interactions import obs_invoke, toggle_filter
 
@@ -28,6 +28,7 @@ tokens_obsws: dict = load_json("obs_ws")
 host: str = tokens_obsws["host"]
 port: int = tokens_obsws["port"]
 password: str = tokens_obsws["password"]
+
 
 @bot.event
 async def on_ready() -> None:
@@ -68,19 +69,20 @@ async def play(ctx, url: str) -> None:
     finally:
         await ctx.delete()
 
+
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def filters(ctx,status:str) -> None:
+async def filters(ctx, status: str) -> None:
     """
     Réinitialise tous les filtres à leur état défini par le booléen.
     """
     name_tags: dict = {
-    'MJ': {'chan': None, 'mute': True},
-    'Joueur1':  {'chan': None, 'mute': True},
-    'Joueur2':  {'chan': None, 'mute': True},
-    'Joueur3':  {'chan': None, 'mute': True},
-    'Joueur4':  {'chan': None, 'mute': True},
-    'Joueur5':  {'chan': None, 'mute': True}
+        'MJ': {'chan': None, 'mute': True},
+        'Joueur1':  {'chan': None, 'mute': True},
+        'Joueur2':  {'chan': None, 'mute': True},
+        'Joueur3':  {'chan': None, 'mute': True},
+        'Joueur4':  {'chan': None, 'mute': True},
+        'Joueur5':  {'chan': None, 'mute': True}
     }
     for tag_name in name_tags:
         await obs_invoke(
