@@ -52,7 +52,8 @@ async def on_ready() -> None:
 async def check_dates():
     date_user_dict: dict = load_json('events')
     current_date = datetime.now().strftime('%Y-%m-%d')
-    if current_date in date_user_dict:
+    if current_date in date_user_dict.keys():
+        print(f"Event found for {current_date}")
         for event_desc in date_user_dict[current_date]:
             for user_id in event_desc['people']:
                 for guild in bot.guilds:
