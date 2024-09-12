@@ -50,8 +50,9 @@ async def on_ready() -> None:
 
 @tasks.loop(hours=2)
 async def check_dates():
+    "Vérifie les dates et envoie des messages aux utilisateurs concernés"
     date_user_dict: dict = load_json('events')
-    current_date = datetime.now().strftime('%Y-%m-%d')
+    current_date = datetime.now().strftime('%d-%m-%y')
     if current_date in date_user_dict.keys():
         print(f"Event found for {current_date}")
         for event_desc in date_user_dict[current_date]:
