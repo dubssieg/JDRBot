@@ -57,12 +57,8 @@ async def check_dates():
         print(f"Event found for {current_date}")
         for event_desc in date_user_dict[current_date]:
             for user_id in event_desc['people']:
-                for guild in bot.guilds:
-                    member = guild.get_member(user_id)
-                    if all(role.id != NO_PINGS_ROLE for role in member.roles):
-                        # On envoie un message privé à l'utilisateur s'il n'a pas le rôle "No pings"
-                        user = await bot.fetch_user(user_id)
-                        await user.send(f"Bonjour, tu as un évènement ({event_desc['title']}) prévu [aujourd'hui](<{event_desc['url']}>).\nMerci de **prévenir au plus vite** en cas d'indisponibilité !\n\n*Ce message est automatique, vous pouvez [mettre à jour votre profil](<{guild_roles}>) sur le serveur pour désactiver.* ")
+                user = await bot.fetch_user(user_id)
+                await user.send(f"Bonjour, tu as un évènement ({event_desc['title']}) prévu [aujourd'hui](<{event_desc['url']}>).\nMerci de **prévenir au plus vite** en cas d'indisponibilité !\n\n*Ce message est automatique, vous pouvez [mettre à jour votre profil](<{guild_roles}>) sur le serveur pour désactiver.* ")
         del date_user_dict[current_date]
     save_json('events', date_user_dict)
 
