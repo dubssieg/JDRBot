@@ -20,6 +20,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 #############################
 
 from env.constants import CAL_ID, NO_PINGS_ROLE, PATOUNES_LOVE, PATOUNES_TONGUE, SCOPES, EMOJI_DENY, EMOJI_VALIDATION, URL, DICE_FIELDS, COMPETENCE_POS, COMPETENCES, PERMA_LINKS, W2G_LINK
+import pytz
 
 # tokens OBS-WS
 tokens_obsws: dict = load_json("obs_ws")
@@ -179,10 +180,22 @@ async def date(
                         concerned_members.append(member)
 
     # Converting dates to desired format
-    start_date = (datetime.strptime(
-        start, '%d/%m/%y %H:%M') - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%S")
-    end_date = (datetime.strptime(
-        end, '%d/%m/%y %H:%M') - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%S")
+    # Define the Paris timezone
+    paris_tz = pytz.timezone('Europe/Paris')
+
+    # Convert start and end times to datetime objects
+    start_dt = datetime.strptime(start, '%d/%m/%y %H:%M')
+    end_dt = datetime.strptime(end, '%d/%m/%y %H:%M')
+
+    # Localize the datetime objects to Paris timezone
+    start_dt = paris_tz.localize(start_dt)
+    end_dt = paris_tz.localize(end_dt)
+
+    # Format the datetime objects to the desired string format
+    start_date = start_dt.strftime("%Y-%m-%dT%H:%M:%S")
+    end_date = end_dt.strftime("%Y-%m-%dT%H:%M:%S")
+    # start_date = (datetime.strptime(start, '%d/%m/%y %H:%M') - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%S")
+    # end_date = (datetime.strptime(end, '%d/%m/%y %H:%M') - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%S")
 
     await ScheduledEvents.create_guild_event(
         guild_id=str(ctx.guild_id),
