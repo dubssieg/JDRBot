@@ -211,18 +211,20 @@ async def date(
         event_end_time=end_date_utc,
         event_metadata={'location': 'TharosTV'},
     )
+    event_id: str = f"https://discord.com/events/313976437818523650/{await ScheduledEvents.find_guild_event(name, 313976437818523650)}"
     if mentions:
-        event_id: str = f"https://discord.com/events/313976437818523650/{await ScheduledEvents.find_guild_event(name, 313976437818523650)}"
         mp_text: str = f"""
 Bonjour ! Tu as été notifié(e) sur le serveur **Tharos** [pour un évènement](<{event_id}>).
 Merci de **prévenir au plus vite** en cas d'indisponibilité !
 
 *Ce message est automatique, vous pouvez [mettre à jour votre profil](<{guild_roles}>) sur le serveur pour désactiver.* 
     """
+        users_to_remind: list = list()
         for member_to_mp in concerned_members:
             if not NO_PINGS_ROLE in member_to_mp.roles:
                 try:
                     await member_to_mp.send(mp_text)
+                    users_to_remind.append(member_to_mp.id)
                 except:
                     try:
                         await ctx.author.send(f"Erreur lors de l'envoi de la notification à l'utilisateur {member_to_mp.name} !")
@@ -266,9 +268,11 @@ Merci de **prévenir au plus vite** en cas d'indisponibilité !
         {
             "title": name,
             "time": datetime.strptime(start, '%d/%m/%y %H:%M').strftime("%H:%M"),
-            "people": concerned_members,
+            "people": users_to_remind,
+            "url": event_id
         }
     ]
+    save_json('events', events_dates)
 
     event = service.events().insert(calendarId=CAL_ID, body=event).execute()
     print('Event created: ' + event.get('htmlLink'))

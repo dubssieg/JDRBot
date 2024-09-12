@@ -7,6 +7,7 @@ from discord import Streaming, FFmpegPCMAudio, Intents, ClientException
 from library import output_msg, load_json, YTDLSource, save_json
 from datetime import date, datetime
 from obs_interactions import obs_invoke, toggle_filter
+from env.constants import NO_PINGS_ROLE
 
 ##################### TOKENS DE CONNEXION ##########################
 
@@ -15,10 +16,15 @@ tokens_connexion: dict = load_json("connect_discord")
 token: str = tokens_connexion['cle_de_connexion']
 admin: str = tokens_connexion['administrator']
 
+tokens_discord: dict = load_json("token")
+guild_id: int = tokens_connexion['guild_id']
+guild_roles: str = tokens_discord['guild_roles']
+
 ############################## DEF BOT ##################################
 
 intents = Intents.default()
 intents.message_content = True
+intents.members = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 ############################## DEF BOT ##################################
@@ -37,7 +43,25 @@ async def on_ready() -> None:
         name="des pôtichats", url="https://www.twitch.tv/TharosTV"
     ))
     birthday.start()
+    check_dates.start()
     output_msg("PATOUNES EST PRET !")
+
+
+@tasks.loop(hours=2)
+async def check_dates():
+    date_user_dict: dict = load_json('events')
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    if current_date in date_user_dict:
+        for event_desc in date_user_dict[current_date]:
+            for user_id in event_desc['people']:
+                for guild in bot.guilds:
+                    member = guild.get_member(user_id)
+                    if all(role.id != NO_PINGS_ROLE for role in member.roles):
+                        # On envoie un message privé à l'utilisateur s'il n'a pas le rôle "No pings"
+                        user = await bot.fetch_user(user_id)
+                        await user.send(f"Bonjour, tu as un évènement ({event_desc['title']}) prévu [aujourd'hui](<{event_desc['url']}>).\nMerci de **prévenir au plus vite** en cas d'indisponibilité !\n\n*Ce message est automatique, vous pouvez [mettre à jour votre profil](<{guild_roles}>) sur le serveur pour désactiver.* ")
+    del date_user_dict[current_date]
+    save_json('events', date_user_dict)
 
 
 @tasks.loop(minutes=60)
