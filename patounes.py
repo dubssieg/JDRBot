@@ -17,7 +17,7 @@ token: str = tokens_connexion['cle_de_connexion']
 admin: str = tokens_connexion['administrator']
 
 tokens_discord: dict = load_json("token")
-guild_id: int = tokens_connexion['guild_id']
+guild_id: int = tokens_discord['guild_id']
 guild_roles: str = tokens_discord['guild_roles']
 
 ############################## DEF BOT ##################################
