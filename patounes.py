@@ -42,6 +42,7 @@ async def on_ready() -> None:
     await bot.change_presence(activity=Streaming(
         name="des pôtichats", url="https://www.twitch.tv/TharosTV"
     ))
+    print(load_json('events'))
     birthday.start()
     check_dates.start()
     output_msg("PATOUNES EST PRET !")
@@ -60,7 +61,7 @@ async def check_dates():
                         # On envoie un message privé à l'utilisateur s'il n'a pas le rôle "No pings"
                         user = await bot.fetch_user(user_id)
                         await user.send(f"Bonjour, tu as un évènement ({event_desc['title']}) prévu [aujourd'hui](<{event_desc['url']}>).\nMerci de **prévenir au plus vite** en cas d'indisponibilité !\n\n*Ce message est automatique, vous pouvez [mettre à jour votre profil](<{guild_roles}>) sur le serveur pour désactiver.* ")
-    del date_user_dict[current_date]
+        del date_user_dict[current_date]
     save_json('events', date_user_dict)
 
 
