@@ -194,15 +194,21 @@ async def date(
     # Format the datetime objects to the desired string format
     start_date = start_dt.strftime("%Y-%m-%dT%H:%M:%S")
     end_date = end_dt.strftime("%Y-%m-%dT%H:%M:%S")
-    # start_date = (datetime.strptime(start, '%d/%m/%y %H:%M') - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%S")
-    # end_date = (datetime.strptime(end, '%d/%m/%y %H:%M') - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%S")
+
+    # Convert start and end times to UTC timezone
+    start_dt_utc = start_dt.astimezone(pytz.utc)
+    end_dt_utc = end_dt.astimezone(pytz.utc)
+
+    # Format the datetime objects to the desired string format in UTC
+    start_date_utc = start_dt_utc.strftime("%Y-%m-%dT%H:%M:%S")
+    end_date_utc = end_dt_utc.strftime("%Y-%m-%dT%H:%M:%S")
 
     await ScheduledEvents.create_guild_event(
         guild_id=str(ctx.guild_id),
         event_name=name,
         event_description=long_description,
-        event_start_time=start_date,
-        event_end_time=end_date,
+        event_start_time=start_date_utc,
+        event_end_time=end_date_utc,
         event_metadata={'location': 'TharosTV'},
     )
     if mentions:
@@ -230,12 +236,6 @@ Merci de **prévenir au plus vite** en cas d'indisponibilité !
     creds = Credentials.from_authorized_user_file(
         "env/token_google_calendar.json", SCOPES)
     service = build("calendar", "v3", credentials=creds)
-
-    # Converting dates to desired format
-    start_date = datetime.strptime(
-        start, '%d/%m/%y %H:%M').strftime("%Y-%m-%dT%H:%M:%S")
-    end_date = datetime.strptime(
-        end, '%d/%m/%y %H:%M').strftime("%Y-%m-%dT%H:%M:%S")
 
     event = {
         'summary': name,
