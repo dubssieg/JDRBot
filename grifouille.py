@@ -224,7 +224,7 @@ Merci de **prévenir au plus vite** en cas d'indisponibilité !
             if not NO_PINGS_ROLE in member_to_mp.roles:
                 try:
                     await member_to_mp.send(mp_text)
-                    users_to_remind.append(member_to_mp.id)
+                    users_to_remind.append(str(member_to_mp.id))
                 except:
                     try:
                         await ctx.author.send(f"Erreur lors de l'envoi de la notification à l'utilisateur {member_to_mp.name} !")
