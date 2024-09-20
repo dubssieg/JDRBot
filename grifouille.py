@@ -569,7 +569,7 @@ async def link(ctx: interactions.CommandContext):
 )
 async def resume(ctx: interactions.CommandContext):
     try:
-        await ctx.send(f"Voici le lien de [**tes résumés de partie liés**](<{get_url(ctx.author.mention, dict_links, gc)}>) ! {PATOUNES_LOVE}", ephemeral=True)
+        await ctx.send(f"Voici le lien de [**tes résumés de partie liés**](<{load_json('resume_links')[str(ctx.author.mention)]}>) ! {PATOUNES_LOVE}", ephemeral=True)
     except Exception:
         await ctx.send("Désolé, tu ne semble pas avoir de document de résumé lié. N'hésite pas à en lier une avec **/save_resume** !", ephemeral=True)
 
