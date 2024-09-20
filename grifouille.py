@@ -58,6 +58,7 @@ gc = authorize(service_file='env/connect_sheets.json')
 # datas d'environnement
 dict_pos: dict = load_json("pos")  # mapping statistique : position (case)
 dict_links: dict = load_json("links")  # liens vers les fiches de persos
+dict_resume: dict = load_json("resume_links")  # liens vers les résumés
 dict_bonuses: dict = load_json("bonus")  # stats de résilience
 dict_stress: dict = load_json("stress")  # états de stress
 quotes: dict = load_json("quotes")  # phrases pour les jets de dés
@@ -314,6 +315,39 @@ async def modal_response(ctx, response: str):
     await ctx.send(f"La fiche nommée {response} vous a été liée !", ephemeral=True)
 
 
+################ Pour demander le résumé #################
+
+@ bot.command(
+    name="save_resume",
+    description="Sauvegarde un lien avec un document de résumé",
+    scope=guild_id,
+)
+async def save_resume(ctx):
+    modal2 = interactions.Modal(
+        title="Lier un document de résumé",
+        custom_id="mod_app_form_resume",
+
+        components=[
+            interactions.TextInput(
+                style=interactions.TextStyleType.SHORT,
+                label="Entrez le nom de votre document sur GoogleSheets",
+                custom_id="text_input_response",
+                min_length=1,
+                max_length=50,
+            )
+        ],  # type: ignore
+    )
+    await ctx.popup(modal2)
+
+
+@bot.modal("mod_app_form_resume")
+async def modal_response_resume(ctx, response: str):
+    await ctx.defer()
+    dict_resume[f"{ctx.author.mention}"] = f"{response}"
+    save_json('resume_links', dict_resume)
+    await ctx.send(f"Le document nommé {response} vous a été lié !", ephemeral=True)
+
+
 ################ Pour lancer un dé #################
 
 
@@ -512,7 +546,7 @@ async def caracteristique(ctx: interactions.CommandContext, competence: str, ajo
     description="Renvoie le lien du salon Watc2Gether pour les parties de jeu de rôle.",
     scope=guild_id,
 )
-async def link(ctx: interactions.CommandContext):
+async def music(ctx: interactions.CommandContext):
     await ctx.send(f"Voici le lien du [**salon pour la musique**](<{W2G_LINK}>) ! {PATOUNES_LOVE}", ephemeral=True)
 
 
@@ -526,6 +560,18 @@ async def link(ctx: interactions.CommandContext):
         await ctx.send(f"Voici le lien de [**ta fiche personnage liée**](<{get_url(ctx.author.mention, dict_links, gc)}>) ! {PATOUNES_LOVE}", ephemeral=True)
     except Exception:
         await ctx.send("Désolé, tu ne semble pas avoir de fiche liée. N'hésite pas à en lier une avec **/save_file** !", ephemeral=True)
+
+
+@bot.command(
+    name="resume",
+    description="Renvoie le lien vers votre document de résumés de partie, ou un message si aucun résumé n'est lié.",
+    scope=guild_id,
+)
+async def resume(ctx: interactions.CommandContext):
+    try:
+        await ctx.send(f"Voici le lien de [**tes résumés de partie liés**](<{get_url(ctx.author.mention, dict_links, gc)}>) ! {PATOUNES_LOVE}", ephemeral=True)
+    except Exception:
+        await ctx.send("Désolé, tu ne semble pas avoir de document de résumé lié. N'hésite pas à en lier une avec **/save_resume** !", ephemeral=True)
 
 
 @bot.command(
