@@ -236,34 +236,40 @@ Merci de **prévenir au plus vite** en cas d'indisponibilité !
                     await ctx.author.send(f"L'utilisateur {member_to_mp.name} a ses notifications désactivées.")
                 except:
                     pass
-    creds = Credentials.from_authorized_user_file(
-        "env/token_google_calendar.json", SCOPES)
-    service = build("calendar", "v3", credentials=creds)
 
-    event = {
-        'summary': name,
-        'location': 'TharosTV',
-        'description': long_description,
-        'start': {
-            'dateTime': start_date,
-            'timeZone': 'Europe/Paris',
-        },
-        'end': {
-            'dateTime': end_date,
-            'timeZone': 'Europe/Paris',
-        },
-        'recurrence': [
-        ],
-        'attendees': [
-        ],
-        'reminders': {
-            'useDefault': False,
-            'overrides': [
-                {'method': 'email', 'minutes': 24 * 60},
-                {'method': 'popup', 'minutes': 10},
+    try:
+        creds = Credentials.from_authorized_user_file(
+            "env/token_google_calendar.json", SCOPES)
+        service = build("calendar", "v3", credentials=creds)
+
+        event = {
+            'summary': name,
+            'location': 'TharosTV',
+            'description': long_description,
+            'start': {
+                'dateTime': start_date,
+                'timeZone': 'Europe/Paris',
+            },
+            'end': {
+                'dateTime': end_date,
+                'timeZone': 'Europe/Paris',
+            },
+            'recurrence': [
             ],
-        },
-    }
+            'attendees': [
+            ],
+            'reminders': {
+                'useDefault': False,
+                'overrides': [
+                    {'method': 'email', 'minutes': 24 * 60},
+                    {'method': 'popup', 'minutes': 10},
+                ],
+            },
+        }
+        event = service.events().insert(calendarId=CAL_ID, body=event).execute()
+    except Exception as e:
+        print(e)
+
     events_dates: dict = load_json('events')
     events_dates[datetime.strptime(start, '%d/%m/%y %H:%M').strftime("%d-%m-%y")] = events_dates.get(datetime.strptime(start, '%d/%m/%y %H:%M').strftime("%d-%m-%y"), list()) + [
         {
@@ -275,7 +281,6 @@ Merci de **prévenir au plus vite** en cas d'indisponibilité !
     ]
     save_json('events', events_dates)
 
-    event = service.events().insert(calendarId=CAL_ID, body=event).execute()
     print('Event created: ' + event.get('htmlLink'))
 
     await ctx.send(f"Evènement [**{name}**]({event_id}) créé! {PATOUNES_LOVE}")
