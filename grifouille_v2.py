@@ -327,9 +327,20 @@ def roll_entity(
             type=interactions.OptionType.INTEGER,
             required=True,
         ),
+        interactions.Option(
+            name="bonus_de_resilience",
+            description="Modificateur de résilience à ajouter au jet",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
     ],
 )
-async def roll(ctx: interactions.CommandContext, nombre_de_des: int, bonus_de_competence: int):
+async def roll(
+    ctx: interactions.CommandContext,
+    nombre_de_des: int,
+    bonus_de_competence: int,
+    bonus_de_resilience: int = 0
+) -> NoReturn:
     """Lance un dé d'une statistique.
 
     On laissera la joueuse se charger de la question du nombre de dés à lancer et du bonus.
@@ -341,22 +352,16 @@ async def roll(ctx: interactions.CommandContext, nombre_de_des: int, bonus_de_co
         nombre_de_des (int): le nombre de dés à lancer
     """
     await ctx.defer()
-    modificateur: int = bonus_de_competence + dict_bonuses[str(ctx.author.mention)] if str(
-        ctx.author.mention) in dict_bonuses else 0
+    modificateur: int = bonus_de_competence + bonus_de_resilience
+    lancers_des: list[int] = roll_d30(number_of_dices=nombre_de_des)
+    dices_text: str = ', '.join(['**'+str(roll)+'/30** [' + str((roll-modificateur+30) %
+                                30)+'-'+str((roll+modificateur) % 30)+']' for roll in lancers_des])
+
     await ctx.send(f"""
         {ctx.author.mention} > **Entité :** {roll_entity(dict_entities['default'])}
-        > Lancers de dés : {', '.join(['**'+str(roll)+'/30** ± '+ str(modificateur) for roll in roll_d30(number_of_dices=nombre_de_des)])}
-        > *{choice(quotes['INCONNU'])}*
+        > Lancers de dés : {dices_text}
+        > *{choice(quotes[choice(quotes.keys())])}*
         """)
-
-"""
-personnage: dict = {
-    "nom": "Pierre",
-    "joueur": "Tharos",
-    "résilience": 0,
-    "stress": 0,
-}
-"""
 
 
 def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, modificateur: int = 0, valeur_difficulte: int = 0, stat_testee: str = "") -> tuple:
