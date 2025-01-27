@@ -57,6 +57,7 @@ dict_resume: dict = load_json("resume_links")  # liens vers les résumés
 dict_bonuses: dict = load_json("bonus")  # stats de résilience
 dict_stress: dict = load_json("stress")  # états de stress
 quotes: dict = load_json("quotes")  # phrases pour les jets de dés
+dict_entities: dict = load_json("entities")  # mapping clé : liste d'entités
 
 # préparation du dico de stress
 listStates = list(dict_stress.keys())
@@ -296,6 +297,67 @@ async def modal_response_resume(ctx, response: str):
 
 
 ################ Pour lancer un dé #################
+
+def roll_d30(
+    number_of_dices: int = 1,
+) -> int:
+    return [randrange(1, 31) for _ in range(number_of_dices)]
+
+
+def roll_entity(
+    choices: list[str],
+) -> str:
+    return choice(choices)
+
+
+@bot.command(
+    name="roll",
+    description="Lancer d'un dé selon le nouveau système de résolution",
+    scope=guild_id,
+    options=[
+        interactions.Option(
+            name="nombre_de_des",
+            description="Nombre de dés que votre test doit comporter",
+            type=interactions.OptionType.INTEGER,
+            required=True,
+        ),
+        interactions.Option(
+            name="bonus_de_competence",
+            description="Modificateur de compétence à ajouter au jet",
+            type=interactions.OptionType.INTEGER,
+            required=True,
+        ),
+    ],
+)
+async def roll(ctx: interactions.CommandContext, nombre_de_des: int, bonus_de_competence: int):
+    """Lance un dé d'une statistique.
+
+    On laissera la joueuse se charger de la question du nombre de dés à lancer et du bonus.
+    En revanche, le système de résilience est géré automatiquement.
+
+    Args:
+        ctx (interactions.CommandContext): contexte d'envoi du message
+        charac (str): la caractéristique à tester
+        nombre_de_des (int): le nombre de dés à lancer
+    """
+    await ctx.defer()
+    modificateur: int = bonus_de_competence + dict_bonuses[str(ctx.author.mention)] if str(
+        ctx.author.mention) in dict_bonuses else 0
+    await ctx.send(f"""
+        {ctx.author.mention} > **Entité :** {roll_entity(dict_entities['default'])}
+        > Lancers de dés : {', '.join(['**'+str(roll)+'/30** ± '+modificateur for roll in roll_d30(number_of_dices=nombre_de_des)])}
+        > Pensez à actualiser vos points de résilience si nécessaire.
+        > *{choice(quotes['INCONNU'])}*
+        """)
+
+"""
+personnage: dict = {
+    "nom": "Pierre",
+    "joueur": "Tharos",
+    "résilience": 0,
+    "stress": 0,
+}
+"""
 
 
 def roll_the_dice(message, result_number_of_dices: int, dices: int, faces: int, modificateur: int = 0, valeur_difficulte: int = 0, stat_testee: str = "") -> tuple:
