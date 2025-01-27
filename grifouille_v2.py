@@ -346,7 +346,6 @@ async def roll(ctx: interactions.CommandContext, nombre_de_des: int, bonus_de_co
     await ctx.send(f"""
         {ctx.author.mention} > **Entité :** {roll_entity(dict_entities['default'])}
         > Lancers de dés : {', '.join(['**'+str(roll)+'/30** ± '+ str(modificateur) for roll in roll_d30(number_of_dices=nombre_de_des)])}
-        > Pensez à actualiser vos points de résilience si nécessaire.
         > *{choice(quotes['INCONNU'])}*
         """)
 
