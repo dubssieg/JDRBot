@@ -360,7 +360,7 @@ async def roll(
     await ctx.send(f"""
         {ctx.author.mention} > **Entité :** {roll_entity(dict_entities['default'])}
         > Lancers de dés : {dices_text}
-        > *{choice(quotes[choice(quotes.keys())])}*
+        > *{choice(quotes[choice(list(quotes.keys()))])}*
         """)
 
 
