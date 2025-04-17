@@ -39,6 +39,7 @@ password: str = tokens_obsws["password"]
 # datas
 tasks_bot: dict = load_json("data_tasks")
 
+
 @bot.event
 async def on_ready() -> None:
     "Lorsque le bot se connecte, effectue des actions d'initialisation"
@@ -50,10 +51,12 @@ async def on_ready() -> None:
     check_dates.start()
     output_msg("PATOUNES EST PRET !")
 
+
 @bot.event
 async def on_message(ctx):
     if bot.user.mentioned_in(ctx):
-        await ctx.channel.send("Hey, une petite mission pour toi " + ctx.author.mention + " <:patounes_heart:979510606216462416> + " " + choice(tasks_bot))
+        await ctx.channel.send("Hey, une petite mission pour toi " + ctx.author.mention + " <:patounes_heart:979510606216462416> " + choice(tasks_bot))
+
 
 @tasks.loop(hours=2)
 async def check_dates():
