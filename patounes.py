@@ -51,9 +51,9 @@ async def on_ready() -> None:
     output_msg("PATOUNES EST PRET !")
 
 @bot.event
-async def on_message(message):
-    if bot.user.mentioned_in(message):
-        await message.channel.send(choice(tasks_bot))
+async def on_message(ctx):
+    if bot.user.mentioned_in(ctx):
+        await ctx.channel.send("Hey, une petite mission pour toi " + ctx.author.mention + " <:patounes_heart:979510606216462416> + " " + choice(tasks_bot))
 
 @tasks.loop(hours=2)
 async def check_dates():
