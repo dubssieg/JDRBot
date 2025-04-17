@@ -8,6 +8,7 @@ from library import output_msg, load_json, YTDLSource, save_json
 from datetime import date, datetime
 from obs_interactions import obs_invoke, toggle_filter
 from env.constants import NO_PINGS_ROLE
+from random import choice
 
 ##################### TOKENS DE CONNEXION ##########################
 
@@ -35,6 +36,8 @@ host: str = tokens_obsws["host"]
 port: int = tokens_obsws["port"]
 password: str = tokens_obsws["password"]
 
+# datas
+tasks_bot: dict = load_json("data_tasks")
 
 @bot.event
 async def on_ready() -> None:
@@ -47,6 +50,10 @@ async def on_ready() -> None:
     check_dates.start()
     output_msg("PATOUNES EST PRET !")
 
+@bot.event
+async def on_message(message):
+    if bot.user.mentioned_in(message):
+        await message.channel.send(choice(tasks_bot))
 
 @tasks.loop(hours=2)
 async def check_dates():
