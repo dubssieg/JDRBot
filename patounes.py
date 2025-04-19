@@ -8,7 +8,7 @@ from library import output_msg, load_json, YTDLSource, save_json
 from datetime import date, datetime
 from obs_interactions import obs_invoke, toggle_filter
 from env.constants import NO_PINGS_ROLE
-from random import choice
+from random import choice, randint, choices
 
 ##################### TOKENS DE CONNEXION ##########################
 
@@ -38,6 +38,7 @@ password: str = tokens_obsws["password"]
 
 # datas
 tasks_bot: dict = load_json("data_tasks")
+tasks_weight: dict = [0 for _ in tasks_bot]
 
 
 @bot.event
@@ -55,7 +56,11 @@ async def on_ready() -> None:
 @bot.event
 async def on_message(ctx):
     if bot.user.mentioned_in(ctx):
-        await ctx.channel.send("Hey, une petite mission pour toi " + ctx.author.mention + " <:patounes_heart:979510606216462416> " + choice(tasks_bot))
+        # We create a list of ints from which to pick where probability is inverted to number of times the task was given
+        random_index: int = choice([x for x in range(len(tasks_weight)) for _ in range(
+            max(tasks_weight) - tasks_weight[x] + 1)])
+        tasks_weight[random_index] += 1
+        await ctx.channel.send("Hey, " + choice(["une petite mission pour toi ", "une jolie tâche à remplir ", "une quête t'attend "]) + ctx.author.mention + " <:patounes_heart:979510606216462416> " + tasks_bot[random_index])
 
 
 @tasks.loop(hours=2)
