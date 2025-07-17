@@ -49,6 +49,7 @@ async def on_ready() -> None:
     ))
     print(load_json('events'))
     birthday.start()
+    positive_chekpoint.start()
     check_dates.start()
     output_msg("PATOUNES EST PRET !")
 
@@ -88,6 +89,16 @@ async def birthday():
                     for channel in guild.channels:
                         if str(channel.id) == "313977728242155520":
                             await channel.send(f"Hey, c'est l'anniversaire de {people} ! <:patounes_heart:979510606216462416>")
+
+
+@tasks.loop(minutes=60)
+async def positive_chekpoint():
+    if date.today().weekday() == 2 and datetime.now().hour == 9:
+        for guild in bot.guilds:
+            if str(guild.id) == "313976437818523650":
+                for channel in guild.channels:
+                    if str(channel.id) == "313977728242155520":
+                        await channel.send("Coucou, c'est le milieu de semaine ! "+choice(["C'est l'heure du *checkpoint* positif ; qu'avez-vous accompli cette semaine ?", "Un peu de positivité : repassez-vous votre semaine, de quoi êtes vous fièr·e ou heureux·se ?", "Une parenthèse qui fait du bien — racontez vos petites réussites et joyeux accomplissements !"]) +" <:patounes_hug:979506894639071283>")
 
 
 @bot.command()
